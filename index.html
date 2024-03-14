@@ -1,0 +1,47 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Time</title><style type="text/css">body{
+margin:40px auto;
+max-width:650px;
+line-height:1.6;
+font-size:18px;
+color:#eee;
+background-color:#111;
+padding:0 10px
+}
+textarea, input, button {
+color:#eee;
+background-color:#111;
+}
+</style>
+</head>
+
+<body>
+    <div>
+        <input id="selected-time" type="range" min="0" max="0" style="width: 100%;" />
+        <p><output id="value"></output></p>
+    </div>
+    <script>
+        const value = document.getElementById("value");
+        const input = document.getElementById("selected-time");
+
+        // TODO Base initial min/max on current time, and allow adjusting it manually
+        input.max = 4_000_000_000_000
+        // TODO Start at current time and tick automatically
+        value.textContent = new Date(0).toUTCString() + " (0)";
+        input.addEventListener("input", (event) => {
+            // TODO? Are we gonna want to debounce this?
+            const v = event.target.value
+            value.textContent = new Date(parseInt(v)).toUTCString() + " (" + v + ")";
+        });
+        // TODO show a common calendar. (Does the built-in date input work for this?)
+        // TODO show a digital clock.
+        // TODO show an analog clock.
+        // TODO look up that 13 * 28 + 1 calendar and display that
+    </script>
+</body>
+</html>
