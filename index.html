@@ -17,22 +17,50 @@ textarea, input, button {
 color:#eee;
 background-color:#111;
 }
+.button-container {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
 </style>
 </head>
 
 <body>
     <div>
-        <input id="selected-time" type="range" min="0" max="0" style="width: 100%;" />
+        <div class="button-container">
+            <button type="button" id="minus">−</button>
+            <button type="button" id="plus">+</button>
+        </div>
+        <input id="selected-time" type="range" style="width: 100%;" />
         <p><output id="value"></output></p>
     </div>
     <script>
         const value = document.getElementById("value");
         const input = document.getElementById("selected-time");
 
-        // TODO Base initial min/max on current time, and allow adjusting it manually
-        input.max = 4_000_000_000_000
+        const startTime = new Date().getTime()
+        const TIME_ROUND_TO = 1_000_000_000_000
+
+        const defaultLowEdge = Math.floor(startTime / TIME_ROUND_TO) * TIME_ROUND_TO
+        const defaultHighEdge = Math.ceil(startTime / TIME_ROUND_TO) * TIME_ROUND_TO
+
+        input.min = defaultLowEdge
+        input.max = defaultHighEdge
+        input.value = startTime
+
+        const minus = document.getElementById("minus");
+        minus.onclick = () => {
+            input.min = parseInt(input.min) - TIME_ROUND_TO
+        };
+
+        const plus = document.getElementById("plus");
+        plus.onclick = () => {
+            input.max = parseInt(input.max) + TIME_ROUND_TO
+        };
+
         // TODO Start at current time and tick automatically
-        value.textContent = new Date(0).toUTCString() + " (0)";
+        value.textContent = new Date(startTime).toUTCString() + " (" + startTime + ")";
         input.addEventListener("input", (event) => {
             // TODO? Are we gonna want to debounce this?
             const v = event.target.value
