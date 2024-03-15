@@ -30,13 +30,18 @@ background-color:#111;
     <div>
         <div class="button-container">
             <button type="button" id="minus">−</button>
+            <button type="button" id="play-pause">&#x23EF;</button>
             <button type="button" id="plus">+</button>
         </div>
         <input id="selected-time" type="range" style="width: 100%;" />
-        <p><output id="value"></output></p>
+        <div style="display: grid;">
+            <output id="raw"></output>
+            <output id="utc-string"></output>
+        </div>
     </div>
     <script>
-        const value = document.getElementById("value");
+        const raw = document.getElementById("raw");
+        const utcString = document.getElementById("utc-string");
         const input = document.getElementById("selected-time");
 
         const startTime = new Date().getTime()
@@ -49,6 +54,14 @@ background-color:#111;
         input.max = defaultHighEdge
         input.value = startTime
 
+        const RUNNING = "running"
+        const PAUSED = "paused"
+
+        let inputMode = RUNNING
+        input.oninput = () => {
+            inputMode = PAUSED
+        }
+
         const minus = document.getElementById("minus");
         minus.onclick = () => {
             input.min = parseInt(input.min) - TIME_ROUND_TO
@@ -59,17 +72,56 @@ background-color:#111;
             input.max = parseInt(input.max) + TIME_ROUND_TO
         };
 
-        // TODO Start at current time and tick automatically
-        value.textContent = new Date(startTime).toUTCString() + " (" + startTime + ")";
+
+        const renderAt = (date) => {
+            const time = date.getTime()
+            input.value = time
+            raw.textContent = time
+            utcString.textContent = date.toUTCString()
+        }
+
         input.addEventListener("input", (event) => {
             // TODO? Are we gonna want to debounce this?
             const v = event.target.value
-            value.textContent = new Date(parseInt(v)).toUTCString() + " (" + v + ")";
+            renderAt(new Date(parseInt(v)))
         });
+
+        const playPause = document.getElementById("play-pause");
+        playPause.onclick = () => {
+            switch (inputMode) {
+                case RUNNING:
+                    inputMode = PAUSED
+                break
+                case PAUSED:
+                    inputMode = RUNNING
+                    renderStep()
+                break
+            }
+        };
+
+        const renderStep = () => {
+            renderAt(new Date())
+
+            switch (inputMode) {
+                case RUNNING:
+                    requestAnimationFrame(renderStep)
+                break
+                case PAUSED:
+                    // don't do another frame
+                break
+            }
+
+        }
+        renderStep()
+
         // TODO show a common calendar. (Does the built-in date input work for this?)
         // TODO show a digital clock.
         // TODO show an analog clock.
         // TODO look up that 13 * 28 + 1 calendar and display that
+        // TODO show a base 12 digital clock
+        // TODO show a base 12 analog clock
+        // TODO show the date in the base of the current day of the month, by the common calendar
+        // TODO show the date in the base of the current day of the month, by the 13 * 28 + 1 calendar
     </script>
 </body>
 </html>
