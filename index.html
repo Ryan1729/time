@@ -100,25 +100,19 @@ background-color:#111;
 
         const calendarBoxes = document.getElementById("calendar-boxes");
 
-        const renderAt = (date) => {
-            const time = date.getTime()
-            input.value = time
-            raw.textContent = time
-            utcString.textContent = date.toUTCString()
+        const calculateCalendarSpecs = (boundsProvider) => {
+            const {
+                dateOfMonth,
+                lastDateOfPreviousMonth,
+                dayOfWeekOfLastOfPrevious,
+                lastDateOfCurrentMonth,
+                dayOfWeekOfFirstOfCurrent,
+                dayOfWeekOfFirstOfNext,
+                boxesPerPage,
+            } = boundsProvider.pageBounds()
 
-            let calendarBoxSpecs = new Array(42)
+            let calendarBoxSpecs = new Array(boxesPerPage)
             let boxIndex = 0;
-
-            const year = date.getUTCFullYear()
-            const month = date.getUTCMonth()
-            const dateOfMonth = date.getUTCDate()
-
-            const lastOfPreviousMonth = new Date(year, month, 0)
-            const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
-            const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
-            const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
-            const dayOfWeekOfFirstOfCurrent = new Date(year, month, 1).getUTCDay()
-            const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
 
             const firstVisibleDateOfPreviousMonth = lastDateOfPreviousMonth - dayOfWeekOfLastOfPrevious
 
@@ -163,6 +157,46 @@ background-color:#111;
                 nextMonthDate += 1
                 boxIndex += 1
             }
+
+            return calendarBoxSpecs
+        }
+
+        const renderAt = (date) => {
+            const time = date.getTime()
+            input.value = time
+            raw.textContent = time
+            utcString.textContent = date.toUTCString()
+
+            const boundsProvider = {
+                date,
+                pageBounds() {
+                    const date = this.date
+
+                    const year = date.getUTCFullYear()
+                    const month = date.getUTCMonth()
+                    const dateOfMonth = date.getUTCDate()
+
+                    const lastOfPreviousMonth = new Date(year, month, 0)
+
+                    const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
+                    const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
+                    const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
+                    const dayOfWeekOfFirstOfCurrent = new Date(year, month, 1).getUTCDay()
+                    const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
+
+                    return {
+                        dateOfMonth,
+                        lastDateOfPreviousMonth,
+                        dayOfWeekOfLastOfPrevious,
+                        lastDateOfCurrentMonth,
+                        dayOfWeekOfFirstOfCurrent,
+                        dayOfWeekOfFirstOfNext,
+                        boxesPerPage: 42
+                    };
+                },
+            }
+
+            const calendarBoxSpecs = calculateCalendarSpecs(boundsProvider)
 
             let newBoxes = ''
             for (let i = 0; i < calendarBoxSpecs.length; i += 1) {
