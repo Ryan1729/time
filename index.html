@@ -47,10 +47,12 @@ background-color:#111;
             <button type="button" id="plus">+</button>
         </div>
         <input id="selected-time" type="range" style="width: 100%;" />
+        <output id="displayed-step"></output>
         <div style="display: grid;">
             <output id="raw"></output>
             <output id="utc-string"></output>
             <div style="border: solid 0.125ex;">
+                <h4> Gregorian </h4>
                 <div class="seven-columns" style="border-bottom: solid 0.125ex;">
                     <div> Sun </div>
                     <div> Mon </div>
@@ -60,12 +62,33 @@ background-color:#111;
                     <div> Fri </div>
                     <div> Sat </div>
                 </div>
-                <div id="calendar-boxes" class="seven-columns">
+                <div id="gregorian-calendar-boxes" class="seven-columns">
+                </div>
+            </div>
+
+            <div style="border: solid 0.125ex;">
+                <h4> International Fixed</h4>
+                <div class="seven-columns" style="border-bottom: solid 0.125ex;">
+                    <div> Sun </div>
+                    <div> Mon </div>
+                    <div> Tue </div>
+                    <div> Wed </div>
+                    <div> Thu </div>
+                    <div> Fri </div>
+                    <div> Sat </div>
+                </div>
+                <div id="international-fixed-calendar-boxes" class="seven-columns">
                 </div>
             </div>
         </div>
     </div>
     <script>
+        const DEBUG_MODE = location.protocol === "file:"
+        if (DEBUG_MODE) {
+            console.log("DEBUG_MODE = " + DEBUG_MODE)
+        }
+
+        const displayedStep = document.getElementById("displayed-step");
         const raw = document.getElementById("raw");
         const utcString = document.getElementById("utc-string");
         const input = document.getElementById("selected-time");
@@ -78,7 +101,18 @@ background-color:#111;
 
         input.min = defaultLowEdge
         input.max = defaultHighEdge
-        input.value = startTime
+        const setStep = (step) => {
+            input.step = step
+            if (step === 1) {
+                displayedStep.textContent = ''
+            } else {
+                displayedStep.textContent = "movement ×" + step.toLocaleString()
+            }
+        }
+        const setFromTime = (time) => {
+            input.value = time
+        }
+        setFromTime(startTime)
 
         const RUNNING = "running"
         const PAUSED = "paused"
@@ -87,6 +121,34 @@ background-color:#111;
         input.oninput = () => {
             inputMode = PAUSED
         }
+
+        let moveListener;
+        let startClientY;
+        input.addEventListener("pointerdown", (e) => {
+            startClientY = e.clientY
+
+            l = input.addEventListener("pointermove", (e) => {
+              const yDelta = Math.abs(startClientY - e.clientY)
+
+              const PIXELS_PER_STEP = 16;
+              // 0 => 1
+              // 10 => 10
+              // 20 => 100
+              // And so on
+              const rawStep = Math.pow(10, Math.floor(yDelta/PIXELS_PER_STEP))
+
+              const range = parseInt(input.max) - parseInt(input.min)
+
+              setStep(Math.min(rawStep, range))
+            });
+        });
+        input.addEventListener("pointerup", (e) => {
+            input.removeEventListener("pointermove", moveListener)
+
+            // Avoid jittering the input when releasing
+            const selectedValue = input.value
+            setTimeout(() => setFromTime(selectedValue), 8)
+        });
 
         const minus = document.getElementById("minus");
         minus.onclick = () => {
@@ -98,7 +160,12 @@ background-color:#111;
             input.max = parseInt(input.max) + TIME_ROUND_TO
         };
 
-        const calendarBoxes = document.getElementById("calendar-boxes");
+        const PREVIOUS = -1
+        const CURRENT = 0
+        const NEXT = 1
+
+        const gregorianCalendarBoxes = document.getElementById("gregorian-calendar-boxes");
+        const internationalFixedCalendarBoxes = document.getElementById("international-fixed-calendar-boxes");
 
         const calculateCalendarSpecs = (boundsProvider) => {
             const {
@@ -108,10 +175,10 @@ background-color:#111;
                 lastDateOfCurrentMonth,
                 dayOfWeekOfFirstOfCurrent,
                 dayOfWeekOfFirstOfNext,
-                boxesPerPage,
+                maxBoxesPerPage,
             } = boundsProvider.pageBounds()
 
-            let calendarBoxSpecs = new Array(boxesPerPage)
+            let calendarBoxSpecs = new Array(maxBoxesPerPage)
             let boxIndex = 0;
 
             const firstVisibleDateOfPreviousMonth = lastDateOfPreviousMonth - dayOfWeekOfLastOfPrevious
@@ -119,9 +186,11 @@ background-color:#111;
             const OTHER_MONTH_CLASS = "other-month"
 
             for (let i = 0; i < dayOfWeekOfFirstOfCurrent; i += 1) {
+                const dayOfMonth = firstVisibleDateOfPreviousMonth + i
                 calendarBoxSpecs[boxIndex] = {
-                    text: firstVisibleDateOfPreviousMonth + i,
-                    className: OTHER_MONTH_CLASS
+                    text: dayOfMonth,
+                    className: OTHER_MONTH_CLASS,
+                    linkedTime: boundsProvider.linkedTimeFromDayOfMonth(PREVIOUS, dayOfMonth)
                 }
                 boxIndex += 1
             }
@@ -137,6 +206,7 @@ background-color:#111;
                 calendarBoxSpecs[boxIndex] = {
                     text: i,
                     className,
+                    linkedTime: boundsProvider.linkedTimeFromDayOfMonth(CURRENT, i)
                 }
 
                 boxIndex += 1
@@ -152,22 +222,40 @@ background-color:#111;
                 calendarBoxSpecs[boxIndex] = {
                     text: nextMonthDate,
                     className: OTHER_MONTH_CLASS,
+                    linkedTime: boundsProvider.linkedTimeFromDayOfMonth(NEXT, i)
                 }
 
                 nextMonthDate += 1
                 boxIndex += 1
             }
 
-            return calendarBoxSpecs
+            return calendarBoxSpecs.flat()
+        }
+
+        const setFromTimeAndRender = (time) => {
+            inputMode = PAUSED
+            setFromTime(time)
+            renderAt(new Date(time))
+        }
+
+        const applyCalendarSpecs = (parent, specs) => {
+            let newBoxes = ''
+            for (let i = 0; i < specs.length; i += 1) {
+                const {text, className, linkedTime} = specs[i]
+                newBoxes += `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
+                    ${text}
+                </div>`
+            }
+            parent.innerHTML = newBoxes
         }
 
         const renderAt = (date) => {
             const time = date.getTime()
-            input.value = time
-            raw.textContent = time
+            setFromTime(input.value)
+            raw.textContent = time.toLocaleString()
             utcString.textContent = date.toUTCString()
 
-            const boundsProvider = {
+            const gregorianBoundsProvider = {
                 date,
                 pageBounds() {
                     const date = this.date
@@ -191,19 +279,61 @@ background-color:#111;
                         lastDateOfCurrentMonth,
                         dayOfWeekOfFirstOfCurrent,
                         dayOfWeekOfFirstOfNext,
-                        boxesPerPage: 42
+                        maxBoxesPerPage: 42
                     };
                 },
+                linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
+                    const year = date.getUTCFullYear()
+                    const month = date.getUTCMonth() + monthDelta
+                    return new Date(year, month, dayOfMonth).getTime()
+                }
             }
 
-            const calendarBoxSpecs = calculateCalendarSpecs(boundsProvider)
+            const gregorianCalendarBoxSpecs = calculateCalendarSpecs(gregorianBoundsProvider)
 
-            let newBoxes = ''
-            for (let i = 0; i < calendarBoxSpecs.length; i += 1) {
-                const {text, className} = calendarBoxSpecs[i]
-                newBoxes += `<div class="${className}">${text}</div>`
+            applyCalendarSpecs(gregorianCalendarBoxes, gregorianCalendarBoxSpecs)
+
+            if (DEBUG_MODE) {
+                const internationalFixedBoundsProvider = {
+                    date,
+                    pageBounds() {
+                        const date = this.date
+
+                        const year = date.getUTCFullYear()
+                        const month = date.getUTCMonth()
+                        // TODO Calculate this properly for this calendar
+                        const dateOfMonth = date.getUTCDate()
+
+                        const lastDateOfPreviousMonth = 28
+                        const dayOfWeekOfLastOfPrevious = 6
+                        const lastDateOfCurrentMonth = 28
+                        const dayOfWeekOfFirstOfCurrent = 0
+                        const dayOfWeekOfFirstOfNext = 0
+
+                        return {
+                            dateOfMonth,
+                            lastDateOfPreviousMonth,
+                            dayOfWeekOfLastOfPrevious,
+                            lastDateOfCurrentMonth,
+                            dayOfWeekOfFirstOfCurrent,
+                            dayOfWeekOfFirstOfNext,
+                            maxBoxesPerPage: 28
+                        };
+                    },
+                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
+                        const year = date.getUTCFullYear()
+                        const month = date.getUTCMonth() + monthDelta
+                        return new Date(year, month, dayOfMonth).getTime()
+                    }
+                }
+
+                const internationalFixedCalendarBoxSpecs = calculateCalendarSpecs(internationalFixedBoundsProvider)
+
+                applyCalendarSpecs(internationalFixedCalendarBoxes, internationalFixedCalendarBoxSpecs)
+            } else {
+                internationalFixedCalendarBoxes.parentElement.style.display = "none"
             }
-            calendarBoxes.innerHTML = newBoxes
+
         }
 
         input.addEventListener("input", (event) => {
