@@ -17,6 +17,9 @@ textarea, input, button {
 color:#eee;
 background-color:#111;
 }
+:root {
+  --thin-border: solid 0.125ex;
+}
 .button-container {
   padding: 0;
   margin: 0;
@@ -34,7 +37,27 @@ background-color:#111;
 }
 .current-month {}
 .current-day {
-    border: solid 0.125ex;
+    border: var(--thin-border);
+}
+.thin-border {
+    border: var(--thin-border);
+}
+.thin-border-row {
+    border-top: var(--thin-border);
+    border-bottom: var(--thin-border);
+}
+.month-label {
+    text-align: center;
+    font-size: 21px;
+    font-weight: 700;
+}
+.calendar-type-label {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    /* Move up into the space of the month label */
+    margin-top: -2ex;
 }
 </style>
 </head>
@@ -51,9 +74,10 @@ background-color:#111;
         <div style="display: grid;">
             <output id="raw"></output>
             <output id="utc-string"></output>
-            <div style="border: solid 0.125ex;">
-                <h4> Gregorian </h4>
-                <div class="seven-columns" style="border-bottom: solid 0.125ex;">
+            <div class="thin-border">
+                <div class="month-label"> January </div>
+                <div class="calendar-type-label" > Gregorian </div>
+                <div class="seven-columns thin-border-row">
                     <div> Sun </div>
                     <div> Mon </div>
                     <div> Tue </div>
@@ -66,9 +90,10 @@ background-color:#111;
                 </div>
             </div>
 
-            <div style="border: solid 0.125ex;">
-                <h4> International Fixed</h4>
-                <div class="seven-columns" style="border-bottom: solid 0.125ex;">
+            <div class="thin-border">
+                <div class="month-label"> January </div>
+                <div class="calendar-type-label"> International Fixed</div>
+                <div class="seven-columns thin-border-row">
                     <div> Sun </div>
                     <div> Mon </div>
                     <div> Tue </div>
@@ -131,10 +156,6 @@ background-color:#111;
               const yDelta = Math.abs(startClientY - e.clientY)
 
               const PIXELS_PER_STEP = 16;
-              // 0 => 1
-              // 10 => 10
-              // 20 => 100
-              // And so on
               const rawStep = Math.pow(10, Math.floor(yDelta/PIXELS_PER_STEP))
 
               const range = parseInt(input.max) - parseInt(input.min)
@@ -176,6 +197,7 @@ background-color:#111;
                 dayOfWeekOfFirstOfCurrent,
                 dayOfWeekOfFirstOfNext,
                 maxBoxesPerPage,
+                monthText,
             } = boundsProvider.pageBounds()
 
             let calendarBoxSpecs = new Array(maxBoxesPerPage)
@@ -237,17 +259,8 @@ background-color:#111;
             setFromTime(time)
             renderAt(new Date(time))
         }
-
-        const applyCalendarSpecs = (parent, specs) => {
-            let newBoxes = ''
-            for (let i = 0; i < specs.length; i += 1) {
-                const {text, className, linkedTime} = specs[i]
-                newBoxes += `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
-                    ${text}
-                </div>`
-            }
-            parent.innerHTML = newBoxes
-        }
+        
+        const GREGORIAN_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 
         const renderAt = (date) => {
             const time = date.getTime()
@@ -263,6 +276,7 @@ background-color:#111;
                     const year = date.getUTCFullYear()
                     const month = date.getUTCMonth()
                     const dateOfMonth = date.getUTCDate()
+                    const monthText = GREGORIAN_MONTH_FORMATTER.format(date)
 
                     const lastOfPreviousMonth = new Date(year, month, 0)
 
@@ -279,7 +293,8 @@ background-color:#111;
                         lastDateOfCurrentMonth,
                         dayOfWeekOfFirstOfCurrent,
                         dayOfWeekOfFirstOfNext,
-                        maxBoxesPerPage: 42
+                        maxBoxesPerPage: 42,
+                        monthText,
                     };
                 },
                 linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
@@ -299,10 +314,11 @@ background-color:#111;
                     pageBounds() {
                         const date = this.date
 
+                        // TODO Calculate these properly for this calendar
                         const year = date.getUTCFullYear()
                         const month = date.getUTCMonth()
-                        // TODO Calculate this properly for this calendar
                         const dateOfMonth = date.getUTCDate()
+                        const monthText = GREGORIAN_MONTH_FORMATTER.format(date)
 
                         const lastDateOfPreviousMonth = 28
                         const dayOfWeekOfLastOfPrevious = 6
@@ -317,7 +333,8 @@ background-color:#111;
                             lastDateOfCurrentMonth,
                             dayOfWeekOfFirstOfCurrent,
                             dayOfWeekOfFirstOfNext,
-                            maxBoxesPerPage: 28
+                            maxBoxesPerPage: 28,
+                            monthText,
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
@@ -354,6 +371,17 @@ background-color:#111;
                 break
             }
         };
+
+        const applyCalendarSpecs = (parent, specs) => {
+            let newBoxes = ''
+            for (let i = 0; i < specs.length; i += 1) {
+                const {text, className, linkedTime} = specs[i]
+                newBoxes += `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
+                    ${text}
+                </div>`
+            }
+            parent.innerHTML = newBoxes
+        }
 
         const renderStep = () => {
             renderAt(new Date())
