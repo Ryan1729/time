@@ -107,6 +107,7 @@ background-color:#111;
             </div>
         </div>
     </div>
+    <script src="time.js"></script>
     <script>
         const DEBUG_MODE = location.protocol === "file:"
         if (DEBUG_MODE) {
@@ -181,86 +182,14 @@ background-color:#111;
             input.max = parseInt(input.max) + TIME_ROUND_TO
         };
 
-        const PREVIOUS = -1
-        const CURRENT = 0
-        const NEXT = 1
-
         const gregorianCalendarBoxes = document.getElementById("gregorian-calendar-boxes");
         const internationalFixedCalendarBoxes = document.getElementById("international-fixed-calendar-boxes");
-
-        const calculateCalendarSpecs = (boundsProvider) => {
-            const {
-                dateOfMonth,
-                lastDateOfPreviousMonth,
-                dayOfWeekOfLastOfPrevious,
-                lastDateOfCurrentMonth,
-                dayOfWeekOfFirstOfCurrent,
-                dayOfWeekOfFirstOfNext,
-                maxBoxesPerPage,
-                monthText,
-            } = boundsProvider.pageBounds()
-
-            let calendarBoxSpecs = new Array(maxBoxesPerPage)
-            let boxIndex = 0;
-
-            const firstVisibleDateOfPreviousMonth = lastDateOfPreviousMonth - dayOfWeekOfLastOfPrevious
-
-            const OTHER_MONTH_CLASS = "other-month"
-
-            for (let i = 0; i < dayOfWeekOfFirstOfCurrent; i += 1) {
-                const dayOfMonth = firstVisibleDateOfPreviousMonth + i
-                calendarBoxSpecs[boxIndex] = {
-                    text: dayOfMonth,
-                    className: OTHER_MONTH_CLASS,
-                    linkedTime: boundsProvider.linkedTimeFromDayOfMonth(PREVIOUS, dayOfMonth)
-                }
-                boxIndex += 1
-            }
-
-            for (let i = 1; i <= lastDateOfCurrentMonth; i += 1) {
-                let className
-                if (i === dateOfMonth) {
-                    className = "current-day"
-                } else {
-                    className = "current-month"
-                }
-
-                calendarBoxSpecs[boxIndex] = {
-                    text: i,
-                    className,
-                    linkedTime: boundsProvider.linkedTimeFromDayOfMonth(CURRENT, i)
-                }
-
-                boxIndex += 1
-            }
-
-            let nextMonthDate = 1
-            const DAYS_IN_WEEK = 7
-            for (
-                let i = dayOfWeekOfFirstOfNext;
-                i < DAYS_IN_WEEK && boxIndex < calendarBoxSpecs.length;
-                i += 1
-            ) {
-                calendarBoxSpecs[boxIndex] = {
-                    text: nextMonthDate,
-                    className: OTHER_MONTH_CLASS,
-                    linkedTime: boundsProvider.linkedTimeFromDayOfMonth(NEXT, i)
-                }
-
-                nextMonthDate += 1
-                boxIndex += 1
-            }
-
-            return calendarBoxSpecs.flat()
-        }
 
         const setFromTimeAndRender = (time) => {
             inputMode = PAUSED
             setFromTime(time)
             renderAt(new Date(time))
         }
-        
-        const GREGORIAN_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 
         const renderAt = (date) => {
             const time = date.getTime()
@@ -268,83 +197,12 @@ background-color:#111;
             raw.textContent = time.toLocaleString()
             utcString.textContent = date.toUTCString()
 
-            const gregorianBoundsProvider = {
-                date,
-                pageBounds() {
-                    const date = this.date
-
-                    const year = date.getUTCFullYear()
-                    const month = date.getUTCMonth()
-                    const dateOfMonth = date.getUTCDate()
-                    const monthText = GREGORIAN_MONTH_FORMATTER.format(date)
-
-                    const lastOfPreviousMonth = new Date(year, month, 0)
-
-                    const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
-                    const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
-                    const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
-                    const dayOfWeekOfFirstOfCurrent = new Date(year, month, 1).getUTCDay()
-                    const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
-
-                    return {
-                        dateOfMonth,
-                        lastDateOfPreviousMonth,
-                        dayOfWeekOfLastOfPrevious,
-                        lastDateOfCurrentMonth,
-                        dayOfWeekOfFirstOfCurrent,
-                        dayOfWeekOfFirstOfNext,
-                        maxBoxesPerPage: 42,
-                        monthText,
-                    };
-                },
-                linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                    const year = date.getUTCFullYear()
-                    const month = date.getUTCMonth() + monthDelta
-                    return new Date(year, month, dayOfMonth).getTime()
-                }
-            }
-
-            const gregorianCalendarBoxSpecs = calculateCalendarSpecs(gregorianBoundsProvider)
+            const gregorianCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.GREGORIAN, date)
 
             applyCalendarSpecs(gregorianCalendarBoxes, gregorianCalendarBoxSpecs)
 
             if (DEBUG_MODE) {
-                const internationalFixedBoundsProvider = {
-                    date,
-                    pageBounds() {
-                        const date = this.date
-
-                        // TODO Calculate these properly for this calendar
-                        const year = date.getUTCFullYear()
-                        const month = date.getUTCMonth()
-                        const dateOfMonth = date.getUTCDate()
-                        const monthText = GREGORIAN_MONTH_FORMATTER.format(date)
-
-                        const lastDateOfPreviousMonth = 28
-                        const dayOfWeekOfLastOfPrevious = 6
-                        const lastDateOfCurrentMonth = 28
-                        const dayOfWeekOfFirstOfCurrent = 0
-                        const dayOfWeekOfFirstOfNext = 0
-
-                        return {
-                            dateOfMonth,
-                            lastDateOfPreviousMonth,
-                            dayOfWeekOfLastOfPrevious,
-                            lastDateOfCurrentMonth,
-                            dayOfWeekOfFirstOfCurrent,
-                            dayOfWeekOfFirstOfNext,
-                            maxBoxesPerPage: 28,
-                            monthText,
-                        };
-                    },
-                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        const year = date.getUTCFullYear()
-                        const month = date.getUTCMonth() + monthDelta
-                        return new Date(year, month, dayOfMonth).getTime()
-                    }
-                }
-
-                const internationalFixedCalendarBoxSpecs = calculateCalendarSpecs(internationalFixedBoundsProvider)
+                const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
 
                 applyCalendarSpecs(internationalFixedCalendarBoxes, internationalFixedCalendarBoxSpecs)
             } else {
