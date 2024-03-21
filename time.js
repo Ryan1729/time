@@ -157,7 +157,10 @@ var Time = (function () {
             boxIndex += 1
         }
 
-        return calendarBoxSpecs.flat()
+        return {
+            monthText,
+            boxSpecs: calendarBoxSpecs.flat()
+        }
     }
 
     return {

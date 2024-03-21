@@ -75,7 +75,7 @@ background-color:#111;
             <output id="raw"></output>
             <output id="utc-string"></output>
             <div class="thin-border">
-                <div class="month-label"> January </div>
+                <div id="gregorian-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label" > Gregorian </div>
                 <div class="seven-columns thin-border-row">
                     <div> Sun </div>
@@ -91,7 +91,7 @@ background-color:#111;
             </div>
 
             <div class="thin-border">
-                <div class="month-label"> January </div>
+                <div id="international-fixed-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label"> International Fixed</div>
                 <div class="seven-columns thin-border-row">
                     <div> Sun </div>
@@ -182,8 +182,14 @@ background-color:#111;
             input.max = parseInt(input.max) + TIME_ROUND_TO
         };
 
-        const gregorianCalendarBoxes = document.getElementById("gregorian-calendar-boxes");
-        const internationalFixedCalendarBoxes = document.getElementById("international-fixed-calendar-boxes");
+        const gregorianCalendarElements = {
+            monthLabel: document.getElementById("gregorian-calendar-month"),
+            boxes: document.getElementById("gregorian-calendar-boxes"),
+        };
+        const internationalFixedCalendarElements = {
+            monthLabel: document.getElementById("international-fixed-calendar-month"),
+            boxes: document.getElementById("international-fixed-calendar-boxes"),
+        };
 
         const setFromTimeAndRender = (time) => {
             inputMode = PAUSED
@@ -197,14 +203,14 @@ background-color:#111;
             raw.textContent = time.toLocaleString()
             utcString.textContent = date.toUTCString()
 
-            const gregorianCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.GREGORIAN, date)
-
-            applyCalendarSpecs(gregorianCalendarBoxes, gregorianCalendarBoxSpecs)
+            const gregorianCalendarSpecs = Time.calculateCalendarSpecs(Time.GREGORIAN, date)
+            
+            applyCalendarSpecs(gregorianCalendarElements, gregorianCalendarSpecs)
 
             if (DEBUG_MODE) {
                 const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
 
-                applyCalendarSpecs(internationalFixedCalendarBoxes, internationalFixedCalendarBoxSpecs)
+                applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
             } else {
                 internationalFixedCalendarBoxes.parentElement.style.display = "none"
             }
@@ -230,15 +236,26 @@ background-color:#111;
             }
         };
 
-        const applyCalendarSpecs = (parent, specs) => {
+        const applyCalendarSpecs = (
+            {
+                monthLabel,
+                boxes,
+            }, 
+            {
+                monthText,
+                boxSpecs,
+            }
+        ) => {
+            monthLabel.innerHTML = monthText
+
             let newBoxes = ''
-            for (let i = 0; i < specs.length; i += 1) {
-                const {text, className, linkedTime} = specs[i]
+            for (let i = 0; i < boxSpecs.length; i += 1) {
+                const {text, className, linkedTime} = boxSpecs[i]
                 newBoxes += `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
                     ${text}
                 </div>`
             }
-            parent.innerHTML = newBoxes
+            boxes.innerHTML = newBoxes
         }
 
         const renderStep = () => {

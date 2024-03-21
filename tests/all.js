@@ -16,11 +16,22 @@ let allTests = []
 const it = (test) => allTests.push(test)
 const skipit = (test) => {}
 
+// test helper
+const range = (start, end) => {
+    let output = []
+    let i = 0
+    for (let current = start; current < end; current += 1) {
+        output[i] = current
+        i += 1;
+    }
+    return output
+}
+
 // tests
 it(() => {
     const date = new Date(1700000000000)
     for (let kind = Time.GREGORIAN; kind < Time.CALENDAR_KIND_COUNT; kind += 1) {
-        const specs = Time.calculateCalendarSpecs(kind, date)
+        const {boxSpecs: specs} = Time.calculateCalendarSpecs(kind, date)
         // We mostly care that we got here without throwing an error
         // but if we can think of better asserts that are easy to write
         // then we shoudl write them!
