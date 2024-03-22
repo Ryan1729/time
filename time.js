@@ -63,7 +63,53 @@ var Time = (function () {
                         const year = date.getUTCFullYear()
                         const month = date.getUTCMonth()
                         const dateOfMonth = date.getUTCDate()
-                        const monthText = GREGORIAN_MONTH_FORMATTER.format(date)
+
+                        let monthText
+                        switch (internationalFixed0IndexedMonth(date)) {
+                            default:
+                                // TODO handle year day and leap day
+                                console.error("Unknown Month for: " + getDayOfYear(date))
+                                // fallthrough
+                            case 0:
+                                monthText = "January"
+                            break
+                            case 1:
+                                monthText = "February"
+                            break
+                            case 2:
+                                monthText = "March"
+                            break
+                            case 3:
+                                monthText = "April"
+                            break
+                            case 4:
+                                monthText = "May"
+                            break
+                            case 5:
+                                monthText = "June"
+                            break
+                            case 6:
+                                monthText = "Sol"
+                            break
+                            case 7:
+                                monthText = "July"
+                            break
+                            case 8:
+                                monthText = "August"
+                            break
+                            case 9:
+                                monthText = "September"
+                            break
+                            case 10:
+                                monthText = "October"
+                            break
+                            case 11:
+                                monthText = "November"
+                            break
+                            case 12:
+                                monthText = "December"
+                            break
+                        }
 
                         const lastDateOfPreviousMonth = 28
                         const dayOfWeekOfLastOfPrevious = 6
@@ -90,10 +136,26 @@ var Time = (function () {
                 }
             break
         }
-        
+
         return calculateCalendarSpecsInner(boundsProvider)
     }
-        
+
+    const get0IndexedDayOfYear = (date) => {
+        const startOfYear = new Date(0);
+        startOfYear.setUTCFullYear(date.getUTCFullYear())
+
+        return Math.floor(
+            (
+                date.getTime()
+                - startOfYear.getTime()
+            ) / (24 * 60 * 60 * 1000)
+        )
+    }
+
+    const internationalFixed0IndexedMonth = (date) => {
+        return Math.floor(get0IndexedDayOfYear(date) / 28)
+    }
+
     const calculateCalendarSpecsInner = (boundsProvider) => {
         const {
             dateOfMonth,
@@ -168,5 +230,7 @@ var Time = (function () {
         GREGORIAN,
         INTERNATIONAL_FIXED,
         CALENDAR_KIND_COUNT,
+        internationalFixed0IndexedMonth,
+        get0IndexedDayOfYear,
     }
 }())

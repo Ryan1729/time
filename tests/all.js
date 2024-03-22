@@ -39,6 +39,54 @@ it(() => {
     }
 })
 
+it(() => {
+    const expected = range(0, 365)
+    for (let i = 0; i < expected.length; i += 1) {
+        const actual = Time.get0IndexedDayOfYear(new Date(1970, 0, 1 + i))
+        assert(actual === expected[i], "day of year did not match: " + actual + " != " + expected[i])
+    }
+})
+
+it(() => {
+    const expected = range(0, 366)
+    for (let i = 0; i < expected.length; i += 1) {
+        const actual = Time.get0IndexedDayOfYear(new Date(2000, 0, 1 + i))
+        assert(actual === expected[i], "day of year number did not match in leap year: " + actual + " != " + expected[i])
+    }
+})
+
+it(() => {
+    const expected = range(0, 13)
+    for (let i = 0; i < expected.length; i += 1) {
+        const actual = Time.internationalFixed0IndexedMonth(new Date(1970, 0, 1 + (i * 28)))
+        assert(actual === expected[i], "month number did not match: " + actual + " != " + expected[i])
+    }
+})
+
+it(() => {
+    const jan29G = new Date(1970, 0, 29)
+    const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, jan29G)
+
+    assert(monthText == "February", "monthText did not match: " + monthText + " != February")
+
+    const expected = range(1, 28 + 1)
+    for (let i = 0; i < expected.length; i += 1) {
+        assert(specs[i].text == expected[i], "text did not match")
+    }
+})
+
+it(() => {
+    const june18G = new Date(1970, 5, 18)
+    const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, june18G)
+
+    assert(monthText == "Sol", "monthText did not match: " + monthText + " != Sol")
+
+    const expected = range(1, 28 + 1)
+    for (let i = 0; i < expected.length; i += 1) {
+        assert(specs[i].text == expected[i], "text did not match")
+    }
+})
+
 // test runner
 for (const test of allTests) {
     test()
