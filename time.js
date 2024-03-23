@@ -25,14 +25,17 @@ var Time = (function () {
                         const year = date.getUTCFullYear()
                         const month = date.getUTCMonth()
                         const dateOfMonth = date.getUTCDate()
-                        const monthText = GREGORIAN_MONTH_FORMATTER.format(date)
+
+                        const firstOfCurrentMonth = new Date(year, month, 1)
+                        // Using just date has timezone issues.
+                        const monthText = GREGORIAN_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
                         const lastOfPreviousMonth = new Date(year, month, 0)
 
                         const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
                         const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
                         const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
-                        const dayOfWeekOfFirstOfCurrent = new Date(year, month, 1).getUTCDay()
+                        const dayOfWeekOfFirstOfCurrent = firstOfCurrentMonth.getUTCDay()
                         const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
 
                         return {
@@ -62,13 +65,16 @@ var Time = (function () {
                         // TODO Calculate these properly for this calendar
                         const year = date.getUTCFullYear()
                         const month = date.getUTCMonth()
-                        const dateOfMonth = date.getUTCDate()
+                        const dayOfYear = get0IndexedDayOfYear(date)
+
+                        // TODO handle leap day
+                        const dateOfMonth = (dayOfYear % 28) + 1
 
                         let monthText
                         switch (internationalFixed0IndexedMonth(date)) {
                             default:
                                 // TODO handle year day and leap day
-                                console.error("Unknown Month for: " + getDayOfYear(date))
+                                console.error("Unknown Month for: " + dayOfYear)
                                 // fallthrough
                             case 0:
                                 monthText = "January"
