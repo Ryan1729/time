@@ -11,6 +11,11 @@ var Time = (function () {
     const CURRENT = 0
     const NEXT = 1
 
+    const DAYS_IN_WEEK = 7
+
+    const IFC_NORMAL_DAYS_PER_MONTH = 28
+
+
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
         switch (kind) {
@@ -27,7 +32,7 @@ var Time = (function () {
                         const dateOfMonth = date.getUTCDate()
 
                         const firstOfCurrentMonth = new Date(year, month, 1)
-                        // Using just date has timezone issues.
+                        // Using just `date` instead of firstOfCurrentMonth has timezone issues.
                         const monthText = GREGORIAN_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
                         const lastOfPreviousMonth = new Date(year, month, 0)
@@ -64,14 +69,24 @@ var Time = (function () {
 
                         // TODO Calculate these properly for this calendar
                         const year = date.getUTCFullYear()
-                        const month = date.getUTCMonth()
                         const dayOfYear = get0IndexedDayOfYear(date)
 
-                        // TODO handle leap day
-                        const dateOfMonth = (dayOfYear % 28) + 1
+                        const isLeap = isGregorianLeapYear(year)
+
+                        const ZERO_INDEXED_LEAP_DAY_OF_YEAR = (6 * IFC_NORMAL_DAYS_PER_MONTH)
+
+                        const leapOffset = (isLeap && dayOfYear >= ZERO_INDEXED_LEAP_DAY_OF_YEAR)
+                            ? 1
+                            : 0
+                        const dateOfMonth = (dayOfYear % IFC_NORMAL_DAYS_PER_MONTH) + 1 + leapOffset
+
+                        const zeroIndexedMonthNumber = Math.floor((dayOfYear - leapOffset) / IFC_NORMAL_DAYS_PER_MONTH)
+
+                        const ZERO_INDEXED_LEAP_MONTH = 5
+                        const ZERO_INDEXED_YEAR_DAY_MONTH = 13
 
                         let monthText
-                        switch (internationalFixed0IndexedMonth(date)) {
+                        switch (zeroIndexedMonthNumber) {
                             default:
                                 // TODO handle year day and leap day
                                 console.error("Unknown Month for: " + dayOfYear)
@@ -91,7 +106,7 @@ var Time = (function () {
                             case 4:
                                 monthText = "May"
                             break
-                            case 5:
+                            case ZERO_INDEXED_LEAP_MONTH:
                                 monthText = "June"
                             break
                             case 6:
@@ -115,13 +130,32 @@ var Time = (function () {
                             case 12:
                                 monthText = "December"
                             break
+                            case ZERO_INDEXED_YEAR_DAY_MONTH:
+                                monthText = "Year Day"
+                            break
                         }
 
-                        const lastDateOfPreviousMonth = 28
+                        const lastDateOfPreviousMonth =
+                            zeroIndexedMonthNumber === (ZERO_INDEXED_LEAP_MONTH + 1)
+                            ? IFC_NORMAL_DAYS_PER_MONTH + 1
+                            : IFC_NORMAL_DAYS_PER_MONTH
+                        // Always start the months on a sunday, even if
+                        // there was a leap day.
                         const dayOfWeekOfLastOfPrevious = 6
-                        const lastDateOfCurrentMonth = 28
+                        const lastDateOfCurrentMonth =
+                            // TODO pass back a signal to hide the week row for year day
+                            zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
+                                ? 1
+                                // TODO pass back a signal to place leap day outside of a week
+                                : zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH
+                                    ? IFC_NORMAL_DAYS_PER_MONTH + 1
+                                    : IFC_NORMAL_DAYS_PER_MONTH
+
+
                         const dayOfWeekOfFirstOfCurrent = 0
-                        const dayOfWeekOfFirstOfNext = 0
+                        // Set to after DAYS in week to preventloop.
+                        // TODO signal in a less coupled way
+                        const dayOfWeekOfFirstOfNext = DAYS_IN_WEEK + 1
 
                         return {
                             dateOfMonth,
@@ -130,7 +164,7 @@ var Time = (function () {
                             lastDateOfCurrentMonth,
                             dayOfWeekOfFirstOfCurrent,
                             dayOfWeekOfFirstOfNext,
-                            maxBoxesPerPage: 28,
+                            maxBoxesPerPage: IFC_NORMAL_DAYS_PER_MONTH,
                             monthText,
                         };
                     },
@@ -146,6 +180,37 @@ var Time = (function () {
         return calculateCalendarSpecsInner(boundsProvider)
     }
 
+    const isGregorianLeapYear = (year) => {
+        // The rule is, it is a leap year if it is a multiple of 4,
+        // and not a multiple 100, unless it is a multiple of 400,
+        // in which case it is a leap year.
+
+        // ANDing by only less than a power of two produces 0 for
+        // multiples of the given power of two and a non zero number
+        // otherwise
+
+        // Not a multple of 4, definitely not a leap year.
+        if (year & 3) {
+            return false
+        }
+
+        // 100 is 4 * 25.
+        // Multiple of 100. Leap year only if a multiple of 400
+        if (year % 25 === 0) {
+            // 400 is 16 * 25.
+            if (year & 15) {
+                // Not a multiple of 400; non-leap year.
+                return false
+            } else {
+                // Is a multiple of 400; leap year.
+                return true
+            }
+        }
+
+        // Not a multiple of 100; leap year.
+        return true
+    };
+
     const get0IndexedDayOfYear = (date) => {
         const startOfYear = new Date(0);
         startOfYear.setUTCFullYear(date.getUTCFullYear())
@@ -159,7 +224,7 @@ var Time = (function () {
     }
 
     const internationalFixed0IndexedMonth = (date) => {
-        return Math.floor(get0IndexedDayOfYear(date) / 28)
+        return Math.floor(get0IndexedDayOfYear(date) / IFC_NORMAL_DAYS_PER_MONTH)
     }
 
     const calculateCalendarSpecsInner = (boundsProvider) => {
@@ -209,7 +274,6 @@ var Time = (function () {
         }
 
         let nextMonthDate = 1
-        const DAYS_IN_WEEK = 7
         for (
             let i = dayOfWeekOfFirstOfNext;
             i < DAYS_IN_WEEK && boxIndex < calendarBoxSpecs.length;
