@@ -56,14 +56,6 @@ it(() => {
 })
 
 it(() => {
-    const expected = range(0, 13)
-    for (let i = 0; i < expected.length; i += 1) {
-        const actual = Time.internationalFixed0IndexedMonth(new Date(1970, 0, 1 + (i * 28)))
-        assert(actual === expected[i], "month number did not match: " + actual + " != " + expected[i])
-    }
-})
-
-it(() => {
     const jan29G = new Date(1970, 0, 29)
     const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, jan29G)
 

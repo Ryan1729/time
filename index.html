@@ -250,7 +250,24 @@ background-color:#111;
 
             let newBoxes = ''
             for (let i = 0; i < boxSpecs.length; i += 1) {
-                const {text, className, linkedTime} = boxSpecs[i]
+                const {text, kind, linkedTime} = boxSpecs[i]
+                
+                let className;
+                switch (kind) {
+                    default:
+                        console.error("No classname for spec kind: " + kind)
+                        // fallthrough
+                    case Time.OTHER_MONTH:
+                        className = "other-month"
+                    break
+                    case Time.CURRENT_MONTH:
+                        className = "current-month"
+                    break
+                    case Time.CURRENT_DAY:
+                        className = "current-day"
+                    break
+                }
+                
                 newBoxes += `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
                     ${text}
                 </div>`

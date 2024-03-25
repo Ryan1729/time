@@ -144,9 +144,12 @@ var Time = (function () {
                         const dayOfWeekOfLastOfPrevious = 6
                         const lastDateOfCurrentMonth =
                             // TODO pass back a signal to hide the week row for year day
+                            // Do other calendars not have weeks, so we set the boolean properly?
+                            // Or maybe it can be an enum for extras. Yeah do that
                             zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
                                 ? 1
                                 // TODO pass back a signal to place leap day outside of a week
+                                // 
                                 : zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH
                                     ? IFC_NORMAL_DAYS_PER_MONTH + 1
                                     : IFC_NORMAL_DAYS_PER_MONTH
@@ -222,10 +225,10 @@ var Time = (function () {
             ) / (24 * 60 * 60 * 1000)
         )
     }
-
-    const internationalFixed0IndexedMonth = (date) => {
-        return Math.floor(get0IndexedDayOfYear(date) / IFC_NORMAL_DAYS_PER_MONTH)
-    }
+    
+    const OTHER_MONTH = 0
+    const CURRENT_MONTH = 1
+    const CURRENT_DAY = 2
 
     const calculateCalendarSpecsInner = (boundsProvider) => {
         const {
@@ -244,29 +247,27 @@ var Time = (function () {
 
         const firstVisibleDateOfPreviousMonth = lastDateOfPreviousMonth - dayOfWeekOfLastOfPrevious
 
-        const OTHER_MONTH_CLASS = "other-month"
-
         for (let i = 0; i < dayOfWeekOfFirstOfCurrent; i += 1) {
             const dayOfMonth = firstVisibleDateOfPreviousMonth + i
             calendarBoxSpecs[boxIndex] = {
                 text: dayOfMonth,
-                className: OTHER_MONTH_CLASS,
+                kind: OTHER_MONTH,
                 linkedTime: boundsProvider.linkedTimeFromDayOfMonth(PREVIOUS, dayOfMonth)
             }
             boxIndex += 1
         }
 
         for (let i = 1; i <= lastDateOfCurrentMonth; i += 1) {
-            let className
+            let kind
             if (i === dateOfMonth) {
-                className = "current-day"
+                kind = CURRENT_DAY
             } else {
-                className = "current-month"
+                kind = CURRENT_MONTH
             }
 
             calendarBoxSpecs[boxIndex] = {
                 text: i,
-                className,
+                kind,
                 linkedTime: boundsProvider.linkedTimeFromDayOfMonth(CURRENT, i)
             }
 
@@ -281,7 +282,7 @@ var Time = (function () {
         ) {
             calendarBoxSpecs[boxIndex] = {
                 text: nextMonthDate,
-                className: OTHER_MONTH_CLASS,
+                kind: OTHER_MONTH,
                 linkedTime: boundsProvider.linkedTimeFromDayOfMonth(NEXT, i)
             }
 
@@ -300,7 +301,9 @@ var Time = (function () {
         GREGORIAN,
         INTERNATIONAL_FIXED,
         CALENDAR_KIND_COUNT,
-        internationalFixed0IndexedMonth,
         get0IndexedDayOfYear,
+        OTHER_MONTH,
+        CURRENT_MONTH,
+        CURRENT_DAY,
     }
 }())
