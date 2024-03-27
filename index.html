@@ -51,6 +51,9 @@ background-color:#111;
     font-size: 21px;
     font-weight: 700;
 }
+.center-text {
+    text-align: center
+}
 .calendar-type-label {
     text-align: right;
     font-size: 12px;
@@ -77,7 +80,7 @@ background-color:#111;
             <div class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label" > Gregorian </div>
-                <div class="seven-columns thin-border-row">
+                <div id="gregorian-calendar-week-labels" class="seven-columns thin-border-row">
                     <div> Sun </div>
                     <div> Mon </div>
                     <div> Tue </div>
@@ -88,12 +91,16 @@ background-color:#111;
                 </div>
                 <div id="gregorian-calendar-boxes" class="seven-columns">
                 </div>
+                <div id="gregorian-calendar-extra-label" class="thin-border-row center-text" style="display: none">
+                </div>
+                <div id="gregorian-calendar-extra-boxes" class="seven-columns" style="display: none">
+                </div>
             </div>
 
             <div class="thin-border">
                 <div id="international-fixed-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label"> International Fixed</div>
-                <div class="seven-columns thin-border-row">
+                <div id="international-fixed-calendar-week-labels" class="seven-columns thin-border-row">
                     <div> Sun </div>
                     <div> Mon </div>
                     <div> Tue </div>
@@ -103,6 +110,10 @@ background-color:#111;
                     <div> Sat </div>
                 </div>
                 <div id="international-fixed-calendar-boxes" class="seven-columns">
+                </div>
+                <div id="international-fixed-calendar-extra-label" class="thin-border-row center-text" style="display: none">
+                </div>
+                <div id="international-fixed-calendar-extra-boxes" class="seven-columns" style="display: none">
                 </div>
             </div>
         </div>
@@ -184,11 +195,17 @@ background-color:#111;
 
         const gregorianCalendarElements = {
             monthLabel: document.getElementById("gregorian-calendar-month"),
+            weekLabels: document.getElementById("gregorian-calendar-week-labels"),
             boxes: document.getElementById("gregorian-calendar-boxes"),
+            extraBoxesLabel: document.getElementById("gregorian-calendar-extra-label"),
+            extraBoxes: document.getElementById("gregorian-calendar-extra-boxes"),
         };
         const internationalFixedCalendarElements = {
             monthLabel: document.getElementById("international-fixed-calendar-month"),
+            weekLabels: document.getElementById("international-fixed-calendar-week-labels"),
             boxes: document.getElementById("international-fixed-calendar-boxes"),
+            extraBoxesLabel: document.getElementById("international-fixed-calendar-extra-label"),
+            extraBoxes: document.getElementById("international-fixed-calendar-extra-boxes"),
         };
 
         const setFromTimeAndRender = (time) => {
@@ -239,20 +256,47 @@ background-color:#111;
         const applyCalendarSpecs = (
             {
                 monthLabel,
+                weekLabel,
                 boxes,
+                extraBoxesLabel,
+                extraBoxes,
             },
             {
                 monthText,
                 boxSpecs,
+                appearance,
             }
         ) => {
             monthLabel.innerHTML = monthText
 
+            if (appearance === Time.HIDE_WEEK_ROW) {
+                weekLabel.style.display = "none"
+            }
+
+            let len = boxSpecs.length
+            if (appearance === Time.LAST_DAY_OUTSIDE_WEEK) {
+                len -= 1
+            }
+
             let newBoxes = ''
-            for (let i = 0; i < boxSpecs.length; i += 1) {
-                const {text, kind, linkedTime} = boxSpecs[i]
-                
-                let className;
+            for (let i = 0; i < len; i += 1) {
+                newBoxes += boxHtml(boxSpecs[i])
+            }
+            boxes.innerHTML = newBoxes
+
+            if (appearance === Time.LAST_DAY_OUTSIDE_WEEK) {
+                console.log("Time.LAST_DAY_OUTSIDE_WEEK")
+                extraBoxesLabel.style.display = "block"
+                extraBoxesLabel.textContent = "No Week Day"
+                extraBoxes.style.display = "block"
+                extraBoxes.innerHTML = boxHtml(boxSpecs[boxSpecs.length - 1])
+            }
+        }
+
+        const boxHtml = (
+            {text, kind, linkedTime}
+        ) => {
+            let className;
                 switch (kind) {
                     default:
                         console.error("No classname for spec kind: " + kind)
@@ -267,13 +311,12 @@ background-color:#111;
                         className = "current-day"
                     break
                 }
-                
-                newBoxes += `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
-                    ${text}
-                </div>`
-            }
-            boxes.innerHTML = newBoxes
+
+            return `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
+                ${text}
+            </div>`
         }
+
 
         const renderStep = () => {
             renderAt(new Date())

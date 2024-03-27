@@ -15,6 +15,9 @@ var Time = (function () {
 
     const IFC_NORMAL_DAYS_PER_MONTH = 28
 
+    const DEFAULT_APPEARANCE = 0
+    const HIDE_WEEK_ROW = 1
+    const LAST_DAY_OUTSIDE_WEEK = 2
 
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
@@ -52,6 +55,7 @@ var Time = (function () {
                             dayOfWeekOfFirstOfNext,
                             maxBoxesPerPage: 42,
                             monthText,
+                            appearance: DEFAULT_APPEARANCE,
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
@@ -154,6 +158,14 @@ var Time = (function () {
                                     ? IFC_NORMAL_DAYS_PER_MONTH + 1
                                     : IFC_NORMAL_DAYS_PER_MONTH
 
+                        const appearance =
+                            zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
+                                ? HIDE_WEEK_ROW
+                                // TODO pass back a signal to place leap day outside of a week
+                                // 
+                                : zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH
+                                    ? LAST_DAY_OUTSIDE_WEEK
+                                    : DEFAULT_APPEARANCE
 
                         const dayOfWeekOfFirstOfCurrent = 0
                         // Set to after DAYS in week to preventloop.
@@ -169,6 +181,7 @@ var Time = (function () {
                             dayOfWeekOfFirstOfNext,
                             maxBoxesPerPage: IFC_NORMAL_DAYS_PER_MONTH,
                             monthText,
+                            appearance,
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
@@ -240,6 +253,7 @@ var Time = (function () {
             dayOfWeekOfFirstOfNext,
             maxBoxesPerPage,
             monthText,
+            appearance,
         } = boundsProvider.pageBounds()
 
         let calendarBoxSpecs = new Array(maxBoxesPerPage)
@@ -292,7 +306,8 @@ var Time = (function () {
 
         return {
             monthText,
-            boxSpecs: calendarBoxSpecs.flat()
+            boxSpecs: calendarBoxSpecs.flat(),
+            appearance,
         }
     }
 
@@ -305,5 +320,9 @@ var Time = (function () {
         OTHER_MONTH,
         CURRENT_MONTH,
         CURRENT_DAY,
+        //
+        DEFAULT_APPEARANCE,
+        HIDE_WEEK_ROW,
+        LAST_DAY_OUTSIDE_WEEK,
     }
 }())
