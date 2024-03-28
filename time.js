@@ -82,7 +82,10 @@ var Time = (function () {
                         const leapOffset = (isLeap && dayOfYear >= ZERO_INDEXED_LEAP_DAY_OF_YEAR)
                             ? 1
                             : 0
-                        const dateOfMonth = (dayOfYear % IFC_NORMAL_DAYS_PER_MONTH) + 1 + leapOffset
+                        const dateOfMonth =
+                            dayOfYear === ZERO_INDEXED_LEAP_DAY_OF_YEAR
+                            ? IFC_NORMAL_DAYS_PER_MONTH + 1
+                            : (dayOfYear % IFC_NORMAL_DAYS_PER_MONTH) + 1 + leapOffset
 
                         const zeroIndexedMonthNumber = Math.floor((dayOfYear - leapOffset) / IFC_NORMAL_DAYS_PER_MONTH)
 
@@ -147,13 +150,8 @@ var Time = (function () {
                         // there was a leap day.
                         const dayOfWeekOfLastOfPrevious = 6
                         const lastDateOfCurrentMonth =
-                            // TODO pass back a signal to hide the week row for year day
-                            // Do other calendars not have weeks, so we set the boolean properly?
-                            // Or maybe it can be an enum for extras. Yeah do that
                             zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
                                 ? 1
-                                // TODO pass back a signal to place leap day outside of a week
-                                // 
                                 : zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH
                                     ? IFC_NORMAL_DAYS_PER_MONTH + 1
                                     : IFC_NORMAL_DAYS_PER_MONTH
@@ -161,8 +159,6 @@ var Time = (function () {
                         const appearance =
                             zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
                                 ? HIDE_WEEK_ROW
-                                // TODO pass back a signal to place leap day outside of a week
-                                // 
                                 : zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH
                                     ? LAST_DAY_OUTSIDE_WEEK
                                     : DEFAULT_APPEARANCE
@@ -179,12 +175,13 @@ var Time = (function () {
                             lastDateOfCurrentMonth,
                             dayOfWeekOfFirstOfCurrent,
                             dayOfWeekOfFirstOfNext,
-                            maxBoxesPerPage: IFC_NORMAL_DAYS_PER_MONTH,
+                            maxBoxesPerPage: lastDateOfCurrentMonth,
                             monthText,
                             appearance,
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
+                        // TODO calcualte correctly for this provider
                         const year = date.getUTCFullYear()
                         const month = date.getUTCMonth() + monthDelta
                         return new Date(year, month, dayOfMonth).getTime()
@@ -238,7 +235,7 @@ var Time = (function () {
             ) / (24 * 60 * 60 * 1000)
         )
     }
-    
+
     const OTHER_MONTH = 0
     const CURRENT_MONTH = 1
     const CURRENT_DAY = 2

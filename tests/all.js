@@ -59,7 +59,7 @@ it(() => {
     const jan29G = new Date(1970, 0, 29)
     const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, jan29G)
 
-    assert(monthText == "February", "monthText did not match: " + monthText + " != February")
+    assert(monthText === "February", "monthText did not match: " + monthText + " != February")
 
     const expected = range(1, 28 + 1)
     for (let i = 0; i < expected.length; i += 1) {
@@ -71,9 +71,22 @@ it(() => {
     const june18G = new Date(1970, 5, 18)
     const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, june18G)
 
-    assert(monthText == "Sol", "monthText did not match: " + monthText + " != Sol")
+    assert(monthText === "Sol", "monthText did not match: " + monthText + " != Sol")
 
     const expected = range(1, 28 + 1)
+    for (let i = 0; i < expected.length; i += 1) {
+        assert(specs[i].text == expected[i], "text did not match")
+    }
+})
+
+it(() => {
+    // 1972 is a leap year
+    const june18G = new Date(1972, 5, 18)
+    const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, june18G)
+
+    assert(monthText === "June", "monthText did not match: " + monthText + " != June")
+
+    const expected = range(1, 29 + 1)
     for (let i = 0; i < expected.length; i += 1) {
         assert(specs[i].text == expected[i], "text did not match")
     }
