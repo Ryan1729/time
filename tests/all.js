@@ -68,7 +68,12 @@ it(() => {
 })
 
 it(() => {
+    // 1970 is not a leap year
     const june18G = new Date(1970, 5, 18)
+
+    const dayOfYear = Time.get0IndexedDayOfYear(june18G)
+    assert(dayOfYear === Time.IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR, "dayOfYear did not match: " + dayOfYear + " != " + Time.IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR)
+
     const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, june18G)
 
     assert(monthText === "Sol", "monthText did not match: " + monthText + " != Sol")
@@ -81,14 +86,39 @@ it(() => {
 
 it(() => {
     // 1972 is a leap year
-    const june18G = new Date(1972, 5, 18)
-    const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, june18G)
+    const june17G = new Date(1972, 5, 17)
+
+    const dayOfYear = Time.get0IndexedDayOfYear(june17G)
+    assert(dayOfYear === Time.IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR, "dayOfYear did not match: " + dayOfYear + " != " + Time.IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR)
+
+    const {boxSpecs: specs, monthText} = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, june17G)
 
     assert(monthText === "June", "monthText did not match: " + monthText + " != June")
 
     const expected = range(1, 29 + 1)
     for (let i = 0; i < expected.length; i += 1) {
-        assert(specs[i].text == expected[i], "text did not match")
+        assert(specs[i].text === expected[i], "text did not match")
+    }
+})
+
+it(() => {
+    const allExpected = [
+        [0,  28,  56,  84, 112, 140, 168, 196, 224, 252, 280, 308, 336, 364],
+        [0,  28,  56,  84, 112, 141, 169, 197, 225, 253, 281, 309, 337, 365],
+    ]
+
+    // 1972 is a leap year
+    for (let year = 1971; year <= 1972; year += 1) {
+        const expected = allExpected[year - 1971]
+
+        for (let zeroIndexedMonthNumber = 0; zeroIndexedMonthNumber <= 13; zeroIndexedMonthNumber += 1) {
+            const zeroIndexedFirstDayOfYearInMonth = Time.ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
+                zeroIndexedMonthNumber,
+                year,
+            })
+
+            assert(zeroIndexedFirstDayOfYearInMonth === expected[zeroIndexedMonthNumber], "zeroIndexedFirstDayOfYearInMonth did not match: " + zeroIndexedFirstDayOfYearInMonth + " != " + expected[zeroIndexedMonthNumber])
+        }
     }
 })
 

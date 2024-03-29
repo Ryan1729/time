@@ -14,10 +14,13 @@ var Time = (function () {
     const DAYS_IN_WEEK = 7
 
     const IFC_NORMAL_DAYS_PER_MONTH = 28
+    const IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR = (6 * IFC_NORMAL_DAYS_PER_MONTH)
 
     const DEFAULT_APPEARANCE = 0
     const HIDE_WEEK_ROW = 1
     const LAST_DAY_OUTSIDE_WEEK = 2
+
+    const DAY_IN_MILLIS = 24 * 60 * 60 * 1000
 
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
@@ -32,7 +35,7 @@ var Time = (function () {
 
                         const year = date.getUTCFullYear()
                         const month = date.getUTCMonth()
-                        const dateOfMonth = date.getUTCDate()
+                        const dayOfMonth = date.getUTCDate()
 
                         const firstOfCurrentMonth = new Date(year, month, 1)
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
@@ -47,7 +50,7 @@ var Time = (function () {
                         const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
 
                         return {
-                            dateOfMonth,
+                            dayOfMonth,
                             lastDateOfPreviousMonth,
                             dayOfWeekOfLastOfPrevious,
                             lastDateOfCurrentMonth,
@@ -71,23 +74,10 @@ var Time = (function () {
                     pageBounds() {
                         const date = this.date
 
-                        // TODO Calculate these properly for this calendar
-                        const year = date.getUTCFullYear()
-                        const dayOfYear = get0IndexedDayOfYear(date)
-
-                        const isLeap = isGregorianLeapYear(year)
-
-                        const ZERO_INDEXED_LEAP_DAY_OF_YEAR = (6 * IFC_NORMAL_DAYS_PER_MONTH)
-
-                        const leapOffset = (isLeap && dayOfYear >= ZERO_INDEXED_LEAP_DAY_OF_YEAR)
-                            ? 1
-                            : 0
-                        const dateOfMonth =
-                            dayOfYear === ZERO_INDEXED_LEAP_DAY_OF_YEAR
-                            ? IFC_NORMAL_DAYS_PER_MONTH + 1
-                            : (dayOfYear % IFC_NORMAL_DAYS_PER_MONTH) + 1 + leapOffset
-
-                        const zeroIndexedMonthNumber = Math.floor((dayOfYear - leapOffset) / IFC_NORMAL_DAYS_PER_MONTH)
+                        const {
+                            zeroIndexedMonthNumber,
+                            dayOfMonth,
+                        } = ifcZeroIndexedMonthAndDay(date)
 
                         const ZERO_INDEXED_LEAP_MONTH = 5
                         const ZERO_INDEXED_YEAR_DAY_MONTH = 13
@@ -169,7 +159,7 @@ var Time = (function () {
                         const dayOfWeekOfFirstOfNext = DAYS_IN_WEEK + 1
 
                         return {
-                            dateOfMonth,
+                            dayOfMonth,
                             lastDateOfPreviousMonth,
                             dayOfWeekOfLastOfPrevious,
                             lastDateOfCurrentMonth,
@@ -181,10 +171,25 @@ var Time = (function () {
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        // TODO calcualte correctly for this provider
-                        const year = date.getUTCFullYear()
-                        const month = date.getUTCMonth() + monthDelta
-                        return new Date(year, month, dayOfMonth).getTime()
+                        const year = this.date.getUTCFullYear()
+
+                        const {
+                            zeroIndexedMonthNumber,
+                        } = ifcZeroIndexedMonthAndDay(this.date)
+
+                        // month to first day of year in that month seems complicated but well defined enough to test
+
+                        const firstDayOfYearInMonth = ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
+                            zeroIndexedMonthNumber,
+                            year,
+                        })
+
+                        const targetDayOfYear = firstDayOfYearInMonth + (dayOfMonth - 1)
+
+                        const startOfYear = new Date(0);
+                        startOfYear.setUTCFullYear(year)
+
+                        return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
                     }
                 }
             break
@@ -232,8 +237,38 @@ var Time = (function () {
             (
                 date.getTime()
                 - startOfYear.getTime()
-            ) / (24 * 60 * 60 * 1000)
+            ) / DAY_IN_MILLIS
         )
+    }
+
+    const ifcZeroIndexedMonthAndDay = (date) => {
+        const year = date.getUTCFullYear()
+        const dayOfYear = get0IndexedDayOfYear(date)
+
+        const isLeap = isGregorianLeapYear(year)
+
+        const leapOffset = (isLeap && dayOfYear >= IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR)
+            ? 1
+            : 0
+        const dayOfMonth =
+            dayOfYear === IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR
+            ? IFC_NORMAL_DAYS_PER_MONTH + 1
+            : (dayOfYear % IFC_NORMAL_DAYS_PER_MONTH) + 1 + leapOffset
+
+        return {
+            zeroIndexedMonthNumber: Math.floor((dayOfYear - leapOffset) / IFC_NORMAL_DAYS_PER_MONTH),
+            dayOfMonth,
+        }
+    }
+
+    const ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth = ({
+        zeroIndexedMonthNumber,
+        year,
+    }) => {
+        const isLeap = isGregorianLeapYear(year)
+
+        // TODO impl
+        return 0
     }
 
     const OTHER_MONTH = 0
@@ -242,7 +277,7 @@ var Time = (function () {
 
     const calculateCalendarSpecsInner = (boundsProvider) => {
         const {
-            dateOfMonth,
+            dayOfMonth,
             lastDateOfPreviousMonth,
             dayOfWeekOfLastOfPrevious,
             lastDateOfCurrentMonth,
@@ -259,18 +294,18 @@ var Time = (function () {
         const firstVisibleDateOfPreviousMonth = lastDateOfPreviousMonth - dayOfWeekOfLastOfPrevious
 
         for (let i = 0; i < dayOfWeekOfFirstOfCurrent; i += 1) {
-            const dayOfMonth = firstVisibleDateOfPreviousMonth + i
+            const firstVisibleDayOfMonth = firstVisibleDateOfPreviousMonth + i
             calendarBoxSpecs[boxIndex] = {
-                text: dayOfMonth,
+                text: firstVisibleDayOfMonth,
                 kind: OTHER_MONTH,
-                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(PREVIOUS, dayOfMonth)
+                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(PREVIOUS, firstVisibleDayOfMonth)
             }
             boxIndex += 1
         }
 
         for (let i = 1; i <= lastDateOfCurrentMonth; i += 1) {
             let kind
-            if (i === dateOfMonth) {
+            if (i === dayOfMonth) {
                 kind = CURRENT_DAY
             } else {
                 kind = CURRENT_MONTH
@@ -314,6 +349,7 @@ var Time = (function () {
         INTERNATIONAL_FIXED,
         CALENDAR_KIND_COUNT,
         get0IndexedDayOfYear,
+        IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         OTHER_MONTH,
         CURRENT_MONTH,
         CURRENT_DAY,
@@ -321,5 +357,6 @@ var Time = (function () {
         DEFAULT_APPEARANCE,
         HIDE_WEEK_ROW,
         LAST_DAY_OUTSIDE_WEEK,
+        ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth,
     }
 }())
