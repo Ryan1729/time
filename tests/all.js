@@ -104,7 +104,7 @@ it(() => {
 it(() => {
     const allExpected = [
         [0,  28,  56,  84, 112, 140, 168, 196, 224, 252, 280, 308, 336, 364],
-        [0,  28,  56,  84, 112, 141, 169, 197, 225, 253, 281, 309, 337, 365],
+        [0,  28,  56,  84, 112, 140, 169, 197, 225, 253, 281, 309, 337, 365],
     ]
 
     // 1972 is a leap year
@@ -120,6 +120,22 @@ it(() => {
             assert(zeroIndexedFirstDayOfYearInMonth === expected[zeroIndexedMonthNumber], "zeroIndexedFirstDayOfYearInMonth did not match: " + zeroIndexedFirstDayOfYearInMonth + " != " + expected[zeroIndexedMonthNumber])
         }
     }
+})
+
+it(() => {
+    // 1972 is a leap year
+    const jan1G = new Date(1972, 0, 1)
+    const time1 = Time.ifcLinkedTimeFromDayOfMonth(jan1G, 5, 1)
+
+    const startOfJune = new Date(time1)
+
+    const startOfJuneTime = Time.ifcLinkedTimeFromDayOfMonth(startOfJune, 0, 1)
+
+    const shouldBeStartOfJune = new Date(startOfJuneTime)
+
+    const shouldBeStartOfJuneTime = Time.ifcLinkedTimeFromDayOfMonth(shouldBeStartOfJune, 0, 1)
+
+    assert(shouldBeStartOfJuneTime === startOfJuneTime, "shouldBeStartOfJuneTime did not match: " + shouldBeStartOfJuneTime + " != " + startOfJuneTime)
 })
 
 // test runner

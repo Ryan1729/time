@@ -171,26 +171,8 @@ var Time = (function () {
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        const year = this.date.getUTCFullYear()
-
-                        const {
-                            zeroIndexedMonthNumber,
-                        } = ifcZeroIndexedMonthAndDay(this.date)
-
-                        // month to first day of year in that month seems complicated but well defined enough to test
-
-                        const firstDayOfYearInMonth = ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
-                            zeroIndexedMonthNumber,
-                            year,
-                        })
-
-                        const targetDayOfYear = firstDayOfYearInMonth + (dayOfMonth - 1)
-
-                        const startOfYear = new Date(0);
-                        startOfYear.setUTCFullYear(year)
-
-                        return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
-                    }
+                        return ifcLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
+                    },
                 }
             break
         }
@@ -261,14 +243,41 @@ var Time = (function () {
         }
     }
 
+    const IFC_FIRST_DAY_OF_YEAR_IN_MONTH_NON_LEAP_YEAR = [0,  28,  56,  84, 112, 140, 168, 196, 224, 252, 280, 308, 336, 364]
+    const IFC_FIRST_DAY_OF_YEAR_IN_MONTH_FOR_LEAP_YEAR = [0,  28,  56,  84, 112, 140, 169, 197, 225, 253, 281, 309, 337, 365]
+
     const ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth = ({
         zeroIndexedMonthNumber,
         year,
     }) => {
         const isLeap = isGregorianLeapYear(year)
 
-        // TODO impl
-        return 0
+        return ((isLeap)
+            ? IFC_FIRST_DAY_OF_YEAR_IN_MONTH_FOR_LEAP_YEAR[zeroIndexedMonthNumber]
+            : IFC_FIRST_DAY_OF_YEAR_IN_MONTH_NON_LEAP_YEAR[zeroIndexedMonthNumber]
+        ) || 0 // for the undefined case
+    }
+
+    const ifcLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        // TODO use month delta correctly!
+        const year = date.getUTCFullYear()
+
+        const {
+            zeroIndexedMonthNumber,
+        } = ifcZeroIndexedMonthAndDay(date)
+
+        const firstDayOfYearInMonth = ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
+            zeroIndexedMonthNumber,
+            year,
+        })
+
+        const targetDayOfYear = firstDayOfYearInMonth + (dayOfMonth - 1)
+
+        const startOfYear = new Date(0);
+        startOfYear.setUTCFullYear(year)
+
+        console.log(date.getTime(), monthDelta, dayOfMonth,"->", zeroIndexedMonthNumber, firstDayOfYearInMonth, targetDayOfYear, "=>", startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS))
+        return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
     }
 
     const OTHER_MONTH = 0
@@ -358,5 +367,6 @@ var Time = (function () {
         HIDE_WEEK_ROW,
         LAST_DAY_OUTSIDE_WEEK,
         ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth,
+        ifcLinkedTimeFromDayOfMonth,
     }
 }())
