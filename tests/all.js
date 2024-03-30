@@ -138,6 +138,22 @@ it(() => {
     assert(shouldBeStartOfJuneTime === startOfJuneTime, "shouldBeStartOfJuneTime did not match: " + shouldBeStartOfJuneTime + " != " + startOfJuneTime)
 })
 
+it(() => {
+    for (let dayOfYear = 1; dayOfYear <= 366; dayOfYear += 1) {
+        // 1972 is a leap year
+        const {
+            zeroIndexedMonthNumber,
+            dayOfMonth,
+        } = Time.ifcZeroIndexedMonthAndDay(new Date(1972, 0, dayOfYear))
+
+        assert(zeroIndexedMonthNumber >= 0, "zeroIndexedMonthNumber was too low on day " + dayOfYear + ": " + zeroIndexedMonthNumber)
+        assert(zeroIndexedMonthNumber < 14, "zeroIndexedMonthNumber was too high on day " + dayOfYear + ": " + zeroIndexedMonthNumber)
+
+        assert(dayOfMonth >= 1, "zeroIndexedMonthNumber was too low on day " + dayOfYear + ": " + dayOfMonth)
+        assert(dayOfMonth <= 29, "zeroIndexedMonthNumber was too high on day " + dayOfYear + ": " + dayOfMonth)
+    }
+})
+
 // test runner
 for (const test of allTests) {
     test()

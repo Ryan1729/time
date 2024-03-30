@@ -369,6 +369,7 @@ var Time = (function () {
         DEFAULT_APPEARANCE,
         HIDE_WEEK_ROW,
         LAST_DAY_OUTSIDE_WEEK,
+        ifcZeroIndexedMonthAndDay,
         ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth,
         ifcLinkedTimeFromDayOfMonth,
     }
