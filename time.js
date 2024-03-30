@@ -132,8 +132,12 @@ var Time = (function () {
                             break
                         }
 
+                        const year = date.getUTCFullYear()
+
+                        const isLeap = isGregorianLeapYear(year)
+
                         const lastDateOfPreviousMonth =
-                            zeroIndexedMonthNumber === (ZERO_INDEXED_LEAP_MONTH + 1)
+                            (isLeap && zeroIndexedMonthNumber === (ZERO_INDEXED_LEAP_MONTH + 1))
                             ? IFC_NORMAL_DAYS_PER_MONTH + 1
                             : IFC_NORMAL_DAYS_PER_MONTH
                         // Always start the months on a sunday, even if
@@ -142,14 +146,14 @@ var Time = (function () {
                         const lastDateOfCurrentMonth =
                             zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
                                 ? 1
-                                : zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH
+                                : (isLeap && zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH)
                                     ? IFC_NORMAL_DAYS_PER_MONTH + 1
                                     : IFC_NORMAL_DAYS_PER_MONTH
 
                         const appearance =
                             zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
                                 ? HIDE_WEEK_ROW
-                                : zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH
+                                : (isLeap && zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH)
                                     ? LAST_DAY_OUTSIDE_WEEK
                                     : DEFAULT_APPEARANCE
 
@@ -230,15 +234,15 @@ var Time = (function () {
         const isLeap = isGregorianLeapYear(year)
 
         const leapOffset = (isLeap && dayOfYear >= IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR)
-            ? 1
+            ? -1
             : 0
         const dayOfMonth =
-            dayOfYear === IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR
+            (isLeap && dayOfYear === IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR)
             ? IFC_NORMAL_DAYS_PER_MONTH + 1
             : (dayOfYear % IFC_NORMAL_DAYS_PER_MONTH) + 1 + leapOffset
 
         return {
-            zeroIndexedMonthNumber: Math.floor((dayOfYear - leapOffset) / IFC_NORMAL_DAYS_PER_MONTH),
+            zeroIndexedMonthNumber: Math.floor((dayOfYear + leapOffset) / IFC_NORMAL_DAYS_PER_MONTH),
             dayOfMonth,
         }
     }
@@ -276,7 +280,6 @@ var Time = (function () {
         const startOfYear = new Date(0);
         startOfYear.setUTCFullYear(year)
 
-        console.log(date.getTime(), monthDelta, dayOfMonth,"->", zeroIndexedMonthNumber, firstDayOfYearInMonth, targetDayOfYear, "=>", startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS))
         return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
     }
 
