@@ -86,7 +86,7 @@ var Time = (function () {
                         switch (zeroIndexedMonthNumber) {
                             default:
                                 // TODO handle year day and leap day
-                                console.error("Unknown Month for: " + dayOfYear)
+                                console.error("Unknown Month for: " + zeroIndexedMonthNumber)
                                 // fallthrough
                             case 0:
                                 monthText = "January"
@@ -233,16 +233,30 @@ var Time = (function () {
 
         const isLeap = isGregorianLeapYear(year)
 
-        const leapOffset = (isLeap && dayOfYear >= IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR)
-            ? -1
-            : 0
-        const dayOfMonth =
-            (isLeap && dayOfYear === IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR)
-            ? IFC_NORMAL_DAYS_PER_MONTH + 1
-            : (dayOfYear % IFC_NORMAL_DAYS_PER_MONTH) + 1 + leapOffset
+        let dayOfYearArray
+        if (isLeap) {
+            dayOfYearArray = IFC_FIRST_DAY_OF_YEAR_IN_MONTH_FOR_LEAP_YEAR
+        } else {
+            dayOfYearArray = IFC_FIRST_DAY_OF_YEAR_IN_MONTH_NON_LEAP_YEAR
+        }
+
+        let monthIndex
+        for (monthIndex = 0; monthIndex < dayOfYearArray.length; monthIndex += 1) {
+            if (
+                dayOfYear >= dayOfYearArray[monthIndex]
+            &&  (
+                    dayOfYearArray[monthIndex + 1] === undefined
+                    || dayOfYear < dayOfYearArray[monthIndex + 1]
+                )
+            ) {
+                break
+            }
+        }
+
+        const dayOfMonth = dayOfYear - dayOfYearArray[monthIndex] + 1
 
         return {
-            zeroIndexedMonthNumber: Math.floor((dayOfYear + leapOffset) / IFC_NORMAL_DAYS_PER_MONTH),
+            zeroIndexedMonthNumber: monthIndex,
             dayOfMonth,
         }
     }
