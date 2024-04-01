@@ -62,9 +62,7 @@ var Time = (function () {
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        const year = date.getUTCFullYear()
-                        const month = date.getUTCMonth() + monthDelta
-                        return new Date(year, month, dayOfMonth).getTime()
+                        return gregorianLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
                     }
                 }
             break
@@ -277,7 +275,6 @@ var Time = (function () {
     }
 
     const ifcLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        // TODO use month delta correctly!
         const year = date.getUTCFullYear()
 
         const {
@@ -285,7 +282,7 @@ var Time = (function () {
         } = ifcZeroIndexedMonthAndDay(date)
 
         const firstDayOfYearInMonth = ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
-            zeroIndexedMonthNumber,
+            zeroIndexedMonthNumber: zeroIndexedMonthNumber + monthDelta,
             year,
         })
 
@@ -295,6 +292,15 @@ var Time = (function () {
         startOfYear.setUTCFullYear(year)
 
         return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
+    }
+
+    const gregorianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        const startOfDay = new Date(0);
+        startOfDay.setUTCFullYear(date.getUTCFullYear())
+        startOfDay.setUTCMonth(date.getUTCMonth() + monthDelta)
+        startOfDay.setUTCDate(dayOfMonth)
+
+        return startOfDay.getTime()
     }
 
     const OTHER_MONTH = 0
@@ -355,7 +361,7 @@ var Time = (function () {
             calendarBoxSpecs[boxIndex] = {
                 text: nextMonthDate,
                 kind: OTHER_MONTH,
-                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(NEXT, i)
+                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(NEXT, nextMonthDate)
             }
 
             nextMonthDate += 1
@@ -386,5 +392,6 @@ var Time = (function () {
         ifcZeroIndexedMonthAndDay,
         ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth,
         ifcLinkedTimeFromDayOfMonth,
+        gregorianLinkedTimeFromDayOfMonth,
     }
 }())
