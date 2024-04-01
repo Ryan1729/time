@@ -224,14 +224,9 @@ background-color:#111;
 
             applyCalendarSpecs(gregorianCalendarElements, gregorianCalendarSpecs)
 
-            if (DEBUG_MODE) {
-                const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
+            const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
 
-                applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
-            } else {
-                internationalFixedCalendarBoxes.parentElement.style.display = "none"
-            }
-
+            applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
         }
 
         input.addEventListener("input", (event) => {
@@ -337,11 +332,13 @@ background-color:#111;
 
         // TODO show a digital clock.
         // TODO show an analog clock.
-        // TODO look up that 13 * 28 + 1 calendar and display that
         // TODO show a base 12 digital clock
         // TODO show a base 12 analog clock
         // TODO show the date in the base of the current day of the month, by the common calendar
         // TODO show the date in the base of the current day of the month, by the 13 * 28 + 1 calendar
+        // TODO show a factorial number system clock.
+        // TODO show a playing card for each of the 52 weeks
+        // TODO show a gregorian calendar using a subset of the years that covers the possible years
     </script>
 </body>
 </html>

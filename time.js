@@ -83,7 +83,6 @@ var Time = (function () {
                         let monthText
                         switch (zeroIndexedMonthNumber) {
                             default:
-                                // TODO handle year day and leap day
                                 console.error("Unknown Month for: " + zeroIndexedMonthNumber)
                                 // fallthrough
                             case 0:
