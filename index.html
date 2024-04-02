@@ -62,6 +62,16 @@ background-color:#111;
     /* Move up into the space of the month label */
     margin-top: -2ex;
 }
+.digital {
+    color: #5a7d8b;
+    font-size: 60px;
+    font-family: monospace;
+    letter-spacing: 7px;
+}
+.clock-row {
+    display: inline-flex;
+    margin-bottom: 1ex;
+}
 </style>
 </head>
 
@@ -77,6 +87,12 @@ background-color:#111;
         <div style="display: grid;">
             <output id="raw"></output>
             <output id="utc-string"></output>
+            <div class="clock-row">
+                <output class="digital" id="digital-clock"></output>
+                <canvas width=0 height=0 id="analogue-clock">
+                    A standard analogue clock.
+                </canvas>
+            </div>
             <div class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label" > Gregorian </div>
@@ -96,7 +112,6 @@ background-color:#111;
                 <div id="gregorian-calendar-extra-boxes" class="seven-columns" style="display: none">
                 </div>
             </div>
-
             <div class="thin-border">
                 <div id="international-fixed-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label"> International Fixed</div>
@@ -208,11 +223,59 @@ background-color:#111;
             extraBoxes: document.getElementById("international-fixed-calendar-extra-boxes"),
         };
 
+        const digitalClock = document.getElementById("digital-clock")
+        const analogueClockCanvas = document.getElementById("analogue-clock")
+        const analogueClockCtx = analogueClockCanvas.getContext("2d");
+
+        const clockWidth = 100
+        const clockHeight = 100
+        const clockX = clockWidth/2
+        const clockY = clockHeight/2
+        const clockRadius = clockWidth * 0.45
+        const clockNumberRadius = clockWidth * 0.35
+
+        analogueClockCanvas.width = clockWidth
+        analogueClockCanvas.height = clockHeight
+
         const setFromTimeAndRender = (time) => {
             inputMode = PAUSED
             setFromTime(time)
             renderAt(new Date(time))
         }
+
+        const clockNumberCenterXYForRadians = (radians) => [
+            clockX + Math.cos(radians) * clockNumberRadius,
+            clockY + Math.sin(radians) * clockNumberRadius,
+        ];
+
+        const twelveHourClockTextForIndex = (i) => "" + (i === 0 ? 12 : i);
+
+        const TAU = 2 * Math.PI
+
+        const twelveHourClockSegmentRadians = TAU / 12
+
+        const clockNumberCenterXYForIndex = (index) =>
+            clockNumberCenterXYForRadians(((index - 3) % 12) * twelveHourClockSegmentRadians);
+
+        const twelveHourCenterXYs = [
+            0,1,2,3,4,5,6,7,8,9,10,11
+        ].map(clockNumberCenterXYForIndex)
+
+        const twelveHourClockNumberXYForIndex = (index) => {
+            // Note that the negatives here do happen to work out
+            const [baseX, baseY] = twelveHourCenterXYs[index]
+
+            const metrics = analogueClockCtx.measureText(twelveHourClockTextForIndex(index))
+
+            return [
+                baseX - metrics.width / 2,
+                baseY + metrics.fontBoundingBoxDescent
+            ]
+        }
+
+        const twelveHourClockNumberXYs = [
+            0,1,2,3,4,5,6,7,8,9,10,11
+        ].map(twelveHourClockNumberXYForIndex)
 
         const renderAt = (date) => {
             const time = date.getTime()
@@ -227,6 +290,68 @@ background-color:#111;
             const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
 
             applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
+
+            const hours = date.getUTCHours(); // 0 - 23
+            const minutes = date.getUTCMinutes(); // 0 - 59
+            const seconds = date.getUTCSeconds(); // 0 - 59
+
+            let h = padToTwoDigits(hours);
+            let m = padToTwoDigits(minutes);
+            let s = padToTwoDigits(seconds);
+
+            digitalClock.textContent = h + ":" + m + ":" + s
+
+            if (DEBUG_MODE) return
+            analogueClockCtx.clearRect(0, 0, clockWidth, clockHeight)
+
+            analogueClockCtx.fillStyle = "#eee"
+            analogueClockCtx.beginPath();
+            analogueClockCtx.arc(clockX, clockY, clockRadius, 0, 2 * Math.PI)
+            analogueClockCtx.fill();
+
+            analogueClockCtx.lineWidth = 3;
+            analogueClockCtx.strokeStyle = '#5a7d8b';
+            analogueClockCtx.stroke();
+
+            analogueClockCtx.fillStyle = "#222"
+            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
+                const [x, y] = twelveHourClockNumberXYs[i]
+                analogueClockCtx.fillText(twelveHourClockTextForIndex(i), x, y);
+            }
+
+            analogueClockCtx.lineWidth = 3;
+            analogueClockCtx.strokeStyle = '#5a7d8b';
+            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
+                analogueClockCtx.beginPath()
+                analogueClockCtx.moveTo(clockX, clockY)
+                const angle = ((i - 3) % 12) * twelveHourClockSegmentRadians
+                analogueClockCtx.lineTo(clockX + Math.cos(angle) * clockNumberRadius, clockY + Math.sin(angle) * clockNumberRadius)
+                analogueClockCtx.stroke()
+            }
+
+            analogueClockCtx.lineWidth = 2;
+            analogueClockCtx.strokeStyle = '#3352e1';
+            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
+                analogueClockCtx.beginPath()
+                analogueClockCtx.moveTo(clockX, clockY)
+                const angle = ((i - 3) % 12) * (twelveHourClockSegmentRadians + TAU / 48)
+                analogueClockCtx.lineTo(clockX + Math.cos(angle) * clockNumberRadius * 0.75, clockY + Math.sin(angle) * clockNumberRadius * 0.75)
+                analogueClockCtx.stroke()
+            }
+
+            analogueClockCtx.lineWidth = 1;
+            analogueClockCtx.strokeStyle = '#de4949';
+            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
+                analogueClockCtx.beginPath()
+                analogueClockCtx.moveTo(clockX, clockY)
+                const angle = ((i - 3) % 12) * (twelveHourClockSegmentRadians + TAU / 96)
+                analogueClockCtx.lineTo(clockX + Math.cos(angle) * clockNumberRadius * 0.5, clockY + Math.sin(angle) * clockNumberRadius * 0.5)
+                analogueClockCtx.stroke()
+            }
+        }
+
+        const padToTwoDigits = (n) => {
+            return (n < 10 ? "0" : "") + n
         }
 
         input.addEventListener("input", (event) => {
