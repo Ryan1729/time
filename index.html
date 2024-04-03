@@ -301,7 +301,7 @@ background-color:#111;
 
             digitalClock.textContent = h + ":" + m + ":" + s
 
-            if (DEBUG_MODE) return
+            if (!DEBUG_MODE) return
             analogueClockCtx.clearRect(0, 0, clockWidth, clockHeight)
 
             analogueClockCtx.fillStyle = "#eee"
