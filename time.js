@@ -21,6 +21,9 @@ var Time = (function () {
     const LAST_DAY_OUTSIDE_WEEK = 2
 
     const DAY_IN_MILLIS = 24 * 60 * 60 * 1000
+    const HOUR_IN_MILLIS = 60 * 60 * 1000
+    const MINUTE_IN_MILLIS = 60 * 1000
+    const SECOND_IN_MILLIS = 24 * 60 * 60 * 1000
 
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
@@ -392,5 +395,10 @@ var Time = (function () {
         ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth,
         ifcLinkedTimeFromDayOfMonth,
         gregorianLinkedTimeFromDayOfMonth,
+        //
+        DAY_IN_MILLIS,
+        HOUR_IN_MILLIS,
+        MINUTE_IN_MILLIS,
+        SECOND_IN_MILLIS,
     }
 }())

@@ -233,6 +233,10 @@ background-color:#111;
         const clockY = clockHeight/2
         const clockRadius = clockWidth * 0.45
         const clockNumberRadius = clockWidth * 0.35
+        const clockInnerEdgeRadius = clockRadius * 0.95
+        const clockSecondRadius = clockInnerEdgeRadius * 0.975
+        const clockMinuteRadius = clockInnerEdgeRadius * 0.95
+        const clockHourRadius = clockInnerEdgeRadius * 0.65
 
         analogueClockCanvas.width = clockWidth
         analogueClockCanvas.height = clockHeight
@@ -301,7 +305,6 @@ background-color:#111;
 
             digitalClock.textContent = h + ":" + m + ":" + s
 
-            if (!DEBUG_MODE) return
             analogueClockCtx.clearRect(0, 0, clockWidth, clockHeight)
 
             analogueClockCtx.fillStyle = "#eee"
@@ -319,35 +322,35 @@ background-color:#111;
                 analogueClockCtx.fillText(twelveHourClockTextForIndex(i), x, y);
             }
 
+            const hourFrac = (time % (Time.DAY_IN_MILLIS / 2)) / (Time.DAY_IN_MILLIS / 2)
+            const minuteFrac = (time % Time.HOUR_IN_MILLIS) / Time.HOUR_IN_MILLIS
+            const secondFrac = (time % Time.MINUTE_IN_MILLIS) / Time.MINUTE_IN_MILLIS
+
+            const TOP_OF_CLOCK_SHIFT = -0.25
+
             analogueClockCtx.lineWidth = 3;
-            analogueClockCtx.strokeStyle = '#5a7d8b';
-            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
-                analogueClockCtx.beginPath()
-                analogueClockCtx.moveTo(clockX, clockY)
-                const angle = ((i - 3) % 12) * twelveHourClockSegmentRadians
-                analogueClockCtx.lineTo(clockX + Math.cos(angle) * clockNumberRadius, clockY + Math.sin(angle) * clockNumberRadius)
-                analogueClockCtx.stroke()
-            }
+            analogueClockCtx.strokeStyle = '#3352e1';
+            analogueClockCtx.beginPath()
+            analogueClockCtx.moveTo(clockX, clockY)
+            const hourAngle = (hourFrac + TOP_OF_CLOCK_SHIFT) * TAU
+            analogueClockCtx.lineTo(clockX + Math.cos(hourAngle) * clockHourRadius, clockY + Math.sin(hourAngle) * clockHourRadius)
+            analogueClockCtx.stroke()
 
             analogueClockCtx.lineWidth = 2;
-            analogueClockCtx.strokeStyle = '#3352e1';
-            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
-                analogueClockCtx.beginPath()
-                analogueClockCtx.moveTo(clockX, clockY)
-                const angle = ((i - 3) % 12) * (twelveHourClockSegmentRadians + TAU / 48)
-                analogueClockCtx.lineTo(clockX + Math.cos(angle) * clockNumberRadius * 0.75, clockY + Math.sin(angle) * clockNumberRadius * 0.75)
-                analogueClockCtx.stroke()
-            }
+            analogueClockCtx.strokeStyle = '#5a7d8b';
+            analogueClockCtx.beginPath()
+            analogueClockCtx.moveTo(clockX, clockY)
+            const minuteAngle = (minuteFrac + TOP_OF_CLOCK_SHIFT) * TAU
+            analogueClockCtx.lineTo(clockX + Math.cos(minuteAngle) * clockMinuteRadius, clockY + Math.sin(minuteAngle) * clockMinuteRadius)
+            analogueClockCtx.stroke()
 
             analogueClockCtx.lineWidth = 1;
             analogueClockCtx.strokeStyle = '#de4949';
-            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
-                analogueClockCtx.beginPath()
-                analogueClockCtx.moveTo(clockX, clockY)
-                const angle = ((i - 3) % 12) * (twelveHourClockSegmentRadians + TAU / 96)
-                analogueClockCtx.lineTo(clockX + Math.cos(angle) * clockNumberRadius * 0.5, clockY + Math.sin(angle) * clockNumberRadius * 0.5)
-                analogueClockCtx.stroke()
-            }
+            analogueClockCtx.beginPath()
+            analogueClockCtx.moveTo(clockX, clockY)
+            const secondAngle = (secondFrac + TOP_OF_CLOCK_SHIFT) * TAU
+            analogueClockCtx.lineTo(clockX + Math.cos(secondAngle) * clockSecondRadius, clockY + Math.sin(secondAngle) * clockSecondRadius)
+            analogueClockCtx.stroke()
         }
 
         const padToTwoDigits = (n) => {
@@ -455,15 +458,31 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO show a digital clock.
-        // TODO show an analog clock.
+        // TODO show a 12 hour digital clock
+        // TODO show a 24 hour analogue clock
+        // TODO show a 0 is at 0 radians analogue clock
+        // TODO show a verbal clock. e.g. quarter past seven
+        // TODO show current season in both northern and southern hemispheres
+        // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres
         // TODO show a base 12 digital clock
-        // TODO show a base 12 analog clock
+        // TODO show a base 12 analogue clock
+        // TODO show a version of the clock on xkcd.com/now
         // TODO show the date in the base of the current day of the month, by the common calendar
         // TODO show the date in the base of the current day of the month, by the 13 * 28 + 1 calendar
         // TODO show a factorial number system clock.
         // TODO show a playing card for each of the 52 weeks
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
+        // TODO? show if the current day or other time period is mildy interesting in a diferent calcendar than usual?
+        //    For example, IFC April fool's day, King of hearts week
+        //    But is there enough of these to be worth it?
+
+
+        // TODO? better/finer time control?
+        //   Like do we want to make it usable for a particular purpose besides fun?
+        //   Honestly a number input box seems to make a lot of sense even just for debugging
+        // TODO a way to show only a subset of the available time displays
+        //    A set of nice radio buttons like all, weird, standard etc.
+        //    Expose a number that encodes booleans to turn each on and off
     </script>
 </body>
 </html>
