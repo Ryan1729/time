@@ -88,10 +88,13 @@ background-color:#111;
             <output id="raw"></output>
             <output id="utc-string"></output>
             <div class="clock-row">
-                <output class="digital" id="digital-clock"></output>
+                <output class="digital" id="digital-clock-12"></output>
                 <canvas width=0 height=0 id="analogue-clock">
                     A standard analogue clock.
                 </canvas>
+            </div>
+            <div class="clock-row">
+                <output class="digital" id="digital-clock-24"></output>
             </div>
             <div class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
@@ -223,7 +226,8 @@ background-color:#111;
             extraBoxes: document.getElementById("international-fixed-calendar-extra-boxes"),
         };
 
-        const digitalClock = document.getElementById("digital-clock")
+        const digitalClock12 = document.getElementById("digital-clock-12")
+        const digitalClock24 = document.getElementById("digital-clock-24")
         const analogueClockCanvas = document.getElementById("analogue-clock")
         const analogueClockCtx = analogueClockCanvas.getContext("2d");
 
@@ -296,14 +300,17 @@ background-color:#111;
             applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
 
             const hours = date.getUTCHours(); // 0 - 23
+            const hours12 = hours % 12 // 0 - 12
             const minutes = date.getUTCMinutes(); // 0 - 59
             const seconds = date.getUTCSeconds(); // 0 - 59
 
             let h = padToTwoDigits(hours);
+            let h12 = padToTwoDigits(hours12 === 0 ? 12 : hours12);
             let m = padToTwoDigits(minutes);
             let s = padToTwoDigits(seconds);
 
-            digitalClock.textContent = h + ":" + m + ":" + s
+            digitalClock12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + h12 + ":" + m + ":" + s
+            digitalClock24.innerHTML = "&nbsp;" + h + ":" + m + ":" + s
 
             analogueClockCtx.clearRect(0, 0, clockWidth, clockHeight)
 
@@ -458,7 +465,6 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO show a 12 hour digital clock
         // TODO show a 24 hour analogue clock
         // TODO show a 0 is at 0 radians analogue clock
         // TODO show a verbal clock. e.g. quarter past seven
