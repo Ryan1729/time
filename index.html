@@ -89,12 +89,15 @@ background-color:#111;
             <output id="utc-string"></output>
             <div class="clock-row">
                 <output class="digital" id="digital-clock-12"></output>
-                <canvas width=0 height=0 id="analogue-clock">
+                <canvas width=0 height=0 id="analogue-clock-12">
                     A standard analogue clock.
                 </canvas>
             </div>
             <div class="clock-row">
                 <output class="digital" id="digital-clock-24"></output>
+                <canvas width=0 height=0 id="analogue-clock-24">
+                    A 24-hour analogue clock.
+                </canvas>
             </div>
             <div class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
@@ -228,8 +231,10 @@ background-color:#111;
 
         const digitalClock12 = document.getElementById("digital-clock-12")
         const digitalClock24 = document.getElementById("digital-clock-24")
-        const analogueClockCanvas = document.getElementById("analogue-clock")
-        const analogueClockCtx = analogueClockCanvas.getContext("2d");
+        const analogueClock12Canvas = document.getElementById("analogue-clock-12")
+        const analogueClock12Ctx = analogueClock12Canvas.getContext("2d");
+        const analogueClock24Canvas = document.getElementById("analogue-clock-24")
+        const analogueClock24Ctx = analogueClock24Canvas.getContext("2d");
 
         const clockWidth = 100
         const clockHeight = 100
@@ -242,8 +247,10 @@ background-color:#111;
         const clockMinuteRadius = clockInnerEdgeRadius * 0.95
         const clockHourRadius = clockInnerEdgeRadius * 0.65
 
-        analogueClockCanvas.width = clockWidth
-        analogueClockCanvas.height = clockHeight
+        analogueClock12Canvas.width = clockWidth
+        analogueClock12Canvas.height = clockHeight
+        analogueClock24Canvas.width = clockWidth
+        analogueClock24Canvas.height = clockHeight
 
         const setFromTimeAndRender = (time) => {
             inputMode = PAUSED
@@ -256,24 +263,37 @@ background-color:#111;
             clockY + Math.sin(radians) * clockNumberRadius,
         ];
 
-        const twelveHourClockTextForIndex = (i) => "" + (i === 0 ? 12 : i);
+        const clockTextForIndex = (index, divisor) => "" + (index === 0 ? divisor : index);
 
         const TAU = 2 * Math.PI
 
-        const twelveHourClockSegmentRadians = TAU / 12
+        const clockNumberCenterXYForIndex = ({index, divisor, offset}) => {
+            offset ||= -3
+            return clockNumberCenterXYForRadians(((index + offset) % divisor) * (TAU / divisor))
+        }
 
-        const clockNumberCenterXYForIndex = (index) =>
-            clockNumberCenterXYForRadians(((index - 3) % 12) * twelveHourClockSegmentRadians);
+        const range = (n) => {
+            let output = new Array(n)
 
-        const twelveHourCenterXYs = [
-            0,1,2,3,4,5,6,7,8,9,10,11
-        ].map(clockNumberCenterXYForIndex)
+            for (let i = 0; i < n; i += 1) {
+                output[i] = i
+            }
+
+            return output
+        }
+
+        const range12 = range(12)
+        const range24 = range(24)
+
+        const twelveHourCenterXYs = range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12}))
+
+        const twentyFourHourCenterXYs = range24.map((index) => clockNumberCenterXYForIndex({index, divisor: 24, offset: -6}))
 
         const twelveHourClockNumberXYForIndex = (index) => {
             // Note that the negatives here do happen to work out
             const [baseX, baseY] = twelveHourCenterXYs[index]
 
-            const metrics = analogueClockCtx.measureText(twelveHourClockTextForIndex(index))
+            const metrics = analogueClock12Ctx.measureText(clockTextForIndex(index, 12))
 
             return [
                 baseX - metrics.width / 2,
@@ -281,9 +301,21 @@ background-color:#111;
             ]
         }
 
-        const twelveHourClockNumberXYs = [
-            0,1,2,3,4,5,6,7,8,9,10,11
-        ].map(twelveHourClockNumberXYForIndex)
+        const twentyFourHourClockNumberXYForIndex = (index) => {
+            // Note that the negatives here do happen to work out
+            const [baseX, baseY] = twentyFourHourCenterXYs[index]
+
+            const metrics = analogueClock24Ctx.measureText(clockTextForIndex(index, 24))
+
+            return [
+                baseX - metrics.width / 2,
+                baseY + metrics.fontBoundingBoxDescent
+            ]
+        }
+
+        const twelveHourClockNumberXYs = range12.map(twelveHourClockNumberXYForIndex)
+
+        const twentyFourHourClockNumberXYs = range24.map(twentyFourHourClockNumberXYForIndex)
 
         const renderAt = (date) => {
             const time = date.getTime()
@@ -312,52 +344,63 @@ background-color:#111;
             digitalClock12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + h12 + ":" + m + ":" + s
             digitalClock24.innerHTML = "&nbsp;" + h + ":" + m + ":" + s
 
-            analogueClockCtx.clearRect(0, 0, clockWidth, clockHeight)
+            const renderClock = ({time, ctx, divisor, numberXYs}) => {
+                divisor ||= 12
+                numberXYs ||= twelveHourClockNumberXYs
 
-            analogueClockCtx.fillStyle = "#eee"
-            analogueClockCtx.beginPath();
-            analogueClockCtx.arc(clockX, clockY, clockRadius, 0, 2 * Math.PI)
-            analogueClockCtx.fill();
+                ctx.clearRect(0, 0, clockWidth, clockHeight)
 
-            analogueClockCtx.lineWidth = 3;
-            analogueClockCtx.strokeStyle = '#5a7d8b';
-            analogueClockCtx.stroke();
+                ctx.fillStyle = "#eee"
+                ctx.beginPath();
+                ctx.arc(clockX, clockY, clockRadius, 0, 2 * Math.PI)
+                ctx.fill();
 
-            analogueClockCtx.fillStyle = "#222"
-            for (let i = 0; i < twelveHourClockNumberXYs.length; i += 1) {
-                const [x, y] = twelveHourClockNumberXYs[i]
-                analogueClockCtx.fillText(twelveHourClockTextForIndex(i), x, y);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#5a7d8b';
+                ctx.stroke();
+
+                ctx.fillStyle = "#222"
+                ctx.font = "6px sans-serif";
+                for (let i = 0; i < numberXYs.length; i += 1) {
+                    const [x, y] = numberXYs[i]
+                    ctx.fillText(clockTextForIndex(i, divisor), x, y);
+                }
+
+                const hourDivisor = 24 / divisor
+
+                const hourFrac = (time % (Time.DAY_IN_MILLIS / hourDivisor)) / (Time.DAY_IN_MILLIS / hourDivisor)
+                const minuteFrac = (time % Time.HOUR_IN_MILLIS) / Time.HOUR_IN_MILLIS
+                const secondFrac = (time % Time.MINUTE_IN_MILLIS) / Time.MINUTE_IN_MILLIS
+
+                const TOP_OF_CLOCK_SHIFT = -0.25
+
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#3352e1';
+                ctx.beginPath()
+                ctx.moveTo(clockX, clockY)
+                const hourAngle = (hourFrac + TOP_OF_CLOCK_SHIFT) * TAU
+                ctx.lineTo(clockX + Math.cos(hourAngle) * clockHourRadius, clockY + Math.sin(hourAngle) * clockHourRadius)
+                ctx.stroke()
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#5a7d8b';
+                ctx.beginPath()
+                ctx.moveTo(clockX, clockY)
+                const minuteAngle = (minuteFrac + TOP_OF_CLOCK_SHIFT) * TAU
+                ctx.lineTo(clockX + Math.cos(minuteAngle) * clockMinuteRadius, clockY + Math.sin(minuteAngle) * clockMinuteRadius)
+                ctx.stroke()
+
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#de4949';
+                ctx.beginPath()
+                ctx.moveTo(clockX, clockY)
+                const secondAngle = (secondFrac + TOP_OF_CLOCK_SHIFT) * TAU
+                ctx.lineTo(clockX + Math.cos(secondAngle) * clockSecondRadius, clockY + Math.sin(secondAngle) * clockSecondRadius)
+                ctx.stroke()
             }
 
-            const hourFrac = (time % (Time.DAY_IN_MILLIS / 2)) / (Time.DAY_IN_MILLIS / 2)
-            const minuteFrac = (time % Time.HOUR_IN_MILLIS) / Time.HOUR_IN_MILLIS
-            const secondFrac = (time % Time.MINUTE_IN_MILLIS) / Time.MINUTE_IN_MILLIS
-
-            const TOP_OF_CLOCK_SHIFT = -0.25
-
-            analogueClockCtx.lineWidth = 3;
-            analogueClockCtx.strokeStyle = '#3352e1';
-            analogueClockCtx.beginPath()
-            analogueClockCtx.moveTo(clockX, clockY)
-            const hourAngle = (hourFrac + TOP_OF_CLOCK_SHIFT) * TAU
-            analogueClockCtx.lineTo(clockX + Math.cos(hourAngle) * clockHourRadius, clockY + Math.sin(hourAngle) * clockHourRadius)
-            analogueClockCtx.stroke()
-
-            analogueClockCtx.lineWidth = 2;
-            analogueClockCtx.strokeStyle = '#5a7d8b';
-            analogueClockCtx.beginPath()
-            analogueClockCtx.moveTo(clockX, clockY)
-            const minuteAngle = (minuteFrac + TOP_OF_CLOCK_SHIFT) * TAU
-            analogueClockCtx.lineTo(clockX + Math.cos(minuteAngle) * clockMinuteRadius, clockY + Math.sin(minuteAngle) * clockMinuteRadius)
-            analogueClockCtx.stroke()
-
-            analogueClockCtx.lineWidth = 1;
-            analogueClockCtx.strokeStyle = '#de4949';
-            analogueClockCtx.beginPath()
-            analogueClockCtx.moveTo(clockX, clockY)
-            const secondAngle = (secondFrac + TOP_OF_CLOCK_SHIFT) * TAU
-            analogueClockCtx.lineTo(clockX + Math.cos(secondAngle) * clockSecondRadius, clockY + Math.sin(secondAngle) * clockSecondRadius)
-            analogueClockCtx.stroke()
+            renderClock({time, ctx: analogueClock12Ctx})
+            renderClock({time, ctx: analogueClock24Ctx, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
         }
 
         const padToTwoDigits = (n) => {
