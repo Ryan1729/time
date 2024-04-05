@@ -429,7 +429,7 @@ background-color:#111;
         const applyCalendarSpecs = (
             {
                 monthLabel,
-                weekLabel,
+                weekLabels,
                 boxes,
                 extraBoxesLabel,
                 extraBoxes,
@@ -443,7 +443,7 @@ background-color:#111;
             monthLabel.innerHTML = monthText
 
             if (appearance === Time.HIDE_WEEK_ROW) {
-                weekLabel.style.display = "none"
+                weekLabels.style.display = "none"
             }
 
             let len = boxSpecs.length
