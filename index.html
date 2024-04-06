@@ -68,6 +68,12 @@ background-color:#111;
     font-family: monospace;
     letter-spacing: 7px;
 }
+.verbal {
+    color: #5a7d8b;
+    font-size: 48px; /* Small enough to fit "Twenty-Five past Eleven" on one line */
+    font-family: cursive;
+    letter-spacing: 7px;
+}
 .clock-row {
     display: inline-flex;
     margin-bottom: 1ex;
@@ -97,6 +103,14 @@ background-color:#111;
                 <output class="digital" id="digital-clock-24"></output>
                 <canvas width=0 height=0 id="analogue-clock-24">
                     A 24-hour analogue clock.
+                </canvas>
+            </div>
+            <div class="clock-row">
+                <output class="verbal" id="verbal-clock"></output>
+            </div>
+            <div class="clock-row">
+                <canvas width=0 height=0 id="analogue-clock-12-0-offset">
+                    A standard analogue clock but rotated so that the 12 is on the far right.
                 </canvas>
             </div>
             <div class="thin-border">
@@ -229,13 +243,6 @@ background-color:#111;
             extraBoxes: document.getElementById("international-fixed-calendar-extra-boxes"),
         };
 
-        const digitalClock12 = document.getElementById("digital-clock-12")
-        const digitalClock24 = document.getElementById("digital-clock-24")
-        const analogueClock12Canvas = document.getElementById("analogue-clock-12")
-        const analogueClock12Ctx = analogueClock12Canvas.getContext("2d");
-        const analogueClock24Canvas = document.getElementById("analogue-clock-24")
-        const analogueClock24Ctx = analogueClock24Canvas.getContext("2d");
-
         const clockWidth = 100
         const clockHeight = 100
         const clockX = clockWidth/2
@@ -247,10 +254,22 @@ background-color:#111;
         const clockMinuteRadius = clockInnerEdgeRadius * 0.95
         const clockHourRadius = clockInnerEdgeRadius * 0.65
 
+        const digitalClock12 = document.getElementById("digital-clock-12")
+        const digitalClock24 = document.getElementById("digital-clock-24")
+        const verbalClock = document.getElementById("verbal-clock")
+        const analogueClock12Canvas = document.getElementById("analogue-clock-12")
         analogueClock12Canvas.width = clockWidth
         analogueClock12Canvas.height = clockHeight
+        const analogueClock12Ctx = analogueClock12Canvas.getContext("2d");
+        const analogueClock24Canvas = document.getElementById("analogue-clock-24")
         analogueClock24Canvas.width = clockWidth
         analogueClock24Canvas.height = clockHeight
+        const analogueClock24Ctx = analogueClock24Canvas.getContext("2d");
+        const analogueClock12ZeroOffsetCanvas = document.getElementById("analogue-clock-12-0-offset")
+        analogueClock12ZeroOffsetCanvas.width = clockWidth
+        analogueClock12ZeroOffsetCanvas.height = clockHeight
+        const analogueClock12ZeroOffsetCtx = analogueClock12ZeroOffsetCanvas.getContext("2d");
+
 
         const setFromTimeAndRender = (time) => {
             inputMode = PAUSED
@@ -268,7 +287,8 @@ background-color:#111;
         const TAU = 2 * Math.PI
 
         const clockNumberCenterXYForIndex = ({index, divisor, offset}) => {
-            offset ||= -3
+            // Note that the negatives here do happen to work out
+            offset = offset === undefined ? -3 : offset
             return clockNumberCenterXYForRadians(((index + offset) % divisor) * (TAU / divisor))
         }
 
@@ -286,11 +306,11 @@ background-color:#111;
         const range24 = range(24)
 
         const twelveHourCenterXYs = range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12}))
+        const twelveHourZeroOffsetCenterXYs = range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12, offset: 0}))
 
         const twentyFourHourCenterXYs = range24.map((index) => clockNumberCenterXYForIndex({index, divisor: 24, offset: -6}))
 
         const twelveHourClockNumberXYForIndex = (index) => {
-            // Note that the negatives here do happen to work out
             const [baseX, baseY] = twelveHourCenterXYs[index]
 
             const metrics = analogueClock12Ctx.measureText(clockTextForIndex(index, 12))
@@ -301,8 +321,18 @@ background-color:#111;
             ]
         }
 
+        const twelveHourZeroOffsetClockNumberXYForIndex = (index) => {
+            const [baseX, baseY] = twelveHourZeroOffsetCenterXYs[index]
+
+            const metrics = analogueClock12Ctx.measureText(clockTextForIndex(index, 12))
+
+            return [
+                baseX - metrics.width / 2,
+                baseY + metrics.fontBoundingBoxDescent
+            ]
+        }
+
         const twentyFourHourClockNumberXYForIndex = (index) => {
-            // Note that the negatives here do happen to work out
             const [baseX, baseY] = twentyFourHourCenterXYs[index]
 
             const metrics = analogueClock24Ctx.measureText(clockTextForIndex(index, 24))
@@ -314,6 +344,7 @@ background-color:#111;
         }
 
         const twelveHourClockNumberXYs = range12.map(twelveHourClockNumberXYForIndex)
+        const twelveHourZeroOffsetClockNumberXYs = range12.map(twelveHourZeroOffsetClockNumberXYForIndex)
 
         const twentyFourHourClockNumberXYs = range24.map(twentyFourHourClockNumberXYForIndex)
 
@@ -344,63 +375,149 @@ background-color:#111;
             digitalClock12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + h12 + ":" + m + ":" + s
             digitalClock24.innerHTML = "&nbsp;" + h + ":" + m + ":" + s
 
-            const renderClock = ({time, ctx, divisor, numberXYs}) => {
-                divisor ||= 12
-                numberXYs ||= twelveHourClockNumberXYs
+            const nextHours12 = (hours12 + 1) % 12
 
-                ctx.clearRect(0, 0, clockWidth, clockHeight)
+            const fiveMinutesRounded = Math.round((((time % Time.HOUR_IN_MILLIS)/Time.HOUR_IN_MILLIS) * (60 / 5))) * 5
 
-                ctx.fillStyle = "#eee"
-                ctx.beginPath();
-                ctx.arc(clockX, clockY, clockRadius, 0, 2 * Math.PI)
-                ctx.fill();
-
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = '#5a7d8b';
-                ctx.stroke();
-
-                ctx.fillStyle = "#222"
-                ctx.font = "6px sans-serif";
-                for (let i = 0; i < numberXYs.length; i += 1) {
-                    const [x, y] = numberXYs[i]
-                    ctx.fillText(clockTextForIndex(i, divisor), x, y);
-                }
-
-                const hourDivisor = 24 / divisor
-
-                const hourFrac = (time % (Time.DAY_IN_MILLIS / hourDivisor)) / (Time.DAY_IN_MILLIS / hourDivisor)
-                const minuteFrac = (time % Time.HOUR_IN_MILLIS) / Time.HOUR_IN_MILLIS
-                const secondFrac = (time % Time.MINUTE_IN_MILLIS) / Time.MINUTE_IN_MILLIS
-
-                const TOP_OF_CLOCK_SHIFT = -0.25
-
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = '#3352e1';
-                ctx.beginPath()
-                ctx.moveTo(clockX, clockY)
-                const hourAngle = (hourFrac + TOP_OF_CLOCK_SHIFT) * TAU
-                ctx.lineTo(clockX + Math.cos(hourAngle) * clockHourRadius, clockY + Math.sin(hourAngle) * clockHourRadius)
-                ctx.stroke()
-
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#5a7d8b';
-                ctx.beginPath()
-                ctx.moveTo(clockX, clockY)
-                const minuteAngle = (minuteFrac + TOP_OF_CLOCK_SHIFT) * TAU
-                ctx.lineTo(clockX + Math.cos(minuteAngle) * clockMinuteRadius, clockY + Math.sin(minuteAngle) * clockMinuteRadius)
-                ctx.stroke()
-
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = '#de4949';
-                ctx.beginPath()
-                ctx.moveTo(clockX, clockY)
-                const secondAngle = (secondFrac + TOP_OF_CLOCK_SHIFT) * TAU
-                ctx.lineTo(clockX + Math.cos(secondAngle) * clockSecondRadius, clockY + Math.sin(secondAngle) * clockSecondRadius)
-                ctx.stroke()
+            let timePhrase
+            switch (fiveMinutesRounded) {
+                default:
+                    console.error("Got unexpected value for fiveMinutesRounded: "+ fiveMinutesRounded)
+                    timePhrase = "Uh... half past a freckle"
+                break
+                case 0:
+                    timePhrase = hoursToWord(hours12) + " o'clock"
+                break
+                case 5:
+                    timePhrase = "Five past " + hoursToWord(hours12)
+                break
+                case 10:
+                    timePhrase = "Ten past " + hoursToWord(hours12)
+                break
+                case 15:
+                    timePhrase = "Quarter past " + hoursToWord(hours12)
+                break
+                case 20:
+                    timePhrase = "Twenty past " + hoursToWord(hours12)
+                break
+                case 25:
+                    timePhrase = "Twenty-Five past " + hoursToWord(hours12)
+                break
+                case 30:
+                    timePhrase = "Half past " + hoursToWord(hours12)
+                break
+                case 35:
+                    timePhrase = "Twenty-Five to " + hoursToWord(nextHours12)
+                break
+                case 40:
+                    timePhrase = "Twenty to " + hoursToWord(nextHours12)
+                break
+                case 45:
+                    timePhrase = "Quarter to " + hoursToWord(nextHours12)
+                break
+                case 50:
+                    timePhrase = "Ten to " + hoursToWord(nextHours12)
+                break
+                case 55:
+                    timePhrase = "Five to " + hoursToWord(nextHours12)
+                break
+                case 60:
+                    timePhrase = hoursToWord(nextHours12) + " o'clock"
+                break
             }
+
+            verbalClock.textContent = timePhrase
 
             renderClock({time, ctx: analogueClock12Ctx})
             renderClock({time, ctx: analogueClock24Ctx, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
+            renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
+        }
+
+        const hoursToWord = (n) => {
+            n = n % 12
+            switch (n) {
+                default:
+                    console.error("Unhandled case in hoursToWord: " + n)
+                    return "" + n
+                case 0:
+                    return "Twelve"
+                case 1:
+                    return "One"
+                case 2:
+                    return "Two"
+                case 3:
+                    return "Three"
+                case 4:
+                    return "Four"
+                case 5:
+                    return "Five"
+                case 6:
+                    return "Six"
+                case 7:
+                    return "Seven"
+                case 8:
+                    return "Eight"
+                case 9:
+                    return "Nine"
+                case 10:
+                    return "Ten"
+                case 11:
+                    return "Eleven"
+            }
+        }
+
+        const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift}) => {
+            divisor ||= 12
+            numberXYs ||= twelveHourClockNumberXYs
+            topOfClockShift = topOfClockShift === undefined ? -0.25 : topOfClockShift
+
+            ctx.clearRect(0, 0, clockWidth, clockHeight)
+
+            ctx.fillStyle = "#eee"
+            ctx.beginPath();
+            ctx.arc(clockX, clockY, clockRadius, 0, 2 * Math.PI)
+            ctx.fill();
+
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#5a7d8b';
+            ctx.stroke();
+
+            ctx.fillStyle = "#222"
+            ctx.font = "6px sans-serif";
+            for (let i = 0; i < numberXYs.length; i += 1) {
+                const [x, y] = numberXYs[i]
+                ctx.fillText(clockTextForIndex(i, divisor), x, y);
+            }
+
+            const hourDivisor = 24 / divisor
+
+            const hourFrac = (time % (Time.DAY_IN_MILLIS / hourDivisor)) / (Time.DAY_IN_MILLIS / hourDivisor)
+            const minuteFrac = (time % Time.HOUR_IN_MILLIS) / Time.HOUR_IN_MILLIS
+            const secondFrac = (time % Time.MINUTE_IN_MILLIS) / Time.MINUTE_IN_MILLIS
+
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#3352e1';
+            ctx.beginPath()
+            ctx.moveTo(clockX, clockY)
+            const hourAngle = (hourFrac + topOfClockShift) * TAU
+            ctx.lineTo(clockX + Math.cos(hourAngle) * clockHourRadius, clockY + Math.sin(hourAngle) * clockHourRadius)
+            ctx.stroke()
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#5a7d8b';
+            ctx.beginPath()
+            ctx.moveTo(clockX, clockY)
+            const minuteAngle = (minuteFrac + topOfClockShift) * TAU
+            ctx.lineTo(clockX + Math.cos(minuteAngle) * clockMinuteRadius, clockY + Math.sin(minuteAngle) * clockMinuteRadius)
+            ctx.stroke()
+
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#de4949';
+            ctx.beginPath()
+            ctx.moveTo(clockX, clockY)
+            const secondAngle = (secondFrac + topOfClockShift) * TAU
+            ctx.lineTo(clockX + Math.cos(secondAngle) * clockSecondRadius, clockY + Math.sin(secondAngle) * clockSecondRadius)
+            ctx.stroke()
         }
 
         const padToTwoDigits = (n) => {
@@ -508,9 +625,6 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO show a 24 hour analogue clock
-        // TODO show a 0 is at 0 radians analogue clock
-        // TODO show a verbal clock. e.g. quarter past seven
         // TODO show current season in both northern and southern hemispheres
         // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres
         // TODO show a base 12 digital clock
