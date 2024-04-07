@@ -78,6 +78,19 @@ background-color:#111;
     display: inline-flex;
     margin-bottom: 1ex;
 }
+.season-row {
+    margin-bottom: 1ex;
+}
+.season-type-label {
+    color: #5a7d8b;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    /* Move up into the space of the season text */
+    margin-top: -6ex;
+    margin-bottom: 0;
+}
 </style>
 </head>
 
@@ -112,6 +125,14 @@ background-color:#111;
                 <canvas width=0 height=0 id="analogue-clock-12-0-offset">
                     A standard analogue clock but rotated so that the 12 is on the far right.
                 </canvas>
+            </div>
+            <div class="season-row">
+                <output class="verbal" id="metrological-seasons-north"></output>
+                <div class="season-type-label" > (metrological; northern hemisphere) </div>
+            </div>
+            <div class="season-row">
+                <output class="verbal" id="metrological-seasons-south"></output>
+                <div class="season-type-label" > (metrological; southern hemisphere) </div>
             </div>
             <div class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
@@ -257,6 +278,9 @@ background-color:#111;
         const digitalClock12 = document.getElementById("digital-clock-12")
         const digitalClock24 = document.getElementById("digital-clock-24")
         const verbalClock = document.getElementById("verbal-clock")
+        const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
+        const metrologicalSeasonsSouth = document.getElementById("metrological-seasons-south")
+
         const analogueClock12Canvas = document.getElementById("analogue-clock-12")
         analogueClock12Canvas.width = clockWidth
         analogueClock12Canvas.height = clockHeight
@@ -431,6 +455,43 @@ background-color:#111;
             renderClock({time, ctx: analogueClock12Ctx})
             renderClock({time, ctx: analogueClock24Ctx, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
+
+            const zeroIndexedMonth = date.getUTCMonth()
+
+            let northernMetrologicalSeason
+            let southernMetrologicalSeason
+            switch(zeroIndexedMonth) {
+                default:
+                    console.error("unexpected month for metrological seasons: " + zeroIndexedMonth)
+                case 0: // Jan
+                case 1: // Feb
+                case 11: // December
+                    northernMetrologicalSeason = "Winter"
+                    southernMetrologicalSeason = "Summer"
+                break
+                case 2:
+                case 3:
+                case 4:
+                    northernMetrologicalSeason = "Spring"
+                    southernMetrologicalSeason = "Fall (Autumn)"
+                break
+                case 0:
+                case 1:
+                case 11:
+                    northernMetrologicalSeason = "Summer"
+                    southernMetrologicalSeason = "Winter"
+                break
+                case 0:
+                case 1:
+                case 11:
+                    northernMetrologicalSeason = "Fall (Autumn)"
+                    southernMetrologicalSeason = "Spring"
+                break
+
+            }
+
+            metrologicalSeasonsNorth.textContent = northernMetrologicalSeason
+            metrologicalSeasonsSouth.textContent = southernMetrologicalSeason
         }
 
         const hoursToWord = (n) => {
@@ -625,7 +686,6 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO show current season in both northern and southern hemispheres
         // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres
         // TODO show a base 12 digital clock
         // TODO show a base 12 analogue clock
