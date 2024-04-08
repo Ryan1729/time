@@ -102,6 +102,7 @@ background-color:#111;
             <button type="button" id="plus">+</button>
         </div>
         <input id="selected-time" type="range" style="width: 100%;" />
+        <input id="selected-time-number" type="number" />
         <output id="displayed-step"></output>
         <div style="display: grid;">
             <output id="raw"></output>
@@ -184,7 +185,8 @@ background-color:#111;
         const displayedStep = document.getElementById("displayed-step");
         const raw = document.getElementById("raw");
         const utcString = document.getElementById("utc-string");
-        const input = document.getElementById("selected-time");
+        const inputRange = document.getElementById("selected-time");
+        const inputNumber = document.getElementById("selected-time-number");
 
         const startTime = new Date().getTime()
         const TIME_ROUND_TO = 1_000_000_000_000
@@ -192,10 +194,10 @@ background-color:#111;
         const defaultLowEdge = Math.floor(startTime / TIME_ROUND_TO) * TIME_ROUND_TO
         const defaultHighEdge = Math.ceil(startTime / TIME_ROUND_TO) * TIME_ROUND_TO
 
-        input.min = defaultLowEdge
-        input.max = defaultHighEdge
+        inputRange.min = inputNumber.min = defaultLowEdge
+        inputRange.max = inputNumber.max = defaultHighEdge
         const setStep = (step) => {
-            input.step = step
+            inputRange.step = inputNumber.step = step
             if (step === 1) {
                 displayedStep.textContent = ''
             } else {
@@ -203,7 +205,7 @@ background-color:#111;
             }
         }
         const setFromTime = (time) => {
-            input.value = time
+            inputRange.value = inputNumber.value = time
         }
         setFromTime(startTime)
 
@@ -211,42 +213,60 @@ background-color:#111;
         const PAUSED = "paused"
 
         let inputMode = RUNNING
-        input.oninput = () => {
+        const onInput = () => {
             inputMode = PAUSED
+            // TODO? Are we gonna want to debounce this?
+            const v = event.target.value
+            const parsed = parseInt(v)
+
+            const min = parseInt(inputRange.min)
+            const max = parseInt(inputRange.max)
+
+            let time
+            if (Number.isNaN(parsed) || parsed < min) {
+                time = min
+            } else if (parsed > max) {
+                time = max
+            } else {
+                time = parsed
+            }
+
+            renderAt(new Date(time))
         }
+        inputRange.oninput = inputNumber.oninput = onInput
 
         let moveListener;
         let startClientY;
-        input.addEventListener("pointerdown", (e) => {
+        inputRange.addEventListener("pointerdown", (e) => {
             startClientY = e.clientY
 
-            l = input.addEventListener("pointermove", (e) => {
+            l = inputRange.addEventListener("pointermove", (e) => {
               const yDelta = Math.abs(startClientY - e.clientY)
 
               const PIXELS_PER_STEP = 16;
               const rawStep = Math.pow(10, Math.floor(yDelta/PIXELS_PER_STEP))
 
-              const range = parseInt(input.max) - parseInt(input.min)
+              const range = parseInt(inputRange.max) - parseInt(inputRange.min)
 
               setStep(Math.min(rawStep, range))
             });
         });
-        input.addEventListener("pointerup", (e) => {
-            input.removeEventListener("pointermove", moveListener)
+        inputRange.addEventListener("pointerup", (e) => {
+            inputRange.removeEventListener("pointermove", moveListener)
 
             // Avoid jittering the input when releasing
-            const selectedValue = input.value
+            const selectedValue = inputRange.value
             setTimeout(() => setFromTime(selectedValue), 8)
         });
 
         const minus = document.getElementById("minus");
         minus.onclick = () => {
-            input.min = parseInt(input.min) - TIME_ROUND_TO
+            inputRange.min = inputNumber.min = parseInt(input.min) - TIME_ROUND_TO
         };
 
         const plus = document.getElementById("plus");
         plus.onclick = () => {
-            input.max = parseInt(input.max) + TIME_ROUND_TO
+            inputRange.max = inputNumber.max = parseInt(input.max) + TIME_ROUND_TO
         };
 
         const gregorianCalendarElements = {
@@ -374,7 +394,7 @@ background-color:#111;
 
         const renderAt = (date) => {
             const time = date.getTime()
-            setFromTime(input.value)
+            setFromTime(time)
             raw.textContent = time.toLocaleString()
             utcString.textContent = date.toUTCString()
 
@@ -585,12 +605,6 @@ background-color:#111;
             return (n < 10 ? "0" : "") + n
         }
 
-        input.addEventListener("input", (event) => {
-            // TODO? Are we gonna want to debounce this?
-            const v = event.target.value
-            renderAt(new Date(parseInt(v)))
-        });
-
         const playPause = document.getElementById("play-pause");
         playPause.onclick = () => {
             switch (inputMode) {
@@ -686,7 +700,7 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres
+        // TODO something based on the different months listed in https://en.wikipedia.org/wiki/Lunar_month
         // TODO show a base 12 digital clock
         // TODO show a base 12 analogue clock
         // TODO show a version of the clock on xkcd.com/now
@@ -695,14 +709,12 @@ background-color:#111;
         // TODO show a factorial number system clock.
         // TODO show a playing card for each of the 52 weeks
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
+        // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres (This is apparently hard to do accurately!)
         // TODO? show if the current day or other time period is mildy interesting in a diferent calcendar than usual?
         //    For example, IFC April fool's day, King of hearts week
         //    But is there enough of these to be worth it?
 
 
-        // TODO? better/finer time control?
-        //   Like do we want to make it usable for a particular purpose besides fun?
-        //   Honestly a number input box seems to make a lot of sense even just for debugging
         // TODO a way to show only a subset of the available time displays
         //    A set of nice radio buttons like all, weird, standard etc.
         //    Expose a number that encodes booleans to turn each on and off
