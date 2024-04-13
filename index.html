@@ -135,6 +135,10 @@ background-color:#111;
                 <output class="verbal" id="metrological-seasons-south"></output>
                 <div class="season-type-label" > (metrological; southern hemisphere) </div>
             </div>
+            <div class="season-row">
+                <output class="digital" id="synodic-month"></output>
+                <div class="season-type-label"> Synodic Months relative to the Epoch </div>
+            </div>
             <div class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label" > Gregorian </div>
@@ -300,6 +304,16 @@ background-color:#111;
         const verbalClock = document.getElementById("verbal-clock")
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
         const metrologicalSeasonsSouth = document.getElementById("metrological-seasons-south")
+        const synodicMonth = document.getElementById("synodic-month")
+
+        // 29 (Earth) days, 12 hours, 44 minutes and 2.9 seconds
+        const SYNODIC_MONTH_IN_MILLIS =
+            29 * Time.DAY_IN_MILLIS
+            + 12 * Time.HOUR_IN_MILLIS
+            + 44 * Time.MINUTE_IN_MILLIS
+            + 2 * Time.SECOND_IN_MILLIS
+            + 900
+        const SYNODIC_MONTH_IN_MILLIS_SIG_FIGS = 8
 
         const analogueClock12Canvas = document.getElementById("analogue-clock-12")
         analogueClock12Canvas.width = clockWidth
@@ -512,6 +526,9 @@ background-color:#111;
 
             metrologicalSeasonsNorth.textContent = northernMetrologicalSeason
             metrologicalSeasonsSouth.textContent = southernMetrologicalSeason
+
+            // TODO align to conjunctions and use that to count and display the number of conjunctions
+            synodicMonth.textContent = (time / SYNODIC_MONTH_IN_MILLIS).toPrecision(SYNODIC_MONTH_IN_MILLIS_SIG_FIGS)
         }
 
         const hoursToWord = (n) => {
