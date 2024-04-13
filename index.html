@@ -265,12 +265,12 @@ background-color:#111;
 
         const minus = document.getElementById("minus");
         minus.onclick = () => {
-            inputRange.min = inputNumber.min = parseInt(input.min) - TIME_ROUND_TO
+            inputRange.min = inputNumber.min = parseInt(inputRange.min) - TIME_ROUND_TO
         };
 
         const plus = document.getElementById("plus");
         plus.onclick = () => {
-            inputRange.max = inputNumber.max = parseInt(input.max) + TIME_ROUND_TO
+            inputRange.max = inputNumber.max = parseInt(inputRange.max) + TIME_ROUND_TO
         };
 
         const gregorianCalendarElements = {
