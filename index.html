@@ -84,10 +84,10 @@ background-color:#111;
     display: inline-flex;
     margin-bottom: 1ex;
 }
-.season-row {
+.labelled-row {
     margin-bottom: 1ex;
 }
-.season-type-label {
+.labelled-row-label {
     color: #5a7d8b;
     text-align: right;
     font-size: 12px;
@@ -133,17 +133,33 @@ background-color:#111;
                     A standard analogue clock but rotated so that the 12 is on the far right.
                 </canvas>
             </div>
-            <div class="season-row">
+            <div class="labelled-row">
                 <output class="verbal" id="metrological-seasons-north"></output>
-                <div class="season-type-label" > (metrological; northern hemisphere) </div>
+                <div class="labelled-row-label" > (metrological; northern hemisphere) </div>
             </div>
-            <div class="season-row">
+            <div class="labelled-row">
                 <output class="verbal" id="metrological-seasons-south"></output>
-                <div class="season-type-label" > (metrological; southern hemisphere) </div>
+                <div class="labelled-row-label" > (metrological; southern hemisphere) </div>
             </div>
-            <div class="season-row">
+            <div class="labelled-row">
                 <output class="digital-small" id="synodic-month"></output>
-                <div class="season-type-label"> Synodic Months relative to the Epoch </div>
+                <div class="labelled-row-label"> Synodic Months relative to the Epoch </div>
+            </div>
+            <div class="labelled-row">
+                <output class="digital-small" id="tropical-month"></output>
+                <div class="labelled-row-label"> Tropical Months relative to the Epoch </div>
+            </div>
+            <div class="labelled-row">
+                <output class="digital-small" id="sideral-month"></output>
+                <div class="labelled-row-label"> Sideral Months relative to the Epoch </div>
+            </div>
+            <div class="labelled-row">
+                <output class="digital-small" id="anomalistic-month"></output>
+                <div class="labelled-row-label"> Anomalistic Months relative to the Epoch </div>
+            </div>
+            <div class="labelled-row">
+                <output class="digital-small" id="dragonic-month"></output>
+                <div class="labelled-row-label"> Dragonic Months relative to the Epoch </div>
             </div>
             <div class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
@@ -310,9 +326,15 @@ background-color:#111;
         const verbalClock = document.getElementById("verbal-clock")
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
         const metrologicalSeasonsSouth = document.getElementById("metrological-seasons-south")
-        const synodicMonth = document.getElementById("synodic-month")
 
-        // 29 (Earth) days, 12 hours, 44 minutes and 2.9 seconds
+        const synodicMonth = document.getElementById("synodic-month")
+        const tropicalMonth = document.getElementById("tropical-month")
+        const sideralMonth = document.getElementById("sideral-month")
+        const anomalisticMonth = document.getElementById("anomalistic-month")
+        const dragonicMonth = document.getElementById("dragonic-month")
+
+        // Month durations as written in
+        // https://archive.org/details/astronomicalalmanac1961/page/n117/mode/1up
         const SYNODIC_MONTH_IN_MILLIS =
             29 * Time.DAY_IN_MILLIS
             + 12 * Time.HOUR_IN_MILLIS
@@ -320,6 +342,38 @@ background-color:#111;
             + 2 * Time.SECOND_IN_MILLIS
             + 900
         const SYNODIC_MONTH_IN_MILLIS_SIG_FIGS = 8
+
+        const TROPICAL_MONTH_IN_MILLIS =
+            27 * Time.DAY_IN_MILLIS
+            + 7 * Time.HOUR_IN_MILLIS
+            + 43 * Time.MINUTE_IN_MILLIS
+            + 4 * Time.SECOND_IN_MILLIS
+            + 700
+        const TROPICAL_MONTH_IN_MILLIS_SIG_FIGS = 8
+
+        const SIDERAL_MONTH_IN_MILLIS =
+            27 * Time.DAY_IN_MILLIS
+            + 7 * Time.HOUR_IN_MILLIS
+            + 43 * Time.MINUTE_IN_MILLIS
+            + 11 * Time.SECOND_IN_MILLIS
+            + 500
+        const SIDERAL_MONTH_IN_MILLIS_SIG_FIGS = 8
+
+        const ANOMALISTIC_MONTH_IN_MILLIS =
+            27 * Time.DAY_IN_MILLIS
+            + 13 * Time.HOUR_IN_MILLIS
+            + 18 * Time.MINUTE_IN_MILLIS
+            + 33 * Time.SECOND_IN_MILLIS
+            + 200
+        const ANOMALISTIC_MONTH_IN_MILLIS_SIG_FIGS = 8
+
+        const DRAGONIC_MONTH_IN_MILLIS =
+            27 * Time.DAY_IN_MILLIS
+            + 05 * Time.HOUR_IN_MILLIS
+            + 05 * Time.MINUTE_IN_MILLIS
+            + 35 * Time.SECOND_IN_MILLIS
+            + 800
+        const DRAGONIC_MONTH_IN_MILLIS_SIG_FIGS = 8
 
         const analogueClock12Canvas = document.getElementById("analogue-clock-12")
         analogueClock12Canvas.width = clockWidth
@@ -535,6 +589,18 @@ background-color:#111;
 
             // TODO align to conjunctions and use that to count and display the number of conjunctions
             synodicMonth.textContent = (time / SYNODIC_MONTH_IN_MILLIS).toPrecision(SYNODIC_MONTH_IN_MILLIS_SIG_FIGS)
+
+            // TODO align to equinoxes and use that to count and display the number of equinoxes
+            tropicalMonth.textContent = (time / TROPICAL_MONTH_IN_MILLIS).toPrecision(TROPICAL_MONTH_IN_MILLIS_SIG_FIGS)
+
+            // TODO align to fixed star points and use that to count and display the number of fixed star points
+            sideralMonth.textContent = (time / SIDERAL_MONTH_IN_MILLIS).toPrecision(SIDERAL_MONTH_IN_MILLIS_SIG_FIGS)
+
+            // TODO align to perigrees and use that to count and display the number of perigrees
+            anomalisticMonth.textContent = (time / ANOMALISTIC_MONTH_IN_MILLIS).toPrecision(ANOMALISTIC_MONTH_IN_MILLIS_SIG_FIGS)
+
+            // TODO align to node events and use that to count and display the number of node events
+            dragonicMonth.textContent = (time / DRAGONIC_MONTH_IN_MILLIS).toPrecision(DRAGONIC_MONTH_IN_MILLIS_SIG_FIGS)
         }
 
         const hoursToWord = (n) => {
@@ -723,7 +789,6 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO something based on the different months listed in https://en.wikipedia.org/wiki/Lunar_month
         // TODO show a base 12 digital clock
         // TODO show a base 12 analogue clock
         // TODO show a version of the clock on xkcd.com/now
