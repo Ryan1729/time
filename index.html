@@ -341,7 +341,6 @@ background-color:#111;
             + 44 * Time.MINUTE_IN_MILLIS
             + 2 * Time.SECOND_IN_MILLIS
             + 900
-        const SYNODIC_MONTH_IN_MILLIS_SIG_FIGS = 8
 
         const TROPICAL_MONTH_IN_MILLIS =
             27 * Time.DAY_IN_MILLIS
@@ -349,7 +348,6 @@ background-color:#111;
             + 43 * Time.MINUTE_IN_MILLIS
             + 4 * Time.SECOND_IN_MILLIS
             + 700
-        const TROPICAL_MONTH_IN_MILLIS_SIG_FIGS = 8
 
         const SIDERAL_MONTH_IN_MILLIS =
             27 * Time.DAY_IN_MILLIS
@@ -357,7 +355,6 @@ background-color:#111;
             + 43 * Time.MINUTE_IN_MILLIS
             + 11 * Time.SECOND_IN_MILLIS
             + 500
-        const SIDERAL_MONTH_IN_MILLIS_SIG_FIGS = 8
 
         const ANOMALISTIC_MONTH_IN_MILLIS =
             27 * Time.DAY_IN_MILLIS
@@ -365,7 +362,6 @@ background-color:#111;
             + 18 * Time.MINUTE_IN_MILLIS
             + 33 * Time.SECOND_IN_MILLIS
             + 200
-        const ANOMALISTIC_MONTH_IN_MILLIS_SIG_FIGS = 8
 
         const DRAGONIC_MONTH_IN_MILLIS =
             27 * Time.DAY_IN_MILLIS
@@ -373,7 +369,39 @@ background-color:#111;
             + 05 * Time.MINUTE_IN_MILLIS
             + 35 * Time.SECOND_IN_MILLIS
             + 800
-        const DRAGONIC_MONTH_IN_MILLIS_SIG_FIGS = 8
+
+        const toAtMost10Chars = (n) => {
+            if (n > 999_999_999) {
+                return ">999999999"
+            }
+            if (n < -99_999_999) {
+                return "<-999999999"
+            }
+
+            // Eight to allow for the minus sign and decimal point
+            const eightSigFigs = n.toPrecision(8)
+
+            if (eightSigFigs.includes("e")) {
+                if (eightSigFigs.endsWith("e-7")) {
+                    if (n > 0) {
+                        return "0.000000" + eightSigFigs.substring(0, 1)
+                    } else {
+                        return "-0.000000" + eightSigFigs.substring(0, 1)
+                    }
+                }
+                if (n > 0) {
+                    return "0.0000001"
+                } else {
+                    return "-0.0000001"
+                }
+            }
+
+            if (eightSigFigs.length > 10) {
+                return eightSigFigs.substring(0,9)
+            }
+
+            return eightSigFigs
+        }
 
         const analogueClock12Canvas = document.getElementById("analogue-clock-12")
         analogueClock12Canvas.width = clockWidth
@@ -588,19 +616,19 @@ background-color:#111;
             metrologicalSeasonsSouth.textContent = southernMetrologicalSeason
 
             // TODO align to conjunctions and use that to count and display the number of conjunctions
-            synodicMonth.textContent = (time / SYNODIC_MONTH_IN_MILLIS).toPrecision(SYNODIC_MONTH_IN_MILLIS_SIG_FIGS)
+            synodicMonth.textContent = toAtMost10Chars(time / SYNODIC_MONTH_IN_MILLIS)
 
             // TODO align to equinoxes and use that to count and display the number of equinoxes
-            tropicalMonth.textContent = (time / TROPICAL_MONTH_IN_MILLIS).toPrecision(TROPICAL_MONTH_IN_MILLIS_SIG_FIGS)
+            tropicalMonth.textContent = toAtMost10Chars(time / TROPICAL_MONTH_IN_MILLIS)
 
             // TODO align to fixed star points and use that to count and display the number of fixed star points
-            sideralMonth.textContent = (time / SIDERAL_MONTH_IN_MILLIS).toPrecision(SIDERAL_MONTH_IN_MILLIS_SIG_FIGS)
+            sideralMonth.textContent = toAtMost10Chars(time / SIDERAL_MONTH_IN_MILLIS)
 
             // TODO align to perigrees and use that to count and display the number of perigrees
-            anomalisticMonth.textContent = (time / ANOMALISTIC_MONTH_IN_MILLIS).toPrecision(ANOMALISTIC_MONTH_IN_MILLIS_SIG_FIGS)
+            anomalisticMonth.textContent = toAtMost10Chars(time / ANOMALISTIC_MONTH_IN_MILLIS)
 
             // TODO align to node events and use that to count and display the number of node events
-            dragonicMonth.textContent = (time / DRAGONIC_MONTH_IN_MILLIS).toPrecision(DRAGONIC_MONTH_IN_MILLIS_SIG_FIGS)
+            dragonicMonth.textContent = toAtMost10Chars(time / DRAGONIC_MONTH_IN_MILLIS)
         }
 
         const hoursToWord = (n) => {
