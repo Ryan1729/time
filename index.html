@@ -111,6 +111,9 @@ background-color:#111;
         <input id="selected-time-number" type="number" />
         <output id="displayed-step"></output>
         <div style="display: grid;">
+            <input id="subset-number" type="number" />
+        </div>
+        <div style="display: grid;">
             <output id="raw"></output>
             <output id="utc-string"></output>
             <div class="clock-row">
@@ -133,35 +136,35 @@ background-color:#111;
                     A standard analogue clock but rotated so that the 12 is on the far right.
                 </canvas>
             </div>
-            <div class="labelled-row">
+            <div id="metrological-seasons-north-row" class="labelled-row">
                 <output class="verbal" id="metrological-seasons-north"></output>
                 <div class="labelled-row-label" > (metrological; northern hemisphere) </div>
             </div>
-            <div class="labelled-row">
+            <div id="metrological-seasons-south-row" class="labelled-row">
                 <output class="verbal" id="metrological-seasons-south"></output>
                 <div class="labelled-row-label" > (metrological; southern hemisphere) </div>
             </div>
-            <div class="labelled-row">
+            <div id="synodic-month-row" class="labelled-row">
                 <output class="digital-small" id="synodic-month"></output>
                 <div class="labelled-row-label"> Synodic Months relative to the Epoch </div>
             </div>
-            <div class="labelled-row">
+            <div id="tropical-month-row" class="labelled-row">
                 <output class="digital-small" id="tropical-month"></output>
                 <div class="labelled-row-label"> Tropical Months relative to the Epoch </div>
             </div>
-            <div class="labelled-row">
+            <div id="sideral-month-row" class="labelled-row">
                 <output class="digital-small" id="sideral-month"></output>
                 <div class="labelled-row-label"> Sideral Months relative to the Epoch </div>
             </div>
-            <div class="labelled-row">
+            <div id="anomalistic-month-row" class="labelled-row">
                 <output class="digital-small" id="anomalistic-month"></output>
                 <div class="labelled-row-label"> Anomalistic Months relative to the Epoch </div>
             </div>
-            <div class="labelled-row">
+            <div id="dragonic-month-row" class="labelled-row">
                 <output class="digital-small" id="dragonic-month"></output>
                 <div class="labelled-row-label"> Dragonic Months relative to the Epoch </div>
             </div>
-            <div class="thin-border">
+            <div id="gregorian-calendar" class="thin-border">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label" > Gregorian </div>
                 <div id="gregorian-calendar-week-labels" class="seven-columns thin-border-row">
@@ -180,7 +183,7 @@ background-color:#111;
                 <div id="gregorian-calendar-extra-boxes" class="seven-columns" style="display: none">
                 </div>
             </div>
-            <div class="thin-border">
+            <div id="international-fixed-calendar", class="thin-border">
                 <div id="international-fixed-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label"> International Fixed</div>
                 <div id="international-fixed-calendar-week-labels" class="seven-columns thin-border-row">
@@ -213,6 +216,51 @@ background-color:#111;
         const utcString = document.getElementById("utc-string");
         const inputRange = document.getElementById("selected-time");
         const inputNumber = document.getElementById("selected-time-number");
+
+        const subsetNumber = document.getElementById("subset-number");
+
+        const TIMEPIECE_IDS = [
+            "digital-clock-12",
+            "analogue-clock-12",
+            "digital-clock-24",
+            "analogue-clock-24",
+            "verbal-clock",
+            "analogue-clock-12-0-offset",
+            "metrological-seasons-north-row",
+            "metrological-seasons-south-row",
+            "synodic-month-row",
+            "tropical-month-row",
+            "sideral-month-row",
+            "anomalistic-month-row",
+            "dragonic-month-row",
+            "gregorian-calendar",
+            "international-fixed-calendar",
+        ]
+
+        const ALL_TIMEPIECES_SUBSET = (1 << TIMEPIECE_IDS.length) - 1
+        subsetNumber.value = ALL_TIMEPIECES_SUBSET
+
+        const onSubsetChange = () => {
+            const parsed = parseInt(subsetNumber.value)
+
+            let subset
+            if (Number.isNaN(parsed)) {
+                subset = ALL_TIMEPIECES_SUBSET
+            } else {
+                subset = parsed
+            }
+
+            for (let i = 0; i < TIMEPIECE_IDS.length; i += 1) {
+                const element = document.getElementById(TIMEPIECE_IDS[i])
+                if ((subset & (1 << i)) !== 0) {
+                    element.style.display = "unset";
+                } else {
+                    element.style.display = "none";
+                }
+            }
+        }
+        subsetNumber.oninput = onSubsetChange
+
 
         const startTime = new Date().getTime()
         const TIME_ROUND_TO = 1_000_000_000_000
@@ -831,9 +879,9 @@ background-color:#111;
         //    But is there enough of these to be worth it?
 
 
-        // TODO a way to show only a subset of the available time displays
+        // TODO a convenient way to show only a subset of the available time displays
         //    A set of nice radio buttons like all, weird, standard etc.
-        //    Expose a number that encodes booleans to turn each on and off
+        //    A way to easily select one digital clock, one analogue clock and one calendar would be good.
     </script>
 </body>
 </html>
