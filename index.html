@@ -110,9 +110,18 @@ background-color:#111;
         <input id="selected-time" type="range" style="width: 100%;" />
         <input id="selected-time-number" type="number" />
         <output id="displayed-step"></output>
-        <div style="display: grid;">
-            <input id="subset-number" type="number" />
-        </div>
+        <details>
+            <summary>
+                Subset Controls
+            </summary>
+            <div style="display: grid;">
+                <input id="subset-number" type="number" />
+                <span>
+                    <button id="subset-shift-up"> &lt;&lt; </button>
+                    <button id="subset-shift-down"> &gt;&gt;&gt; </button>
+                </span>
+            </div>
+        </details>
         <div style="display: grid;">
             <output id="raw"></output>
             <output id="utc-string"></output>
@@ -240,7 +249,20 @@ background-color:#111;
         const ALL_TIMEPIECES_SUBSET = (1 << TIMEPIECE_IDS.length) - 1
         subsetNumber.value = ALL_TIMEPIECES_SUBSET
 
-        const onSubsetChange = () => {
+        const setSubsetMask = (mask) => {
+            subsetNumber.value = mask
+
+            for (let i = 0; i < TIMEPIECE_IDS.length; i += 1) {
+                const element = document.getElementById(TIMEPIECE_IDS[i])
+                if ((mask & (1 << i)) !== 0) {
+                    element.style.display = "unset";
+                } else {
+                    element.style.display = "none";
+                }
+            }
+        }
+
+        const getCurrentSubsetMask = () => {
             const parsed = parseInt(subsetNumber.value)
 
             let subset
@@ -250,16 +272,26 @@ background-color:#111;
                 subset = parsed
             }
 
-            for (let i = 0; i < TIMEPIECE_IDS.length; i += 1) {
-                const element = document.getElementById(TIMEPIECE_IDS[i])
-                if ((subset & (1 << i)) !== 0) {
-                    element.style.display = "unset";
-                } else {
-                    element.style.display = "none";
-                }
-            }
+            return subset
+        }
+
+        const onSubsetChange = () => {
+            setSubsetMask(getCurrentSubsetMask())
         }
         subsetNumber.oninput = onSubsetChange
+
+        const subsetShiftUp = document.getElementById("subset-shift-up");
+        const onShiftUp = () => {
+            setSubsetMask(getCurrentSubsetMask() << 1)
+        }
+        subsetShiftUp.onclick = onShiftUp
+
+        const subsetShiftDown = document.getElementById("subset-shift-down");
+        const onShiftDown = () => {
+            setSubsetMask(getCurrentSubsetMask() >>> 1)
+        }
+        subsetShiftDown.onclick = onShiftDown
+
 
 
         const startTime = new Date().getTime()
