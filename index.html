@@ -140,7 +140,13 @@ background-color:#111;
             <div class="clock-row">
                 <output class="digital" id="digital-clock-base-12"></output>
                 <canvas width=0 height=0 id="analogue-clock-base-12">
-                    A standard analogue clock with X, E, and 10 instead pf 10, 11 and 12 respevtively.
+                    A standard analogue clock with X, E, and 10 instead of 10, 11 and 12 respevtively.
+                </canvas>
+            </div>
+            <div class="clock-row">
+                <output class="digital" id="digital-clock-24-base-12"></output>
+                <canvas width=0 height=0 id="analogue-clock-24-base-12">
+                    A 24-hour analogue clock with X, E, and 10 instead of 10, 11 and 12 respevtively, and so on up to 23 being 1E, and 24 being 20.
                 </canvas>
             </div>
             <div class="clock-row">
@@ -241,6 +247,8 @@ background-color:#111;
             "analogue-clock-24",
             "digital-clock-base-12",
             "analogue-clock-base-12",
+            "digital-clock-24-base-12",
+            "analogue-clock-24-base-12",
             "verbal-clock",
             "analogue-clock-12-0-offset",
             "metrological-seasons-north-row",
@@ -412,6 +420,7 @@ background-color:#111;
         const digitalClock12 = document.getElementById("digital-clock-12")
         const digitalClock24 = document.getElementById("digital-clock-24")
         const digitalClockBase12 = document.getElementById("digital-clock-base-12")
+        const digitalClock24Base12 = document.getElementById("digital-clock-24-base-12")
 
         const verbalClock = document.getElementById("verbal-clock")
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
@@ -503,6 +512,7 @@ background-color:#111;
         const analogueClock12Ctx = getAnalogueClockCtx("analogue-clock-12")
         const analogueClock24Ctx = getAnalogueClockCtx("analogue-clock-24")
         const analogueClockBase12Ctx = getAnalogueClockCtx("analogue-clock-base-12")
+        const analogueClock24Base12Ctx = getAnalogueClockCtx("analogue-clock-24-base-12")
         const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
 
         const setFromTimeAndRender = (time) => {
@@ -532,11 +542,18 @@ background-color:#111;
         const clockTextForIndex = (index, divisor) => "" + (index === 0 ? divisor : index);
         // Only works from 0 to 11 at the moment!
         const base12TextForIndex = (index, divisor) => {
-            if (index === 0) {
-                return "10"
+            let n = index === 0 ? divisor : index
+
+            let output = ""
+            // Takes advantage of n being known to not be 0
+            while (n > 0) {
+                output = lastBase12Digit(n) + output
+
+                n /= 12
+                n = Math.floor(n)
             }
 
-            return lastBase12Digit(index)
+            return output
         }
 
         const TAU = 2 * Math.PI
@@ -630,6 +647,7 @@ background-color:#111;
             digitalClock12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + h12 + ":" + m + ":" + s
             digitalClock24.innerHTML = "&nbsp;" + h + ":" + m + ":" + s
             digitalClockBase12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + padToTwoDigitsBase12(hours12 === 0 ? 12 : hours12) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
+            digitalClock24Base12.innerHTML = "&nbsp;" + padToTwoDigitsBase12(hours) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
 
             const nextHours12 = (hours12 + 1) % 12
 
@@ -687,6 +705,7 @@ background-color:#111;
             renderClock({time, ctx: analogueClock12Ctx})
             renderClock({time, ctx: analogueClock24Ctx, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
             renderClock({time, ctx: analogueClockBase12Ctx, textForIndex: base12TextForIndex})
+            renderClock({time, ctx: analogueClock24Base12Ctx, textForIndex: base12TextForIndex, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
             const zeroIndexedMonth = date.getUTCMonth()
@@ -933,8 +952,6 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO? show a 24 hour base 12 digital clock?
-        // TODO? show a 24 hour base 12 analogue clock?
         // TODO show a version of the clock on xkcd.com/now
         // TODO show the date in the base of the current day of the month, by the common calendar
         // TODO show the date in the base of the current day of the month, by the 13 * 28 + 1 calendar
