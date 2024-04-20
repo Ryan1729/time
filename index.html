@@ -157,6 +157,9 @@ background-color:#111;
                     A standard analogue clock but rotated so that the 12 is on the far right.
                 </canvas>
             </div>
+            <div class="clock-row">
+                <output class="digital" id="digital-date"></output>
+            </div>
             <div id="metrological-seasons-north-row" class="labelled-row">
                 <output class="verbal" id="metrological-seasons-north"></output>
                 <div class="labelled-row-label" > (metrological; northern hemisphere) </div>
@@ -251,6 +254,7 @@ background-color:#111;
             "analogue-clock-24-base-12",
             "verbal-clock",
             "analogue-clock-12-0-offset",
+            "digital-date",
             "metrological-seasons-north-row",
             "metrological-seasons-south-row",
             "synodic-month-row",
@@ -423,6 +427,8 @@ background-color:#111;
         const digitalClock24Base12 = document.getElementById("digital-clock-24-base-12")
 
         const verbalClock = document.getElementById("verbal-clock")
+        const digitalDate = document.getElementById("digital-date")
+
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
         const metrologicalSeasonsSouth = document.getElementById("metrological-seasons-south")
 
@@ -708,7 +714,11 @@ background-color:#111;
             renderClock({time, ctx: analogueClock24Base12Ctx, textForIndex: base12TextForIndex, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
+            const year = date.getUTCFullYear()
             const zeroIndexedMonth = date.getUTCMonth()
+            const dayOfMonth = date.getUTCDate()
+
+            digitalDate.textContent = `${year}-${padToTwoDigits(zeroIndexedMonth + 1)}-${padToTwoDigits(dayOfMonth)}`
 
             let northernMetrologicalSeason
             let southernMetrologicalSeason
