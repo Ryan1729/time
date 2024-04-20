@@ -657,7 +657,16 @@ background-color:#111;
 
             const nextHours12 = (hours12 + 1) % 12
 
-            const fiveMinutesRounded = Math.round((((time % Time.HOUR_IN_MILLIS)/Time.HOUR_IN_MILLIS) * (60 / 5))) * 5
+            const signedFiveMinutesRounded = Math.round((((time % Time.HOUR_IN_MILLIS)/Time.HOUR_IN_MILLIS) * (60 / 5))) * 5
+
+            let fiveMinutesRounded;
+            if (signedFiveMinutesRounded > 0) {
+                fiveMinutesRounded = signedFiveMinutesRounded
+            } else {
+                fiveMinutesRounded = 60 + signedFiveMinutesRounded
+            }
+            // For -0
+            fiveMinutesRounded = Math.abs(fiveMinutesRounded)
 
             let timePhrase
             switch (fiveMinutesRounded) {
