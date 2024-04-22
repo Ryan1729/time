@@ -163,6 +163,9 @@ background-color:#111;
             <div class="clock-row">
                 <output class="digital" id="digital-date-base-day-of-month-plus-one"></output>
             </div>
+            <div class="clock-row">
+                <output class="digital" id="digital-ifc-date-base-day-of-month-plus-one"></output>
+            </div>
             <div id="metrological-seasons-north-row" class="labelled-row">
                 <output class="verbal" id="metrological-seasons-north"></output>
                 <div class="labelled-row-label" > (metrological; northern hemisphere) </div>
@@ -259,6 +262,7 @@ background-color:#111;
             "analogue-clock-12-0-offset",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
+            "digital-ifc-date-base-day-of-month-plus-one",
             "metrological-seasons-north-row",
             "metrological-seasons-south-row",
             "synodic-month-row",
@@ -433,6 +437,8 @@ background-color:#111;
         const verbalClock = document.getElementById("verbal-clock")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
+        const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
+
 
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
         const metrologicalSeasonsSouth = document.getElementById("metrological-seasons-south")
@@ -738,6 +744,11 @@ background-color:#111;
             const base = dayOfMonth + 1
             digitalDateBaseDayOfMonthPlusOne.textContent = `${year.toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
 
+            const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date)
+
+            const ifcBase = ifcMAndD.dayOfMonth + 1
+            digitalIFCDateBaseDayOfMonthPlusOne.textContent = `${year.toString(ifcBase)}-${padStringToTwoDigits((ifcMAndD.zeroIndexedMonthNumber + 1).toString(ifcBase))}-${padStringToTwoDigits(ifcMAndD.dayOfMonth.toString(ifcBase))}`
+
             let northernMetrologicalSeason
             let southernMetrologicalSeason
             switch(zeroIndexedMonth) {
@@ -985,8 +996,10 @@ background-color:#111;
         renderStep()
 
         // TODO show a version of the clock on xkcd.com/now
-        // TODO show the date in the base of the current day of the month, by the 13 * 28 + 1 calendar
         // TODO show a factorial number system clock.
+        //   Could reasonably use a look up table for 0 to 60 here
+        // TODO show a factorial number system date.
+        //   Can't reasonably cheat here!
         // TODO show a playing card for each of the 52 weeks
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
         // TODO show position in the Sexagenary cycle/ganzhi
