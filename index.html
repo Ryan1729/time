@@ -150,6 +150,9 @@ background-color:#111;
                 </canvas>
             </div>
             <div class="clock-row">
+                <output class="digital" id="digital-clock-base-factorial"></output>
+            </div>
+            <div class="clock-row">
                 <output class="verbal" id="verbal-clock"></output>
             </div>
             <div class="clock-row">
@@ -234,6 +237,7 @@ background-color:#111;
             </div>
         </div>
     </div>
+    <script src="factorialBase.js"></script>
     <script src="time.js"></script>
     <script>
         const DEBUG_MODE = location.protocol === "file:"
@@ -433,6 +437,11 @@ background-color:#111;
         const digitalClock24 = document.getElementById("digital-clock-24")
         const digitalClockBase12 = document.getElementById("digital-clock-base-12")
         const digitalClock24Base12 = document.getElementById("digital-clock-24-base-12")
+        const digitalClockBaseFactorial = document.getElementById("digital-clock-base-factorial")
+
+        if (!DEBUG_MODE) {
+            digitalClockBaseFactorial.style.display = "none"
+        }
 
         const verbalClock = document.getElementById("verbal-clock")
         const digitalDate = document.getElementById("digital-date")
@@ -665,6 +674,7 @@ background-color:#111;
             digitalClock24.innerHTML = "&nbsp;" + h + ":" + m + ":" + s
             digitalClockBase12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + padToTwoDigitsBase12(hours12 === 0 ? 12 : hours12) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
             digitalClock24Base12.innerHTML = "&nbsp;" + padToTwoDigitsBase12(hours) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
+            digitalClockBaseFactorial.innerHTML = "&nbsp;" + padToFiveDigitsBaseFactorial(hours) + ":" + padToFiveDigitsBaseFactorial(minutes) + ":" + padToFiveDigitsBaseFactorial(seconds)
 
             const nextHours12 = (hours12 + 1) % 12
 
@@ -896,6 +906,16 @@ background-color:#111;
             return (n < 12 ? "0" : lastBase12Digit(n/12)) + lastBase12Digit(n)
         }
 
+        const padToFiveDigitsBaseFactorial = (n) => {
+            let output = FactorialBase.toString(FactorialBase.of(n))
+
+            while (output.length < 5) {
+                output = "0" + output
+            }
+
+            return output
+        }
+
         const padStringToTwoDigits = (s) => {
             return (s.length === 0 ? "00" : (s.length === 1 ? "0" : "")) + s
         }
@@ -1001,6 +1021,7 @@ background-color:#111;
         // TODO show a factorial number system date.
         //   Can't reasonably cheat here!
         // TODO show a playing card for each of the 52 weeks
+        //   https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
         // TODO show position in the Sexagenary cycle/ganzhi
         //    Any other similar cycles like this? Mayan calendar maybe?
