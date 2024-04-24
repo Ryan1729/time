@@ -439,10 +439,6 @@ background-color:#111;
         const digitalClock24Base12 = document.getElementById("digital-clock-24-base-12")
         const digitalClockBaseFactorial = document.getElementById("digital-clock-base-factorial")
 
-        if (!DEBUG_MODE) {
-            digitalClockBaseFactorial.style.display = "none"
-        }
-
         const verbalClock = document.getElementById("verbal-clock")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
@@ -674,7 +670,7 @@ background-color:#111;
             digitalClock24.innerHTML = "&nbsp;" + h + ":" + m + ":" + s
             digitalClockBase12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + padToTwoDigitsBase12(hours12 === 0 ? 12 : hours12) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
             digitalClock24Base12.innerHTML = "&nbsp;" + padToTwoDigitsBase12(hours) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
-            digitalClockBaseFactorial.innerHTML = "&nbsp;" + padToFiveDigitsBaseFactorial(hours) + ":" + padToFiveDigitsBaseFactorial(minutes) + ":" + padToFiveDigitsBaseFactorial(seconds)
+            digitalClockBaseFactorial.innerHTML = "&nbsp;" + padToFourDigitsBaseFactorial(hours) + ":" + padToFourDigitsBaseFactorial(minutes) + ":" + padToFourDigitsBaseFactorial(seconds)
 
             const nextHours12 = (hours12 + 1) % 12
 
@@ -906,10 +902,10 @@ background-color:#111;
             return (n < 12 ? "0" : lastBase12Digit(n/12)) + lastBase12Digit(n)
         }
 
-        const padToFiveDigitsBaseFactorial = (n) => {
+        const padToFourDigitsBaseFactorial = (n) => {
             let output = FactorialBase.toString(FactorialBase.of(n))
 
-            while (output.length < 5) {
+            while (output.length < 4) {
                 output = "0" + output
             }
 
@@ -1016,10 +1012,9 @@ background-color:#111;
         renderStep()
 
         // TODO show a version of the clock on xkcd.com/now
-        // TODO show a factorial number system clock.
-        //   Could reasonably use a look up table for 0 to 60 here
+        // TODO show a factorial number system analogue clock.
         // TODO show a factorial number system date.
-        //   Can't reasonably cheat here!
+        // TODO show a large analogue clock with words for numbers.
         // TODO show a playing card for each of the 52 weeks
         //   https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
@@ -1029,6 +1024,10 @@ background-color:#111;
         // TODO show French Republican decimal time
         // TODO show French Republican Calendar
         // TODO show Swatch Internet time
+        // TODO add a analogue clock that has a minute hand, a millenium hand, and an eon hand.
+        //   Can probably call an eon the average langth of a geologic eon, or since wikipedia says "half a billion years or more", just use a nice round number close to half a billion years
+        // TODO? invent and show an "analogue date"? 
+        //     I guess numbers for the months? Maybe this would only make sense for a calandar with truly fixed length months? What if a "year" is 4 years to bake in leap year stuff?
         // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres (This is apparently hard to do accurately!)
         // TODO? show if the current day or other time period is mildy interesting in a different calendar than usual?
         //    For example, IFC April fool's day, King of hearts week

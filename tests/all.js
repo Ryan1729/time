@@ -1,6 +1,7 @@
 const fs = require('fs');
 
 eval(fs.readFileSync('./time.js')+'')
+eval(fs.readFileSync('./factorialBase.js')+'')
 
 // assertion framework
 const assert = (bool, message) => {
@@ -9,6 +10,30 @@ const assert = (bool, message) => {
     }
 
     throw new Error(message || "Assertion failed")
+}
+
+const arrayEqual = (a, b) => {
+    if (!Array.isArray(a)) {
+        throw new Error("arrayEqual was passed non-array: " + a)
+    }
+    if (!Array.isArray(b)) {
+        throw new Error("arrayEqual was passed non-array: " + b)
+    }
+
+    if (a === b) {
+        return true
+    }
+    if (a.length !== b.length) {
+        return false
+    }
+
+    for (var i = 0; i < a.length; i += 1) {
+         // TODO? make this function recursive and remove array restrictions?
+        if (a[i] !== b[i]) {
+            return false
+        }
+    }
+    return true
 }
 
 // test framework
@@ -131,7 +156,7 @@ it(() => {
 
     const shouldBeStartOfJulyTime = Time.gregorianLinkedTimeFromDayOfMonth(startOfJune, 1, 1)
 
-    const startOfJulyTime = startOfJuly.getTime() + 1
+    const startOfJulyTime = startOfJuly.getTime()
 
     assert(shouldBeStartOfJulyTime === startOfJulyTime, "shouldBeStartOfJulyTime did not match: " + shouldBeStartOfJulyTime + " != " + startOfJulyTime)
 })
@@ -165,6 +190,42 @@ it(() => {
 
         assert(dayOfMonth >= 1, "zeroIndexedMonthNumber was too low on day " + dayOfYear + ": " + dayOfMonth)
         assert(dayOfMonth <= 29, "zeroIndexedMonthNumber was too high on day " + dayOfYear + ": " + dayOfMonth)
+    }
+})
+
+it(() => {
+    const expecteds = [
+        [0],
+        [1],
+        [1, 0],
+        [1, 1],
+        [2, 0],
+        [2, 1],
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, 0],
+        [1, 1, 1],
+        [1, 2, 0],
+        [1, 2, 1],
+        [2, 0, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+        [2, 1, 1],
+        [2, 2, 0],
+        [2, 2, 1],
+        [3, 0, 0],
+        [3, 0, 1],
+        [3, 1, 0],
+        [3, 1, 1],
+        [3, 2, 0],
+        [3, 2, 1],
+        [1, 0, 0, 0],
+    ]
+
+    for (let i = 0; i < expecteds.length; i += 1) {
+        const actual = FactorialBase.of(i)
+        const expected = expecteds[i]
+        assert(arrayEqual(actual, expected), `${i} in base factorial should be "${expected}" not "${actual}"`)
     }
 })
 
