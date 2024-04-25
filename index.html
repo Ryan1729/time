@@ -151,6 +151,9 @@ background-color:#111;
             </div>
             <div class="clock-row">
                 <output class="digital" id="digital-clock-base-factorial"></output>
+                <canvas width=0 height=0 id="analogue-clock-base-factorial">
+                    A standard analogue clock that uses the factorial number system (sans trailing 0) to represent the numbers from 1 to 12
+                </canvas>
             </div>
             <div class="clock-row">
                 <output class="verbal" id="verbal-clock"></output>
@@ -262,6 +265,8 @@ background-color:#111;
             "analogue-clock-base-12",
             "digital-clock-24-base-12",
             "analogue-clock-24-base-12",
+            "digital-clock-base-factorial",
+            "analogue-clock-base-factorial",
             "verbal-clock",
             "analogue-clock-12-0-offset",
             "digital-date",
@@ -535,6 +540,7 @@ background-color:#111;
         const analogueClock24Ctx = getAnalogueClockCtx("analogue-clock-24")
         const analogueClockBase12Ctx = getAnalogueClockCtx("analogue-clock-base-12")
         const analogueClock24Base12Ctx = getAnalogueClockCtx("analogue-clock-24-base-12")
+        const analogueClockBaseFactorialCtx = getAnalogueClockCtx("analogue-clock-base-factorial")
         const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
 
         const setFromTimeAndRender = (time) => {
@@ -562,7 +568,7 @@ background-color:#111;
         }
 
         const clockTextForIndex = (index, divisor) => "" + (index === 0 ? divisor : index);
-        // Only works from 0 to 11 at the moment!
+
         const base12TextForIndex = (index, divisor) => {
             let n = index === 0 ? divisor : index
 
@@ -576,6 +582,12 @@ background-color:#111;
             }
 
             return output
+        }
+
+        const factorialTextForIndex = (index, divisor) => {
+            const n = index === 0 ? divisor : index
+
+            return FactorialBase.toString(FactorialBase.of(n))
         }
 
         const TAU = 2 * Math.PI
@@ -738,6 +750,7 @@ background-color:#111;
             renderClock({time, ctx: analogueClock24Ctx, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
             renderClock({time, ctx: analogueClockBase12Ctx, textForIndex: base12TextForIndex})
             renderClock({time, ctx: analogueClock24Base12Ctx, textForIndex: base12TextForIndex, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
+            renderClock({time, ctx: analogueClockBaseFactorialCtx, textForIndex: factorialTextForIndex})
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
             const year = date.getUTCFullYear()
@@ -1012,7 +1025,6 @@ background-color:#111;
         renderStep()
 
         // TODO show a version of the clock on xkcd.com/now
-        // TODO show a factorial number system analogue clock.
         // TODO show a factorial number system date.
         // TODO show a large analogue clock with words for numbers.
         // TODO show a playing card for each of the 52 weeks
@@ -1024,9 +1036,11 @@ background-color:#111;
         // TODO show French Republican decimal time
         // TODO show French Republican Calendar
         // TODO show Swatch Internet time
+        // TODO show a "digital analogue" clock that merely prints the angle of the hands
+        //  I guess a analogue digital clock would be one of those ones where the digits are shown on cards that flip over?
         // TODO add a analogue clock that has a minute hand, a millenium hand, and an eon hand.
         //   Can probably call an eon the average langth of a geologic eon, or since wikipedia says "half a billion years or more", just use a nice round number close to half a billion years
-        // TODO? invent and show an "analogue date"? 
+        // TODO? invent and show an "analogue date"?
         //     I guess numbers for the months? Maybe this would only make sense for a calandar with truly fixed length months? What if a "year" is 4 years to bake in leap year stuff?
         // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres (This is apparently hard to do accurately!)
         // TODO? show if the current day or other time period is mildy interesting in a different calendar than usual?
