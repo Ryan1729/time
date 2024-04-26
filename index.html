@@ -156,6 +156,9 @@ background-color:#111;
                 </canvas>
             </div>
             <div class="clock-row">
+                <output class="digital" id="digital-clock-24-base-factorial"></output>
+            </div>
+            <div class="clock-row">
                 <output class="verbal" id="verbal-clock"></output>
             </div>
             <div class="clock-row">
@@ -267,6 +270,7 @@ background-color:#111;
             "analogue-clock-24-base-12",
             "digital-clock-base-factorial",
             "analogue-clock-base-factorial",
+            "digital-clock-24-base-factorial",
             "verbal-clock",
             "analogue-clock-12-0-offset",
             "digital-date",
@@ -443,6 +447,8 @@ background-color:#111;
         const digitalClockBase12 = document.getElementById("digital-clock-base-12")
         const digitalClock24Base12 = document.getElementById("digital-clock-24-base-12")
         const digitalClockBaseFactorial = document.getElementById("digital-clock-base-factorial")
+        const digitalClock24BaseFactorial = document.getElementById("digital-clock-24-base-factorial")
+
 
         const verbalClock = document.getElementById("verbal-clock")
         const digitalDate = document.getElementById("digital-date")
@@ -682,7 +688,8 @@ background-color:#111;
             digitalClock24.innerHTML = "&nbsp;" + h + ":" + m + ":" + s
             digitalClockBase12.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + padToTwoDigitsBase12(hours12 === 0 ? 12 : hours12) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
             digitalClock24Base12.innerHTML = "&nbsp;" + padToTwoDigitsBase12(hours) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
-            digitalClockBaseFactorial.innerHTML = "&nbsp;" + padToFourDigitsBaseFactorial(hours) + ":" + padToFourDigitsBaseFactorial(minutes) + ":" + padToFourDigitsBaseFactorial(seconds)
+            digitalClockBaseFactorial.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + padToNDigitsBaseFactorial(3, hours12) + ":" + padToNDigitsBaseFactorial(4, minutes) + ":" + padToNDigitsBaseFactorial(4, seconds)
+            digitalClock24BaseFactorial.innerHTML = "&nbsp;" + padToNDigitsBaseFactorial(3, hours) + ":" + padToNDigitsBaseFactorial(4, minutes) + ":" + padToNDigitsBaseFactorial(4, seconds)
 
             const nextHours12 = (hours12 + 1) % 12
 
@@ -915,10 +922,10 @@ background-color:#111;
             return (n < 12 ? "0" : lastBase12Digit(n/12)) + lastBase12Digit(n)
         }
 
-        const padToFourDigitsBaseFactorial = (n) => {
-            let output = FactorialBase.toString(FactorialBase.of(n))
+        const padToNDigitsBaseFactorial = (digits, toPad) => {
+            let output = FactorialBase.toString(FactorialBase.of(toPad))
 
-            while (output.length < 4) {
+            while (output.length < digits) {
                 output = "0" + output
             }
 
