@@ -157,6 +157,9 @@ background-color:#111;
             </div>
             <div class="clock-row">
                 <output class="digital" id="digital-clock-24-base-factorial"></output>
+                <canvas width=0 height=0 id="analogue-clock-24-base-factorial">
+                    A 24-hour analogue clock that uses the factorial number system (sans trailing 0) to represent the numbers from 1 to 24
+                </canvas>
             </div>
             <div class="clock-row">
                 <output class="verbal" id="verbal-clock"></output>
@@ -271,6 +274,7 @@ background-color:#111;
             "digital-clock-base-factorial",
             "analogue-clock-base-factorial",
             "digital-clock-24-base-factorial",
+            //"analogue-clock-24-base-factorial",
             "verbal-clock",
             "analogue-clock-12-0-offset",
             "digital-date",
@@ -431,16 +435,40 @@ background-color:#111;
             extraBoxes: document.getElementById("international-fixed-calendar-extra-boxes"),
         };
 
-        const clockWidth = 100
-        const clockHeight = 100
-        const clockX = clockWidth/2
-        const clockY = clockHeight/2
-        const clockRadius = clockWidth * 0.45
-        const clockNumberRadius = clockWidth * 0.35
-        const clockInnerEdgeRadius = clockRadius * 0.95
-        const clockSecondRadius = clockInnerEdgeRadius * 0.975
-        const clockMinuteRadius = clockInnerEdgeRadius * 0.95
-        const clockHourRadius = clockInnerEdgeRadius * 0.65
+        let clockLengthsMemo = {}
+
+        const clockLengths = (scale) => {
+            scale ||= 1
+            
+            // TODO? Measure whether memoizing this was actually worth it?
+            if (!clockLengthsMemo[scale]) {
+                const clockWidth = 100 * scale
+                const clockHeight = 100 * scale
+                const clockX = clockWidth/2
+                const clockY = clockHeight/2
+                const clockRadius = clockWidth * 0.45
+                const clockNumberRadius = clockWidth * 0.35
+                const clockInnerEdgeRadius = clockRadius * 0.95
+                const clockSecondRadius = clockInnerEdgeRadius * 0.975
+                const clockMinuteRadius = clockInnerEdgeRadius * 0.95
+                const clockHourRadius = clockInnerEdgeRadius * 0.65
+                
+                clockLengthsMemo[scale] = {
+                    clockWidth,
+                    clockHeight,
+                    clockX,
+                    clockY,
+                    clockRadius,
+                    clockNumberRadius,
+                    clockInnerEdgeRadius,
+                    clockSecondRadius,
+                    clockMinuteRadius,
+                    clockHourRadius,
+                }
+            }
+            
+            return clockLengthsMemo[scale]
+        }
 
         const digitalClock12 = document.getElementById("digital-clock-12")
         const digitalClock24 = document.getElementById("digital-clock-24")
@@ -535,11 +563,18 @@ background-color:#111;
             return eightSigFigs
         }
 
-        const getAnalogueClockCtx = (id) => {
+        const getAnalogueClockCtx = (id, scale) => {
+            scale ||= 1
+            
+            const lengths = clockLengths(scale)
+            
             const canvas = document.getElementById(id)
-            canvas.width = clockWidth
-            canvas.height = clockHeight
-            return canvas.getContext("2d");
+            canvas.width = lengths.clockWidth
+            canvas.height = lengths.clockHeight
+            return {
+                ctx: canvas.getContext("2d"),
+                scale,
+            };
         }
 
         const analogueClock12Ctx = getAnalogueClockCtx("analogue-clock-12")
@@ -547,6 +582,7 @@ background-color:#111;
         const analogueClockBase12Ctx = getAnalogueClockCtx("analogue-clock-base-12")
         const analogueClock24Base12Ctx = getAnalogueClockCtx("analogue-clock-24-base-12")
         const analogueClockBaseFactorialCtx = getAnalogueClockCtx("analogue-clock-base-factorial")
+        const analogueClock24BaseFactorialCtx = getAnalogueClockCtx("analogue-clock-24-base-factorial", 2)
         const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
 
         const setFromTimeAndRender = (time) => {
@@ -555,10 +591,14 @@ background-color:#111;
             renderAt(new Date(time))
         }
 
-        const clockNumberCenterXYForRadians = (radians) => [
-            clockX + Math.cos(radians) * clockNumberRadius,
-            clockY + Math.sin(radians) * clockNumberRadius,
-        ];
+        const clockNumberCenterXYForRadians = (radians, scale) => {
+            scale ||= 1
+            const lengths = clockLengths(scale)
+            return [
+                lengths.clockX + Math.cos(radians) * lengths.clockNumberRadius,
+                lengths.clockY + Math.sin(radians) * lengths.clockNumberRadius,
+            ]
+        };
 
         function lastBase12Digit(x){
             x = Math.floor(x)
@@ -598,10 +638,13 @@ background-color:#111;
 
         const TAU = 2 * Math.PI
 
-        const clockNumberCenterXYForIndex = ({index, divisor, offset}) => {
+        const clockNumberCenterXYForIndex = ({index, divisor, offset, scale}) => {
             // Note that the negatives here do happen to work out
             offset = offset === undefined ? -3 : offset
-            return clockNumberCenterXYForRadians(((index + offset) % divisor) * (TAU / divisor))
+            return clockNumberCenterXYForRadians(
+                ((index + offset) % divisor) * (TAU / divisor),
+                scale
+            )
         }
 
         const range = (n) => {
@@ -617,26 +660,17 @@ background-color:#111;
         const range12 = range(12)
         const range24 = range(24)
 
-        const twelveHourCenterXYs = range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12}))
-        const twelveHourZeroOffsetCenterXYs = range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12, offset: 0}))
+        // TODO? Memoize these?
+        const twelveHourCenterXYs = (scale) => range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12, scale}))
+        const twelveHourZeroOffsetCenterXYs = (scale) => range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12, offset: 0, scale}))
 
-        const twentyFourHourCenterXYs = range24.map((index) => clockNumberCenterXYForIndex({index, divisor: 24, offset: -6}))
+        const twentyFourHourCenterXYs = (scale) => range24.map((index) => clockNumberCenterXYForIndex({index, divisor: 24, offset: -6, scale}))
 
-        const twelveHourClockNumberXYForIndex = (index) => {
-            const [baseX, baseY] = twelveHourCenterXYs[index]
+        const twelveHourClockNumberXYForIndex = (index, scale) => {
+            scale ||= 1
+            const [baseX, baseY] = twelveHourCenterXYs(scale)[index]
 
-            const metrics = analogueClock12Ctx.measureText(clockTextForIndex(index, 12))
-
-            return [
-                baseX - metrics.width / 2,
-                baseY + metrics.fontBoundingBoxDescent
-            ]
-        }
-
-        const twelveHourZeroOffsetClockNumberXYForIndex = (index) => {
-            const [baseX, baseY] = twelveHourZeroOffsetCenterXYs[index]
-
-            const metrics = analogueClock12Ctx.measureText(clockTextForIndex(index, 12))
+            const metrics = analogueClock12Ctx.ctx.measureText(clockTextForIndex(index, 12))
 
             return [
                 baseX - metrics.width / 2,
@@ -644,10 +678,11 @@ background-color:#111;
             ]
         }
 
-        const twentyFourHourClockNumberXYForIndex = (index) => {
-            const [baseX, baseY] = twentyFourHourCenterXYs[index]
+        const twelveHourZeroOffsetClockNumberXYForIndex = (index, scale) => {
+            scale ||= 1
+            const [baseX, baseY] = twelveHourZeroOffsetCenterXYs(scale)[index]
 
-            const metrics = analogueClock24Ctx.measureText(clockTextForIndex(index, 24))
+            const metrics = analogueClock12Ctx.ctx.measureText(clockTextForIndex(index, 12))
 
             return [
                 baseX - metrics.width / 2,
@@ -655,10 +690,22 @@ background-color:#111;
             ]
         }
 
-        const twelveHourClockNumberXYs = range12.map(twelveHourClockNumberXYForIndex)
-        const twelveHourZeroOffsetClockNumberXYs = range12.map(twelveHourZeroOffsetClockNumberXYForIndex)
+        const twentyFourHourClockNumberXYForIndex = (index, scale) => {
+            scale ||= 1
+            const [baseX, baseY] = twentyFourHourCenterXYs(scale)[index]
 
-        const twentyFourHourClockNumberXYs = range24.map(twentyFourHourClockNumberXYForIndex)
+            const metrics = analogueClock24Ctx.ctx.measureText(clockTextForIndex(index, 24))
+
+            return [
+                baseX - metrics.width / 2,
+                baseY + metrics.fontBoundingBoxDescent
+            ]
+        }
+
+        const twelveHourClockNumberXYs = (scale) => range12.map(n => twelveHourClockNumberXYForIndex(n, scale))
+        const twelveHourZeroOffsetClockNumberXYs = (scale) => range12.map(n => twelveHourZeroOffsetClockNumberXYForIndex(n, scale))
+
+        const twentyFourHourClockNumberXYs = (scale) => range24.map(n => twentyFourHourClockNumberXYForIndex(n, scale))
 
         const renderAt = (date) => {
             const time = date.getTime()
@@ -758,6 +805,9 @@ background-color:#111;
             renderClock({time, ctx: analogueClockBase12Ctx, textForIndex: base12TextForIndex})
             renderClock({time, ctx: analogueClock24Base12Ctx, textForIndex: base12TextForIndex, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
             renderClock({time, ctx: analogueClockBaseFactorialCtx, textForIndex: factorialTextForIndex})
+            if (DEBUG_MODE) {
+            renderClock({time, ctx: analogueClock24BaseFactorialCtx, textForIndex: factorialTextForIndex, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
+            }
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
             const year = date.getUTCFullYear()
@@ -864,12 +914,17 @@ background-color:#111;
             numberXYs ||= twelveHourClockNumberXYs
             topOfClockShift = topOfClockShift === undefined ? -0.25 : topOfClockShift
             textForIndex ||= clockTextForIndex
+            
+            const scale = ctx.scale
+            ctx = ctx.ctx
 
-            ctx.clearRect(0, 0, clockWidth, clockHeight)
+            const lengths = clockLengths(scale)
+
+            ctx.clearRect(0, 0, lengths.clockWidth, lengths.clockHeight)
 
             ctx.fillStyle = "#eee"
             ctx.beginPath();
-            ctx.arc(clockX, clockY, clockRadius, 0, 2 * Math.PI)
+            ctx.arc(lengths.clockX, lengths.clockY, lengths.clockRadius, 0, 2 * Math.PI)
             ctx.fill();
 
             ctx.lineWidth = 3;
@@ -877,9 +932,10 @@ background-color:#111;
             ctx.stroke();
 
             ctx.fillStyle = "#222"
-            ctx.font = "6px sans-serif";
-            for (let i = 0; i < numberXYs.length; i += 1) {
-                const [x, y] = numberXYs[i]
+            ctx.font = (6 * scale) + "px sans-serif";
+            const numberXYsArray = numberXYs(scale)
+            for (let i = 0; i < numberXYsArray.length; i += 1) {
+                const [x, y] = numberXYsArray[i]
                 ctx.fillText(textForIndex(i, divisor), x, y);
             }
 
@@ -892,25 +948,25 @@ background-color:#111;
             ctx.lineWidth = 3;
             ctx.strokeStyle = '#3352e1';
             ctx.beginPath()
-            ctx.moveTo(clockX, clockY)
+            ctx.moveTo(lengths.clockX, lengths.clockY)
             const hourAngle = (hourFrac + topOfClockShift) * TAU
-            ctx.lineTo(clockX + Math.cos(hourAngle) * clockHourRadius, clockY + Math.sin(hourAngle) * clockHourRadius)
+            ctx.lineTo(lengths.clockX + Math.cos(hourAngle) * lengths.clockHourRadius, lengths.clockY + Math.sin(hourAngle) * lengths.clockHourRadius)
             ctx.stroke()
 
             ctx.lineWidth = 2;
             ctx.strokeStyle = '#5a7d8b';
             ctx.beginPath()
-            ctx.moveTo(clockX, clockY)
+            ctx.moveTo(lengths.clockX, lengths.clockY)
             const minuteAngle = (minuteFrac + topOfClockShift) * TAU
-            ctx.lineTo(clockX + Math.cos(minuteAngle) * clockMinuteRadius, clockY + Math.sin(minuteAngle) * clockMinuteRadius)
+            ctx.lineTo(lengths.clockX + Math.cos(minuteAngle) * lengths.clockMinuteRadius, lengths.clockY + Math.sin(minuteAngle) * lengths.clockMinuteRadius)
             ctx.stroke()
 
             ctx.lineWidth = 1;
             ctx.strokeStyle = '#de4949';
             ctx.beginPath()
-            ctx.moveTo(clockX, clockY)
+            ctx.moveTo(lengths.clockX, lengths.clockY)
             const secondAngle = (secondFrac + topOfClockShift) * TAU
-            ctx.lineTo(clockX + Math.cos(secondAngle) * clockSecondRadius, clockY + Math.sin(secondAngle) * clockSecondRadius)
+            ctx.lineTo(lengths.clockX + Math.cos(secondAngle) * lengths.clockSecondRadius, lengths.clockY + Math.sin(secondAngle) * lengths.clockSecondRadius)
             ctx.stroke()
         }
 
