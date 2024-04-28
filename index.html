@@ -439,7 +439,7 @@ background-color:#111;
 
         const clockLengths = (scale) => {
             scale ||= 1
-            
+
             // TODO? Measure whether memoizing this was actually worth it?
             if (!clockLengthsMemo[scale]) {
                 const clockWidth = 100 * scale
@@ -447,12 +447,12 @@ background-color:#111;
                 const clockX = clockWidth/2
                 const clockY = clockHeight/2
                 const clockRadius = clockWidth * 0.45
-                const clockNumberRadius = clockWidth * 0.35
+                const clockNumberRadius = clockWidth * 0.375
                 const clockInnerEdgeRadius = clockRadius * 0.95
                 const clockSecondRadius = clockInnerEdgeRadius * 0.975
                 const clockMinuteRadius = clockInnerEdgeRadius * 0.95
                 const clockHourRadius = clockInnerEdgeRadius * 0.65
-                
+
                 clockLengthsMemo[scale] = {
                     clockWidth,
                     clockHeight,
@@ -466,7 +466,7 @@ background-color:#111;
                     clockHourRadius,
                 }
             }
-            
+
             return clockLengthsMemo[scale]
         }
 
@@ -565,9 +565,9 @@ background-color:#111;
 
         const getAnalogueClockCtx = (id, scale) => {
             scale ||= 1
-            
+
             const lengths = clockLengths(scale)
-            
+
             const canvas = document.getElementById(id)
             canvas.width = lengths.clockWidth
             canvas.height = lengths.clockHeight
@@ -661,45 +661,16 @@ background-color:#111;
         const range24 = range(24)
 
         // TODO? Memoize these?
-        const twelveHourCenterXYs = (scale) => range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12, scale}))
-        const twelveHourZeroOffsetCenterXYs = (scale) => range12.map((index) => clockNumberCenterXYForIndex({index, divisor: 12, offset: 0, scale}))
-
-        const twentyFourHourCenterXYs = (scale) => range24.map((index) => clockNumberCenterXYForIndex({index, divisor: 24, offset: -6, scale}))
-
         const twelveHourClockNumberXYForIndex = (index, scale) => {
-            scale ||= 1
-            const [baseX, baseY] = twelveHourCenterXYs(scale)[index]
-
-            const metrics = analogueClock12Ctx.ctx.measureText(clockTextForIndex(index, 12))
-
-            return [
-                baseX - metrics.width / 2,
-                baseY + metrics.fontBoundingBoxDescent
-            ]
+            return clockNumberCenterXYForIndex({index, divisor: 12, scale})
         }
 
         const twelveHourZeroOffsetClockNumberXYForIndex = (index, scale) => {
-            scale ||= 1
-            const [baseX, baseY] = twelveHourZeroOffsetCenterXYs(scale)[index]
-
-            const metrics = analogueClock12Ctx.ctx.measureText(clockTextForIndex(index, 12))
-
-            return [
-                baseX - metrics.width / 2,
-                baseY + metrics.fontBoundingBoxDescent
-            ]
+            return clockNumberCenterXYForIndex({index, divisor: 12, offset: 0, scale})
         }
 
         const twentyFourHourClockNumberXYForIndex = (index, scale) => {
-            scale ||= 1
-            const [baseX, baseY] = twentyFourHourCenterXYs(scale)[index]
-
-            const metrics = analogueClock24Ctx.ctx.measureText(clockTextForIndex(index, 24))
-
-            return [
-                baseX - metrics.width / 2,
-                baseY + metrics.fontBoundingBoxDescent
-            ]
+            return clockNumberCenterXYForIndex({index, divisor: 24, offset: -6, scale})
         }
 
         const twelveHourClockNumberXYs = (scale) => range12.map(n => twelveHourClockNumberXYForIndex(n, scale))
@@ -805,9 +776,14 @@ background-color:#111;
             renderClock({time, ctx: analogueClockBase12Ctx, textForIndex: base12TextForIndex})
             renderClock({time, ctx: analogueClock24Base12Ctx, textForIndex: base12TextForIndex, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
             renderClock({time, ctx: analogueClockBaseFactorialCtx, textForIndex: factorialTextForIndex})
-            if (DEBUG_MODE) {
-            renderClock({time, ctx: analogueClock24BaseFactorialCtx, textForIndex: factorialTextForIndex, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
-            }
+            renderClock({
+                time,
+                ctx: analogueClock24BaseFactorialCtx,
+                textForIndex: factorialTextForIndex,
+                numberXYs: twentyFourHourClockNumberXYs,
+                divisor: 24,
+                shouldRotateIndex: (i) => i === 23 || i === 0 || i === 1 || i === 11 || i === 12 || i === 13,
+            })
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
             const year = date.getUTCFullYear()
@@ -909,12 +885,13 @@ background-color:#111;
             }
         }
 
-        const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex}) => {
+        const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex, shouldRotateIndex}) => {
             divisor ||= 12
             numberXYs ||= twelveHourClockNumberXYs
             topOfClockShift = topOfClockShift === undefined ? -0.25 : topOfClockShift
             textForIndex ||= clockTextForIndex
-            
+            shouldRotateIndex ||= () => false;
+
             const scale = ctx.scale
             ctx = ctx.ctx
 
@@ -935,8 +912,21 @@ background-color:#111;
             ctx.font = (6 * scale) + "px sans-serif";
             const numberXYsArray = numberXYs(scale)
             for (let i = 0; i < numberXYsArray.length; i += 1) {
-                const [x, y] = numberXYsArray[i]
-                ctx.fillText(textForIndex(i, divisor), x, y);
+                const [baseX, baseY] = numberXYsArray[i]
+
+                const text = textForIndex(i, divisor)
+                const metrics = ctx.measureText(text)
+
+
+                if (shouldRotateIndex(i)) {
+                    ctx.save();
+                    ctx.translate(baseX, baseY);
+                    ctx.rotate(Math.PI/2);
+                    ctx.fillText(text, -metrics.width / 2, metrics.fontBoundingBoxDescent);
+                    ctx.restore();
+                } else {
+                    ctx.fillText(text, baseX - metrics.width / 2, baseY + metrics.fontBoundingBoxDescent)
+                }
             }
 
             const hourDivisor = 24 / divisor
