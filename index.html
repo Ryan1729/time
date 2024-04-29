@@ -178,6 +178,12 @@ background-color:#111;
             <div class="clock-row">
                 <output class="digital" id="digital-ifc-date-base-day-of-month-plus-one"></output>
             </div>
+            <div class="clock-row">
+                <output class="digital" id="digital-date-base-factorial"></output>
+            </div>
+            <div class="clock-row">
+                <output class="digital" id="digital-ifc-date-base-factorial"></output>
+            </div>
             <div id="metrological-seasons-north-row" class="labelled-row">
                 <output class="verbal" id="metrological-seasons-north"></output>
                 <div class="labelled-row-label" > (metrological; northern hemisphere) </div>
@@ -280,6 +286,8 @@ background-color:#111;
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
+            "digital-date-base-factorial",
+            "digital-ifc-date-base-factorial",
             "metrological-seasons-north-row",
             "metrological-seasons-south-row",
             "synodic-month-row",
@@ -482,6 +490,8 @@ background-color:#111;
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
+        const digitalDateBaseFactorial = document.getElementById("digital-date-base-factorial")
+        const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
 
 
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
@@ -633,7 +643,7 @@ background-color:#111;
         const factorialTextForIndex = (index, divisor) => {
             const n = index === 0 ? divisor : index
 
-            return FactorialBase.toString(FactorialBase.of(n))
+            return FactorialBase.stringOf(n)
         }
 
         const TAU = 2 * Math.PI
@@ -798,8 +808,13 @@ background-color:#111;
 
             const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date)
 
+            const ifcOneIndexedMonth = ifcMAndD.zeroIndexedMonthNumber + 1
+
             const ifcBase = ifcMAndD.dayOfMonth + 1
-            digitalIFCDateBaseDayOfMonthPlusOne.textContent = `${year.toString(ifcBase)}-${padStringToTwoDigits((ifcMAndD.zeroIndexedMonthNumber + 1).toString(ifcBase))}-${padStringToTwoDigits(ifcMAndD.dayOfMonth.toString(ifcBase))}`
+            digitalIFCDateBaseDayOfMonthPlusOne.textContent = `${year.toString(ifcBase)}-${padStringToTwoDigits((ifcOneIndexedMonth).toString(ifcBase))}-${padStringToTwoDigits(ifcMAndD.dayOfMonth.toString(ifcBase))}`
+
+            digitalDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
+            digitalIFCDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
 
             let northernMetrologicalSeason
             let southernMetrologicalSeason
@@ -969,7 +984,7 @@ background-color:#111;
         }
 
         const padToNDigitsBaseFactorial = (digits, toPad) => {
-            let output = FactorialBase.toString(FactorialBase.of(toPad))
+            let output = FactorialBase.stringOf(toPad)
 
             while (output.length < digits) {
                 output = "0" + output
