@@ -165,6 +165,9 @@ background-color:#111;
                 <output class="verbal" id="verbal-clock"></output>
             </div>
             <div class="clock-row">
+                <output class="verbal" id="verbal-time"></output>
+            </div>
+            <div class="clock-row">
                 <canvas width=0 height=0 id="analogue-clock-12-0-offset">
                     A standard analogue clock but rotated so that the 12 is on the far right.
                 </canvas>
@@ -282,6 +285,7 @@ background-color:#111;
             "digital-clock-24-base-factorial",
             "analogue-clock-24-base-factorial",
             "verbal-clock",
+            "verbal-time",
             "analogue-clock-12-0-offset",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
@@ -487,6 +491,7 @@ background-color:#111;
 
 
         const verbalClock = document.getElementById("verbal-clock")
+        const verbalTime = document.getElementById("verbal-time")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -780,6 +785,7 @@ background-color:#111;
             }
 
             verbalClock.textContent = timePhrase
+            verbalTime.textContent = intToWords(time)
 
             renderClock({time, ctx: analogueClock12Ctx})
             renderClock({time, ctx: analogueClock24Ctx, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
@@ -869,35 +875,10 @@ background-color:#111;
 
         const hoursToWord = (n) => {
             n = n % 12
-            switch (n) {
-                default:
-                    console.error("Unhandled case in hoursToWord: " + n)
-                    return "" + n
-                case 0:
-                    return "Twelve"
-                case 1:
-                    return "One"
-                case 2:
-                    return "Two"
-                case 3:
-                    return "Three"
-                case 4:
-                    return "Four"
-                case 5:
-                    return "Five"
-                case 6:
-                    return "Six"
-                case 7:
-                    return "Seven"
-                case 8:
-                    return "Eight"
-                case 9:
-                    return "Nine"
-                case 10:
-                    return "Ten"
-                case 11:
-                    return "Eleven"
+            if (n === 0) {
+                n = 12
             }
+            return intToWords(n)
         }
 
         const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex, shouldRotateIndex}) => {
@@ -973,6 +954,116 @@ background-color:#111;
             const secondAngle = (secondFrac + topOfClockShift) * TAU
             ctx.lineTo(lengths.clockX + Math.cos(secondAngle) * lengths.clockSecondRadius, lengths.clockY + Math.sin(secondAngle) * lengths.clockSecondRadius)
             ctx.stroke()
+        }
+
+        const intToWords = (n) => {
+            let output = ""
+
+            if (n < 0) {
+                output += "Minus "
+            }
+
+            n = Math.abs(n)
+
+            for (let [roundValue, word] of [
+                // This covers up to Number.MAX_SAFE_INTEGER, which seems as good a place to stop as any
+                [1_000_000_000_000_000_000, "Quintillion"],
+                [1_000_000_000_000_000, "Quadrillion"],
+                [1_000_000_000_000, "Trillion"],
+                [1_000_000_000, "Billion"],
+                [1_000_000, "Million"],
+                [1000, "Thousand"],
+                [100, "Hundred"]
+            ]) {
+                if (n === roundValue) {
+                    output += intToWords(1) + " " + word
+                    return output
+                } else if (n > roundValue) {
+                    const leadingDigits = Math.floor(n / roundValue)
+                    output += intToWords(leadingDigits) + " " + word + " "
+                    n -= leadingDigits * roundValue
+                    if (n === 0) {
+                        return output
+                    }
+                }
+            }
+
+            for (let [multipleOfTen, word] of [[90, "Ninety"], [80, "Eighty"], [70, "Seventy"], [60, "Sixty"], [50, "Fifty"], [40, "Forty"], [30, "Thirty"], [20, "Twenty"]]) {
+                if (n === multipleOfTen) {
+                    output += word
+                    return output
+                } else if (n > multipleOfTen) {
+                    output += intToWords(multipleOfTen) + '-' + intToWords(n % multipleOfTen)
+                    return output
+                }
+            }
+            switch (n) {
+                default:
+                    console.error("Unhandled case in intToWords: " + n)
+                    return "" + n
+                case 0:
+                    output += "Zero"
+                break
+                case 1:
+                    output += "One"
+                break
+                case 2:
+                    output += "Two"
+                break
+                case 3:
+                    output += "Three"
+                break
+                case 4:
+                    output += "Four"
+                break
+                case 5:
+                    output += "Five"
+                break
+                case 6:
+                    output += "Six"
+                break
+                case 7:
+                    output += "Seven"
+                break
+                case 8:
+                    output += "Eight"
+                break
+                case 9:
+                    output += "Nine"
+                break
+                case 10:
+                    output += "Ten"
+                break
+                case 11:
+                    output += "Eleven"
+                break
+                case 12:
+                    output += "Twelve"
+                break
+                case 13:
+                    output += "Thirteen"
+                break
+                case 14:
+                    output += "Fourteen"
+                break
+                case 15:
+                    output += "Fifteen"
+                break
+                case 16:
+                    output += "Sixteen"
+                break
+                case 17:
+                    output +="Seventeen"
+                break
+                case 18:
+                    output += "Eighteen"
+                break
+                case 19:
+                    output += "Nineteen"
+                break
+            }
+
+            return output
         }
 
         const padToTwoDigits = (n) => {
@@ -1093,7 +1184,6 @@ background-color:#111;
         renderStep()
 
         // TODO show a version of the clock on xkcd.com/now
-        // TODO show a factorial number system date.
         // TODO show a large analogue clock with words for numbers.
         // TODO show a playing card for each of the 52 weeks
         //   https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
