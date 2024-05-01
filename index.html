@@ -163,6 +163,9 @@ background-color:#111;
             </div>
             <div class="clock-row">
                 <output class="verbal" id="verbal-clock"></output>
+                <canvas width=0 height=0 id="analogue-clock-verbal">
+                    A standard analogue clock that uses words instead of numbers
+                </canvas>
             </div>
             <div class="clock-row">
                 <output class="verbal" id="verbal-time"></output>
@@ -285,6 +288,7 @@ background-color:#111;
             "digital-clock-24-base-factorial",
             "analogue-clock-24-base-factorial",
             "verbal-clock",
+            "analogue-clock-verbal",
             "verbal-time",
             "analogue-clock-12-0-offset",
             "digital-date",
@@ -598,7 +602,9 @@ background-color:#111;
         const analogueClock24Base12Ctx = getAnalogueClockCtx("analogue-clock-24-base-12")
         const analogueClockBaseFactorialCtx = getAnalogueClockCtx("analogue-clock-base-factorial")
         const analogueClock24BaseFactorialCtx = getAnalogueClockCtx("analogue-clock-24-base-factorial", 2)
+        const analogueClockVerbalCtx = getAnalogueClockCtx("analogue-clock-verbal", 2)
         const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
+
 
         const setFromTimeAndRender = (time) => {
             inputMode = PAUSED
@@ -650,6 +656,13 @@ background-color:#111;
 
             return FactorialBase.stringOf(n)
         }
+
+        const wordForIndex = (index, divisor) => {
+            const n = index === 0 ? divisor : index
+
+            return intToWords(n)
+        }
+
 
         const TAU = 2 * Math.PI
 
@@ -798,7 +811,25 @@ background-color:#111;
                 textForIndex: factorialTextForIndex,
                 numberXYs: twentyFourHourClockNumberXYs,
                 divisor: 24,
-                shouldRotateIndex: (i) => i === 23 || i === 0 || i === 1 || i === 11 || i === 12 || i === 13,
+                rotationForIndex: (i) =>
+                    i === 23 || i === 0 || i === 1 || i === 11 || i === 12 || i === 13 ? TAU/4 : 0,
+            })
+            renderClock({
+                time,
+                ctx: analogueClockVerbalCtx,
+                textForIndex: wordForIndex,
+                rotationForIndex: (i) => {
+                    switch (i) {
+                        case 3:
+                            return TAU/4;
+                        case 8:
+                            return TAU/8;
+                        case 11:
+                            return -TAU/8;
+                        default:
+                            return 0;
+                    }
+                },
             })
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
@@ -881,12 +912,12 @@ background-color:#111;
             return intToWords(n)
         }
 
-        const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex, shouldRotateIndex}) => {
+        const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex, rotationForIndex}) => {
             divisor ||= 12
             numberXYs ||= twelveHourClockNumberXYs
             topOfClockShift = topOfClockShift === undefined ? -0.25 : topOfClockShift
             textForIndex ||= clockTextForIndex
-            shouldRotateIndex ||= () => false;
+            rotationForIndex ||= () => 0;
 
             const scale = ctx.scale
             ctx = ctx.ctx
@@ -913,16 +944,13 @@ background-color:#111;
                 const text = textForIndex(i, divisor)
                 const metrics = ctx.measureText(text)
 
+                const angle = rotationForIndex(i)
 
-                if (shouldRotateIndex(i)) {
-                    ctx.save();
-                    ctx.translate(baseX, baseY);
-                    ctx.rotate(Math.PI/2);
-                    ctx.fillText(text, -metrics.width / 2, metrics.fontBoundingBoxDescent);
-                    ctx.restore();
-                } else {
-                    ctx.fillText(text, baseX - metrics.width / 2, baseY + metrics.fontBoundingBoxDescent)
-                }
+                ctx.save();
+                ctx.translate(baseX, baseY);
+                ctx.rotate(angle);
+                ctx.fillText(text, -metrics.width / 2, metrics.fontBoundingBoxDescent);
+                ctx.restore();
             }
 
             const hourDivisor = 24 / divisor
@@ -1184,7 +1212,6 @@ background-color:#111;
         renderStep()
 
         // TODO show a version of the clock on xkcd.com/now
-        // TODO show a large analogue clock with words for numbers.
         // TODO show a playing card for each of the 52 weeks
         //   https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
