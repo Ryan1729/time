@@ -168,6 +168,12 @@ background-color:#111;
                 </canvas>
             </div>
             <div class="clock-row">
+                <output class="verbal" id="verbal-clock-24"></output>
+                <canvas width=0 height=0 id="analogue-clock-verbal-24">
+                    A 24-hour analogue clock that uses words instead of numbers
+                </canvas>
+            </div>
+            <div class="clock-row">
                 <output class="verbal" id="verbal-time"></output>
             </div>
             <div class="clock-row">
@@ -289,6 +295,8 @@ background-color:#111;
             "analogue-clock-24-base-factorial",
             "verbal-clock",
             "analogue-clock-verbal",
+            "verbal-clock-24",
+            "analogue-clock-verbal-24",
             "verbal-time",
             "analogue-clock-12-0-offset",
             "digital-date",
@@ -495,6 +503,7 @@ background-color:#111;
 
 
         const verbalClock = document.getElementById("verbal-clock")
+        const verbalClock24 = document.getElementById("verbal-clock-24")
         const verbalTime = document.getElementById("verbal-time")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
@@ -603,6 +612,7 @@ background-color:#111;
         const analogueClockBaseFactorialCtx = getAnalogueClockCtx("analogue-clock-base-factorial")
         const analogueClock24BaseFactorialCtx = getAnalogueClockCtx("analogue-clock-24-base-factorial", 2)
         const analogueClockVerbalCtx = getAnalogueClockCtx("analogue-clock-verbal", 2)
+        const analogueClockVerbal24Ctx = getAnalogueClockCtx("analogue-clock-verbal-24", 2)
         const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
 
 
@@ -612,12 +622,14 @@ background-color:#111;
             renderAt(new Date(time))
         }
 
-        const clockNumberCenterXYForRadians = (radians, scale) => {
+        const clockNumberCenterXYForRadians = (radians, scale, radiusScale, xOffset) => {
             scale ||= 1
+            radiusScale ||= 1
+            xOffset ||= 1
             const lengths = clockLengths(scale)
             return [
-                lengths.clockX + Math.cos(radians) * lengths.clockNumberRadius,
-                lengths.clockY + Math.sin(radians) * lengths.clockNumberRadius,
+                (lengths.clockX + Math.cos(radians) * lengths.clockNumberRadius * radiusScale) + (xOffset * scale),
+                lengths.clockY + Math.sin(radians) * lengths.clockNumberRadius * radiusScale,
             ]
         };
 
@@ -666,12 +678,14 @@ background-color:#111;
 
         const TAU = 2 * Math.PI
 
-        const clockNumberCenterXYForIndex = ({index, divisor, offset, scale}) => {
+        const clockNumberCenterXYForIndex = ({index, divisor, offset, scale, radiusScale, xOffset}) => {
             // Note that the negatives here do happen to work out
             offset = offset === undefined ? -3 : offset
             return clockNumberCenterXYForRadians(
                 ((index + offset) % divisor) * (TAU / divisor),
-                scale
+                scale,
+                radiusScale,
+                xOffset
             )
         }
 
@@ -701,10 +715,56 @@ background-color:#111;
             return clockNumberCenterXYForIndex({index, divisor: 24, offset: -6, scale})
         }
 
+        const twentyFourHourClockVerbalXYForIndex = (index, scale) => {
+            let radiusScale
+            switch (index) {
+                case 0:
+                case 12:
+                    radiusScale = 1
+                break
+                case 1:
+                case 11:
+                case 13:
+                case 23:
+                    radiusScale = 0.9
+                break
+                case 3:
+                    radiusScale = 0.825
+                break
+                case 14:
+                case 22:
+                    radiusScale = 0.8
+                break
+                case 15:
+                case 16:
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                    radiusScale = 0.75
+                break
+                default:
+                    radiusScale = 0.85
+                break
+            }
+            switch (index) {
+                case 1:
+                    xOffset = 12
+                break
+                default:
+                    xOffset = 0
+                break
+            }
+            return clockNumberCenterXYForIndex({index, divisor: 24, offset: -6, scale, radiusScale, xOffset})
+        }
+
         const twelveHourClockNumberXYs = (scale) => range12.map(n => twelveHourClockNumberXYForIndex(n, scale))
         const twelveHourZeroOffsetClockNumberXYs = (scale) => range12.map(n => twelveHourZeroOffsetClockNumberXYForIndex(n, scale))
 
         const twentyFourHourClockNumberXYs = (scale) => range24.map(n => twentyFourHourClockNumberXYForIndex(n, scale))
+        const twentyFourHourClockVerbalNumberXYs = (scale) => range24.map(n => twentyFourHourClockVerbalXYForIndex(n, scale))
+
 
         const renderAt = (date) => {
             const time = date.getTime()
@@ -738,6 +798,7 @@ background-color:#111;
             digitalClock24BaseFactorial.innerHTML = "&nbsp;" + padToNDigitsBaseFactorial(3, hours) + ":" + padToNDigitsBaseFactorial(4, minutes) + ":" + padToNDigitsBaseFactorial(4, seconds)
 
             const nextHours12 = (hours12 + 1) % 12
+            const nextHours24 = (hours + 1) % 24
 
             const signedFiveMinutesRounded = Math.round((((time % Time.HOUR_IN_MILLIS)/Time.HOUR_IN_MILLIS) * (60 / 5))) * 5
 
@@ -750,54 +811,59 @@ background-color:#111;
             // For -0
             fiveMinutesRounded = Math.abs(fiveMinutesRounded)
 
-            let timePhrase
-            switch (fiveMinutesRounded) {
-                default:
-                    console.error("Got unexpected value for fiveMinutesRounded: "+ fiveMinutesRounded)
-                    timePhrase = "Uh... half past a freckle"
-                break
-                case 0:
-                    timePhrase = hoursToWord(hours12) + " o'clock"
-                break
-                case 5:
-                    timePhrase = "Five past " + hoursToWord(hours12)
-                break
-                case 10:
-                    timePhrase = "Ten past " + hoursToWord(hours12)
-                break
-                case 15:
-                    timePhrase = "Quarter past " + hoursToWord(hours12)
-                break
-                case 20:
-                    timePhrase = "Twenty past " + hoursToWord(hours12)
-                break
-                case 25:
-                    timePhrase = "Twenty-Five past " + hoursToWord(hours12)
-                break
-                case 30:
-                    timePhrase = "Half past " + hoursToWord(hours12)
-                break
-                case 35:
-                    timePhrase = "Twenty-Five to " + hoursToWord(nextHours12)
-                break
-                case 40:
-                    timePhrase = "Twenty to " + hoursToWord(nextHours12)
-                break
-                case 45:
-                    timePhrase = "Quarter to " + hoursToWord(nextHours12)
-                break
-                case 50:
-                    timePhrase = "Ten to " + hoursToWord(nextHours12)
-                break
-                case 55:
-                    timePhrase = "Five to " + hoursToWord(nextHours12)
-                break
-                case 60:
-                    timePhrase = hoursToWord(nextHours12) + " o'clock"
-                break
+            const getTimePhrase = (currentHours, nextHours, divisor) => {
+                let timePhrase
+                switch (fiveMinutesRounded) {
+                    default:
+                        console.error("Got unexpected value for fiveMinutesRounded: "+ fiveMinutesRounded)
+                        timePhrase = "Uh... half past a freckle"
+                    break
+                    case 0:
+                        timePhrase = hoursToWord(currentHours, divisor) + (divisor === 24 ? " hundred" : " o'clock")
+                    break
+                    case 5:
+                        timePhrase = "Five past " + hoursToWord(currentHours, divisor)
+                    break
+                    case 10:
+                        timePhrase = "Ten past " + hoursToWord(currentHours, divisor)
+                    break
+                    case 15:
+                        timePhrase = "Quarter past " + hoursToWord(currentHours, divisor)
+                    break
+                    case 20:
+                        timePhrase = "Twenty past " + hoursToWord(currentHours, divisor)
+                    break
+                    case 25:
+                        timePhrase = "Twenty-Five past " + hoursToWord(currentHours, divisor)
+                    break
+                    case 30:
+                        timePhrase = "Half past " + hoursToWord(currentHours, divisor)
+                    break
+                    case 35:
+                        timePhrase = "Twenty-Five to " + hoursToWord(nextHours, divisor)
+                    break
+                    case 40:
+                        timePhrase = "Twenty to " + hoursToWord(nextHours, divisor)
+                    break
+                    case 45:
+                        timePhrase = "Quarter to " + hoursToWord(nextHours, divisor)
+                    break
+                    case 50:
+                        timePhrase = "Ten to " + hoursToWord(nextHours, divisor)
+                    break
+                    case 55:
+                        timePhrase = "Five to " + hoursToWord(nextHours, divisor)
+                    break
+                    case 60:
+                        timePhrase = hoursToWord(nextHours, divisor) + " o'clock"
+                    break
+                }
+
+                return timePhrase
             }
 
-            verbalClock.textContent = timePhrase
+            verbalClock.textContent = getTimePhrase(hours12, nextHours12, 12)
+            verbalClock24.textContent = getTimePhrase(hours, nextHours24, 24)
             verbalTime.textContent = intToWords(time)
 
             renderClock({time, ctx: analogueClock12Ctx})
@@ -830,6 +896,21 @@ background-color:#111;
                             return 0;
                     }
                 },
+            })
+            renderClock({
+                time,
+                ctx: analogueClockVerbal24Ctx,
+                textForIndex: wordForIndex,
+                numberXYs: twentyFourHourClockVerbalNumberXYs,
+                rotationForIndex: (i) => {
+                    switch (i) {
+                        case 11:
+                            return TAU/8;
+                        default:
+                            return 0;
+                    }
+                },
+                divisor: 24
             })
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
@@ -904,10 +985,10 @@ background-color:#111;
             dragonicMonth.textContent = toAtMost10Chars(time / DRAGONIC_MONTH_IN_MILLIS)
         }
 
-        const hoursToWord = (n) => {
-            n = n % 12
+        const hoursToWord = (n, divisor) => {
+            n = n % divisor
             if (n === 0) {
-                n = 12
+                n = divisor
             }
             return intToWords(n)
         }
