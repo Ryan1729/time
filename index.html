@@ -865,6 +865,8 @@ background-color:#111;
             verbalClock.textContent = getTimePhrase(hours12, nextHours12, 12)
             verbalClock24.textContent = getTimePhrase(hours, nextHours24, 24)
             verbalTime.textContent = intToWords(time)
+            // This keeps the height at its maximum value so far
+            verbalTime.style.minHeight = verbalTime.scrollHeight + "px"
 
             renderClock({time, ctx: analogueClock12Ctx})
             renderClock({time, ctx: analogueClock24Ctx, numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
