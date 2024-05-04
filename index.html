@@ -118,7 +118,7 @@ background-color:#111;
                 <input id="subset-number" type="number" />
                 <span>
                     <button id="subset-shift-up"> &lt;&lt; </button>
-                    <button id="subset-shift-down"> &gt;&gt;&gt; </button>
+                    <button id="subset-shift-down"> &gt;&gt; </button>
                     <button id="calendars-only"> calendars </button>
                 </span>
             </div>
@@ -316,17 +316,17 @@ background-color:#111;
             "international-fixed-calendar",
         ]
 
-        const ALL_TIMEPIECES_SUBSET = (1 << TIMEPIECE_IDS.length) - 1
+        const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
         subsetNumber.value = ALL_TIMEPIECES_SUBSET
 
         const CALENDARS_SUBSET = (() => {
-            let subset = 0
-            let bit = 1
+            let subset = 0n
+            let bit = 1n
             for (let id of TIMEPIECE_IDS) {
                 if (id.includes("calendar")) {
                     subset |= bit
                 }
-                bit <<= 1
+                bit <<= 1n
             }
             return subset
         })()
@@ -334,9 +334,9 @@ background-color:#111;
         const setSubsetMask = (mask) => {
             subsetNumber.value = mask
 
-            for (let i = 0; i < TIMEPIECE_IDS.length; i += 1) {
+            for (let i = 0n; i < TIMEPIECE_IDS.length; i += 1n) {
                 const element = document.getElementById(TIMEPIECE_IDS[i])
-                if ((mask & (1 << i)) !== 0) {
+                if ((mask & (1n << i)) !== 0n) {
                     element.style.display = "unset";
                 } else {
                     element.style.display = "none";
@@ -345,15 +345,15 @@ background-color:#111;
         }
 
         const getCurrentSubsetMask = () => {
-            const parsed = parseInt(subsetNumber.value)
-
             let subset
-            if (Number.isNaN(parsed)) {
+            try {
+                subset = BigInt(subsetNumber.value)
+            } catch (e) {
+                if (DEBUG_MODE) {
+                    console.log(e)
+                }
                 subset = ALL_TIMEPIECES_SUBSET
-            } else {
-                subset = parsed
             }
-
             return subset
         }
 
@@ -364,13 +364,13 @@ background-color:#111;
 
         const subsetShiftUp = document.getElementById("subset-shift-up");
         const onShiftUp = () => {
-            setSubsetMask(getCurrentSubsetMask() << 1)
+            setSubsetMask(getCurrentSubsetMask() << 1n)
         }
         subsetShiftUp.onclick = onShiftUp
 
         const subsetShiftDown = document.getElementById("subset-shift-down");
         const onShiftDown = () => {
-            setSubsetMask(getCurrentSubsetMask() >>> 1)
+            setSubsetMask(getCurrentSubsetMask() >> 1n)
         }
         subsetShiftDown.onclick = onShiftDown
 
@@ -1310,8 +1310,6 @@ background-color:#111;
 
         }
         renderStep()
-
-        // TODO support more than 32 flags in timepiece subsets
 
         // TODO show a version of the clock on xkcd.com/now
         // TODO show a playing card for each of the 52 weeks
