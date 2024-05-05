@@ -183,6 +183,9 @@ background-color:#111;
                 </canvas>
             </div>
             <div class="clock-row">
+                <output class="verbal" id="verbal-english-weekday"></output>
+            </div>
+            <div class="clock-row">
                 <output class="digital" id="digital-date"></output>
             </div>
             <div class="clock-row">
@@ -300,6 +303,7 @@ background-color:#111;
             "analogue-clock-verbal-24",
             "verbal-time",
             "analogue-clock-12-0-offset",
+            "verbal-english-weekday",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
@@ -522,6 +526,7 @@ background-color:#111;
         const verbalClock = document.getElementById("verbal-clock")
         const verbalClock24 = document.getElementById("verbal-clock-24")
         const verbalTime = document.getElementById("verbal-time")
+        const verbalEnglishWeekday = document.getElementById("verbal-english-weekday")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -933,6 +938,38 @@ background-color:#111;
             })
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
 
+            const weekdayNumber = date.getUTCDay()
+
+            let weekdayWord
+            switch (weekdayNumber) {
+                default:
+                    console.error("Unexpected weekdayNumber:" + weekdayNumber)
+                    // fallthrough
+                case 0:
+                    weekdayWord = "Sunday"
+                break
+                case 1:
+                    weekdayWord = "Monday"
+                break
+                case 2:
+                    weekdayWord = "Tuesday"
+                break
+                case 3:
+                    weekdayWord = "Wednesday"
+                break
+                case 4:
+                    weekdayWord = "Thursday"
+                break
+                case 5:
+                    weekdayWord = "Friday"
+                break
+                case 6:
+                    weekdayWord = "Saturday"
+                break
+            }
+
+            verbalEnglishWeekday.textContent = weekdayWord
+
             const year = date.getUTCFullYear()
             const zeroIndexedMonth = date.getUTCMonth()
             const dayOfMonth = date.getUTCDate()
@@ -1311,20 +1348,31 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO show a version of the clock on xkcd.com/now
-        // TODO show a playing card for each of the 52 weeks
+        // TODO show the "Western traditional" gregorian week number
+        // TODO show the gregorian ISO8601 week number
+        // TODO show the IFC week number
+        // TODO show a playing card for each of the 52 gregorain weeks
         //   https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
+        // TODO show a playing card for each of the 53/54 IFC weeks
+        //   Joker for the excess ones. Maybe make leap day and year day distinct somehow?
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
+        //   Are there names for the different types of years? If not, use descriptions, like "Started on monday, leap year"
+        //   Maybe show 14 whole year calendars and show a dot jumping from
+        // TODO? The different types of years thing but for the IFC? Or is that too boring?
         // TODO show position in the Sexagenary cycle/ganzhi
         //    Any other similar cycles like this? Mayan calendar maybe?
         // TODO show a continued Julian calendar
+        // TODO show the day of the Pawukon as described in the article mentioned below. Apparently a particular date in the Julian calendar is a traditional base.
+        //    https://en.wikipedia.org/wiki/Pawukon_calendar
         // TODO show French Republican decimal time
         // TODO show French Republican Calendar
         // TODO show Swatch Internet time
+        // TODO show a version of the clock on xkcd.com/now
         // TODO show a "digital analogue" clock that merely prints the angle of the hands
         //  I guess a analogue digital clock would be one of those ones where the digits are shown on cards that flip over?
+        // TODO add a analogue clock that has second, minute, hour, day, and week hands
         // TODO add a analogue clock that has a minute hand, a millenium hand, and an eon hand.
-        //   Can probably call an eon the average langth of a geologic eon, or since wikipedia says "half a billion years or more", just use a nice round number close to half a billion years
+        //   Can probably call an eon the average length of a geologic eon, or since wikipedia says "half a billion years or more", just use a nice round number close to half a billion years
         // TODO? invent and show an "analogue date"?
         //     I guess numbers for the months? Maybe this would only make sense for a calandar with truly fixed length months? What if a "year" is 4 years to bake in leap year stuff?
         // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres (This is apparently hard to do accurately!)
@@ -1333,6 +1381,8 @@ background-color:#111;
         //    But is there enough of these to be worth it? There are more of these if there's more calendars
 
         // TODO? add labels to more of the timepieces, maybe making them optional?
+
+        // TODO? Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
 
         // TODO a convenient way to show only a subset of the available time displays
         //    A set of nice radio buttons like all, weird, standard etc.
