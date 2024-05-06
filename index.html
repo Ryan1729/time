@@ -185,6 +185,10 @@ background-color:#111;
             <div class="clock-row">
                 <output class="verbal" id="verbal-english-weekday"></output>
             </div>
+            <div id="week-number-first-saturday-row" class="labelled-row">
+                <output class="verbal" id="week-number-first-saturday"></output>
+                <div class="labelled-row-label" > (Starts on Sunday before first Saturday) </div>
+            </div>
             <div class="clock-row">
                 <output class="digital" id="digital-date"></output>
             </div>
@@ -304,6 +308,7 @@ background-color:#111;
             "verbal-time",
             "analogue-clock-12-0-offset",
             "verbal-english-weekday",
+            "week-number-first-saturday-row",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
@@ -527,6 +532,7 @@ background-color:#111;
         const verbalClock24 = document.getElementById("verbal-clock-24")
         const verbalTime = document.getElementById("verbal-time")
         const verbalEnglishWeekday = document.getElementById("verbal-english-weekday")
+        const weekNumberFirstSaturday = document.getElementById("week-number-first-saturday")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -969,10 +975,30 @@ background-color:#111;
             }
 
             verbalEnglishWeekday.textContent = weekdayWord
-
+            
             const year = date.getUTCFullYear()
             const zeroIndexedMonth = date.getUTCMonth()
             const dayOfMonth = date.getUTCDate()
+
+            const startOfYear = Time.getStartOfYear(date)
+            const weekdayNumberOfFirstDay = startOfYear.getUTCDay()
+            
+            const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * weekdayNumberOfFirstDay)
+
+            let weekNumberCounter = 0
+            let weekNumberTime = firstDayOfFirstWeekTime
+            while (weekNumberTime <= time) {
+                weekNumberCounter += 1
+                weekNumberTime += Time.WEEK_IN_MILLIS
+            }
+            
+            let yearOfWeek = year
+            if (weekNumberCounter > 52) {
+                weekNumberCounter = 1
+                yearOfWeek += 1
+            }
+            
+            weekNumberFirstSaturday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek
 
             const oneIndexedMonth = zeroIndexedMonth + 1
 

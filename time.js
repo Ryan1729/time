@@ -20,6 +20,7 @@ var Time = (function () {
     const HIDE_WEEK_ROW = 1
     const LAST_DAY_OUTSIDE_WEEK = 2
 
+    const WEEK_IN_MILLIS = DAYS_IN_WEEK * 24 * 60 * 60 * 1000
     const DAY_IN_MILLIS = 24 * 60 * 60 * 1000
     const HOUR_IN_MILLIS = 60 * 60 * 1000
     const MINUTE_IN_MILLIS = 60 * 1000
@@ -215,9 +216,14 @@ var Time = (function () {
         return true
     };
 
-    const get0IndexedDayOfYear = (date) => {
+    const getStartOfYear = (date) => {
         const startOfYear = new Date(0);
         startOfYear.setUTCFullYear(date.getUTCFullYear())
+        return startOfYear
+    }
+
+    const get0IndexedDayOfYear = (date) => {
+        const startOfYear = getStartOfYear(date)
 
         return Math.floor(
             (
@@ -382,6 +388,7 @@ var Time = (function () {
         GREGORIAN,
         INTERNATIONAL_FIXED,
         CALENDAR_KIND_COUNT,
+        getStartOfYear,
         get0IndexedDayOfYear,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         OTHER_MONTH,
@@ -396,6 +403,7 @@ var Time = (function () {
         ifcLinkedTimeFromDayOfMonth,
         gregorianLinkedTimeFromDayOfMonth,
         //
+        WEEK_IN_MILLIS,
         DAY_IN_MILLIS,
         HOUR_IN_MILLIS,
         MINUTE_IN_MILLIS,
