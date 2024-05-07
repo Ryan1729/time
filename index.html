@@ -120,6 +120,7 @@ background-color:#111;
                     <button id="subset-shift-up"> &lt;&lt; </button>
                     <button id="subset-shift-down"> &gt;&gt; </button>
                     <button id="calendars-only"> calendars </button>
+                    <button id="week-numbers-only"> week numbers </button>
                 </span>
             </div>
         </details>
@@ -185,9 +186,17 @@ background-color:#111;
             <div class="clock-row">
                 <output class="verbal" id="verbal-english-weekday"></output>
             </div>
+            <div id="week-number-first-friday-row" class="labelled-row">
+                <output class="verbal" id="week-number-first-friday"></output>
+                <div class="labelled-row-label" > (Starts on Saturday before first Friday) </div>
+            </div>
             <div id="week-number-first-saturday-row" class="labelled-row">
                 <output class="verbal" id="week-number-first-saturday"></output>
                 <div class="labelled-row-label" > (Starts on Sunday before first Saturday) </div>
+            </div>
+            <div id="week-number-first-sunday-row" class="labelled-row">
+                <output class="verbal" id="week-number-first-sunday"></output>
+                <div class="labelled-row-label" > (Starts on Monday before first Sunday) </div>
             </div>
             <div class="clock-row">
                 <output class="digital" id="digital-date"></output>
@@ -308,7 +317,9 @@ background-color:#111;
             "verbal-time",
             "analogue-clock-12-0-offset",
             "verbal-english-weekday",
+            "week-number-first-friday-row",
             "week-number-first-saturday-row",
+            "week-number-first-sunday-row",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
@@ -328,17 +339,21 @@ background-color:#111;
         const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
         subsetNumber.value = ALL_TIMEPIECES_SUBSET
 
-        const CALENDARS_SUBSET = (() => {
+        const subsetThatContains = (substr) => {
             let subset = 0n
             let bit = 1n
             for (let id of TIMEPIECE_IDS) {
-                if (id.includes("calendar")) {
+                if (id.includes(substr)) {
                     subset |= bit
                 }
                 bit <<= 1n
             }
             return subset
-        })()
+        }
+
+        const CALENDARS_SUBSET = subsetThatContains("calendar");
+
+        const WEEK_NUMBERS_SUBSET = subsetThatContains("week-number");
 
         const setSubsetMask = (mask) => {
             subsetNumber.value = mask
@@ -388,6 +403,12 @@ background-color:#111;
             setSubsetMask(CALENDARS_SUBSET)
         }
         calendarsOnly.onclick = onCalendarsOnly
+
+        const weekNumbersOnly = document.getElementById("week-numbers-only");
+        const onWeekNumbersOnly = () => {
+            setSubsetMask(WEEK_NUMBERS_SUBSET)
+        }
+        weekNumbersOnly.onclick = onWeekNumbersOnly
 
         const startTime = new Date().getTime()
         const TIME_ROUND_TO = 1_000_000_000_000
@@ -532,7 +553,9 @@ background-color:#111;
         const verbalClock24 = document.getElementById("verbal-clock-24")
         const verbalTime = document.getElementById("verbal-time")
         const verbalEnglishWeekday = document.getElementById("verbal-english-weekday")
+        const weekNumberFirstFriday = document.getElementById("week-number-first-friday")
         const weekNumberFirstSaturday = document.getElementById("week-number-first-saturday")
+        const weekNumberFirstSunday = document.getElementById("week-number-first-sunday")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -975,30 +998,78 @@ background-color:#111;
             }
 
             verbalEnglishWeekday.textContent = weekdayWord
-            
+
             const year = date.getUTCFullYear()
             const zeroIndexedMonth = date.getUTCMonth()
             const dayOfMonth = date.getUTCDate()
 
             const startOfYear = Time.getStartOfYear(date)
-            const weekdayNumberOfFirstDay = startOfYear.getUTCDay()
-            
-            const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * weekdayNumberOfFirstDay)
+            const weekdayNumberOfFirstDay = startOfYear.getUTCDay();
 
-            let weekNumberCounter = 0
-            let weekNumberTime = firstDayOfFirstWeekTime
-            while (weekNumberTime <= time) {
-                weekNumberCounter += 1
-                weekNumberTime += Time.WEEK_IN_MILLIS
-            }
-            
-            let yearOfWeek = year
-            if (weekNumberCounter > 52) {
-                weekNumberCounter = 1
-                yearOfWeek += 1
-            }
-            
-            weekNumberFirstSaturday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek
+            // IIFE for a fresh scope
+            (() => {
+                const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * weekdayNumberOfFirstDay);
+
+                let weekNumberCounter = 0;
+                let weekNumberTime = firstDayOfFirstWeekTime;
+                while (weekNumberTime <= time) {
+                    weekNumberCounter += 1;
+                    weekNumberTime += Time.WEEK_IN_MILLIS;
+                }
+
+                let yearOfWeek = year;
+                if (weekNumberCounter > 52) {
+                    weekNumberCounter = 1;
+                    yearOfWeek += 1;
+                }
+
+                weekNumberFirstSaturday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek;
+            })();
+
+            // IIFE for a fresh scope
+            (() => {
+                const saturdayStartWeekdayNumberOfFirstDay = (weekdayNumberOfFirstDay + 1) % 7;
+
+                const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * saturdayStartWeekdayNumberOfFirstDay);
+
+                let weekNumberCounter = 0;
+                let weekNumberTime = firstDayOfFirstWeekTime;
+                while (weekNumberTime <= time) {
+                    weekNumberCounter += 1;
+                    weekNumberTime += Time.WEEK_IN_MILLIS;
+                }
+
+                let yearOfWeek = year;
+                if (weekNumberCounter > 52) {
+                    weekNumberCounter = 1;
+                    yearOfWeek += 1;
+                }
+
+                weekNumberFirstFriday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek;
+            })();
+
+            // IIFE for a fresh scope
+            (() => {
+                // + 6 is - 1 mod 7, and this keeps us on the positive side of 0
+                const mondayStartWeekdayNumberOfFirstDay = (weekdayNumberOfFirstDay + 6) % 7;
+
+                const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * mondayStartWeekdayNumberOfFirstDay);
+
+                let weekNumberCounter = 0;
+                let weekNumberTime = firstDayOfFirstWeekTime;
+                while (weekNumberTime <= time) {
+                    weekNumberCounter += 1;
+                    weekNumberTime += Time.WEEK_IN_MILLIS;
+                }
+
+                let yearOfWeek = year;
+                if (weekNumberCounter > 52) {
+                    weekNumberCounter = 1;
+                    yearOfWeek += 1;
+                }
+
+                weekNumberFirstSunday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek;
+            })();
 
             const oneIndexedMonth = zeroIndexedMonth + 1
 
@@ -1407,6 +1478,8 @@ background-color:#111;
         //    But is there enough of these to be worth it? There are more of these if there's more calendars
 
         // TODO? add labels to more of the timepieces, maybe making them optional?
+
+        // TODO show human readable time period next to slider multipler. So we can know what multiplier is approximatey a day, for example
 
         // TODO? Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
 
