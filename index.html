@@ -423,7 +423,7 @@ background-color:#111;
             if (step === 1) {
                 displayedStep.textContent = ''
             } else {
-                displayedStep.textContent = "movement ×" + step.toLocaleString()
+                displayedStep.textContent = "movement ×" + step.toLocaleString() + " " + humanReadableSIDurationFromMillis(step)
             }
         }
         const setFromTime = (time) => {
@@ -738,6 +738,69 @@ background-color:#111;
                 radiusScale,
                 xOffset
             )
+        }
+
+        const humanReadableSIDurationFromMillis = (millis) => {
+            if (millis < Time.SECOND_IN_MILLIS) {
+                return "less than a second"
+            }
+
+            const totalSeconds = Math.floor(millis / Time.SECOND_IN_MILLIS)
+            const remainingSeconds = totalSeconds % 60
+
+            const totalMinutes = Math.floor(millis / Time.MINUTE_IN_MILLIS)
+            const remainingMinutes = totalMinutes % 60
+
+            const totalHours = Math.floor(millis / Time.HOUR_IN_MILLIS)
+            const remainingHours = totalHours % 24
+
+            const totalDays = Math.floor(millis / Time.DAY_IN_MILLIS)
+            const remainingDays = totalDays % 365.25
+
+            const totalYears = Math.floor(millis / Time.SI_YEAR_IN_MILLIS)
+            const remainingYears = totalYears % 1000
+
+            const totalMillenia = Math.floor(millis / Time.SI_MILLIENUM_IN_MILLIS)
+            const remainingMillenia = totalMillenia % 1000
+
+            const totalMegaannus = Math.floor(millis / Time.SI_MEGAANNUM_IN_MILLIS)
+            const remainingMegaannus = totalMegaannus % 1000
+
+            const totalGigaannus = Math.floor(millis / Time.SI_GIGAANNUM_IN_MILLIS)
+            const remainingGigaannus = totalGigaannus % 1000
+
+            const totalTeraannus = Math.floor(millis / Time.SI_TERAANNUM_IN_MILLIS)
+            const remainingTeraannus = totalTeraannus % 1000
+
+            const totalPetaannus = Math.floor(millis / Time.SI_PETAANNUM_IN_MILLIS)
+            const remainingPetaannus = totalPetaannus % 1000
+
+            const totalExaannus = Math.floor(millis / Time.SI_EXAANNUM_IN_MILLIS)
+            const remainingExaannus = totalExaannus % 1000
+
+            const totalZetaannus = Math.floor(millis / Time.SI_ZETAANNUM_IN_MILLIS)
+            const remainingZetaannus = totalZetaannus % 1000
+
+            const totalYottaannus = Math.floor(millis / Time.SI_YOTTAANNUM_IN_MILLIS)
+
+            // Some of these units exceed the integer precision of double precision floating point
+
+            return [
+                (totalYottaannus > 0 ? (totalYottaannus === 1 ? "1 yottaannum" : totalYottaannus + " yottaannus") : ""),
+                (remainingZetaannus > 0 ? (remainingZetaannus === 1 ? "1 zetaannum" : remainingZetaannus + " zetaannus") : ""),
+                (remainingExaannus > 0 ? (remainingExaannus === 1 ? "1 exaannum" : remainingExaannus + " exaannus") : ""),
+                (remainingPetaannus > 0 ? (remainingPetaannus === 1 ? "1 teraannum" : remainingPetaannus + " teraannus") : ""),
+                (remainingTeraannus > 0 ? (remainingTeraannus === 1 ? "1 teraannum" : remainingTeraannus + " teraannus") : ""),
+                (remainingGigaannus > 0 ? (remainingGigaannus === 1 ? "1 gigaannum" : remainingGigaannus + " gigaannus") : ""),
+                (remainingMegaannus > 0 ? (remainingMegaannus === 1 ? "1 megaannum" : remainingMegaannus + " megaannus") : ""),
+                (remainingMillenia > 0 ? (remainingMillenia === 1 ? "1 millienium" : remainingMillenia + " millienia") : ""),
+                (remainingYears > 0 ? (remainingYears === 1 ? "1 year" : remainingYears + " years") : ""),
+                (remainingDays > 0 ? (remainingDays === 1 ? "1 day" : remainingDays + " days") : ""),
+                (remainingHours > 0 ? (remainingHours === 1 ? "1 hour" : remainingHours + " hours") : ""),
+                (remainingMinutes > 0 ? (remainingMinutes === 1 ? "1 minute" : remainingMinutes + " minutes") : ""),
+                (remainingSeconds === 1) ? "1 second" : remainingSeconds + " seconds",
+            ].filter(x => x) // empty string is falsey
+            .join(", ")
         }
 
         const range = (n) => {
@@ -1478,8 +1541,6 @@ background-color:#111;
         //    But is there enough of these to be worth it? There are more of these if there's more calendars
 
         // TODO? add labels to more of the timepieces, maybe making them optional?
-
-        // TODO show human readable time period next to slider multipler. So we can know what multiplier is approximatey a day, for example
 
         // TODO? Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
 

@@ -20,11 +20,22 @@ var Time = (function () {
     const HIDE_WEEK_ROW = 1
     const LAST_DAY_OUTSIDE_WEEK = 2
 
-    const WEEK_IN_MILLIS = DAYS_IN_WEEK * 24 * 60 * 60 * 1000
-    const DAY_IN_MILLIS = 24 * 60 * 60 * 1000
-    const HOUR_IN_MILLIS = 60 * 60 * 1000
-    const MINUTE_IN_MILLIS = 60 * 1000
-    const SECOND_IN_MILLIS = 24 * 60 * 60 * 1000
+    // Some of these units exceed the integer precision of double precision floating point
+    const SECOND_IN_MILLIS = 1000
+    const MINUTE_IN_MILLIS = 60 * SECOND_IN_MILLIS
+    const HOUR_IN_MILLIS = 60 * MINUTE_IN_MILLIS
+    const DAY_IN_MILLIS = 24 * HOUR_IN_MILLIS
+    const WEEK_IN_MILLIS = DAYS_IN_WEEK * DAY_IN_MILLIS
+    const SI_YEAR_IN_MILLIS = 365.25 * DAY_IN_MILLIS
+    const SI_MILLIENUM_IN_MILLIS = 1000 * SI_YEAR_IN_MILLIS
+    const SI_MEGAANNUM_IN_MILLIS = 1000 * SI_MILLIENUM_IN_MILLIS
+    const SI_GIGAANNUM_IN_MILLIS = 1000 * SI_MEGAANNUM_IN_MILLIS
+    const SI_TERAANNUM_IN_MILLIS = 1000 * SI_GIGAANNUM_IN_MILLIS
+    const SI_PETAANNUM_IN_MILLIS = 1000 * SI_TERAANNUM_IN_MILLIS
+    const SI_EXAANNUM_IN_MILLIS = 1000 * SI_PETAANNUM_IN_MILLIS
+    const SI_ZETAANNUM_IN_MILLIS = 1000 * SI_EXAANNUM_IN_MILLIS
+    const SI_YOTTAANNUM_IN_MILLIS = 1000 * SI_ZETAANNUM_IN_MILLIS
+
 
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
@@ -403,6 +414,16 @@ var Time = (function () {
         ifcLinkedTimeFromDayOfMonth,
         gregorianLinkedTimeFromDayOfMonth,
         //
+        // Some of these units exceed the integer precision of double precision floating point
+        SI_YOTTAANNUM_IN_MILLIS,
+        SI_ZETAANNUM_IN_MILLIS,
+        SI_EXAANNUM_IN_MILLIS,
+        SI_PETAANNUM_IN_MILLIS,
+        SI_TERAANNUM_IN_MILLIS,
+        SI_GIGAANNUM_IN_MILLIS,
+        SI_MEGAANNUM_IN_MILLIS,
+        SI_MILLIENUM_IN_MILLIS,
+        SI_YEAR_IN_MILLIS,
         WEEK_IN_MILLIS,
         DAY_IN_MILLIS,
         HOUR_IN_MILLIS,
