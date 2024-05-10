@@ -202,7 +202,10 @@ background-color:#111;
                 <output class="verbal" id="week-number-iso-8601"></output>
                 <div class="labelled-row-label" > (ISO 8601) </div>
             </div>
-
+            <div id="week-number-ifc-row" class="labelled-row">
+                <output class="verbal" id="week-number-ifc"></output>
+                <div class="labelled-row-label" > (International Fixed Calendar) </div>
+            </div>
             <div class="clock-row">
                 <output class="digital" id="digital-date"></output>
             </div>
@@ -326,6 +329,7 @@ background-color:#111;
             "week-number-first-saturday-row",
             "week-number-first-sunday-row",
             "week-number-iso-8601-row",
+            "week-number-ifc-row",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
@@ -563,6 +567,7 @@ background-color:#111;
         const weekNumberFirstSaturday = document.getElementById("week-number-first-saturday")
         const weekNumberFirstSunday = document.getElementById("week-number-first-sunday")
         const weekNumberISO8601 = document.getElementById("week-number-iso-8601")
+        const weekNumberIFC = document.getElementById("week-number-ifc")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -902,10 +907,9 @@ background-color:#111;
             const year = date.getUTCFullYear()
             const sundayWeekdayNumber = date.getUTCDay()
             const weekdayNumber = sundayStartWeekNumberToMondayStart(sundayWeekdayNumber)
-            console.log("Time.get0IndexedDayOfYear(date)", Time.get0IndexedDayOfYear(date), weekdayNumber)
+
             const provisionalWeekNumber = Math.floor((10 + Time.get0IndexedDayOfYear(date) - weekdayNumber) / 7)
 
-            console.log(provisionalWeekNumber, getISO8601WeekCount(year))
             if (provisionalWeekNumber < 1) {
                 return {iso8601WeekNumber: getISO8601WeekCount(year - 1), yearOfISO8601Week: year - 1}
             } else if (provisionalWeekNumber > getISO8601WeekCount(year)) {
@@ -1098,12 +1102,18 @@ background-color:#111;
 
             verbalEnglishWeekday.textContent = weekdayWord
 
+
             const year = date.getUTCFullYear()
             const zeroIndexedMonth = date.getUTCMonth()
             const dayOfMonth = date.getUTCDate()
 
             const startOfYear = Time.getStartOfYear(date)
             const weekdayNumberOfFirstDay = startOfYear.getUTCDay();
+
+            // TODO pull these week number calculations into a single,
+            // pure, Time function, so we can then paramterize it on
+            // calendar type, once we have enough calendars where that
+            // would be interesting
 
             // IIFE for a fresh scope
             (() => {
@@ -1173,13 +1183,44 @@ background-color:#111;
 
             weekNumberISO8601.textContent = "Week " + iso8601WeekNumber + " of " + yearOfISO8601Week;
 
+            const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
+
+            let weekNumberIFCText
+            switch (ifcMAndD.zeroIndexedMonthNumber) {
+                case Time.IFC_ZERO_INDEXED_LEAP_MONTH:
+                    if (ifcMAndD.dayOfMonth > Time.IFC_NORMAL_DAYS_PER_MONTH) {
+                        weekNumberIFCText = "Leap day";
+                        break
+                    }
+                    // fallthrough
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                    weekNumberIFCText = "Week " + (ifcMAndD.zeroIndexedMonthNumber * 4 + Math.floor((ifcMAndD.dayOfMonth - 1) / 7) + 1) + " of " + year;
+                break
+                default:
+                case Time.IFC_ZERO_INDEXED_YEAR_DAY_MONTH:
+                    weekNumberIFCText = "Year day";
+                break
+
+            }
+
+            weekNumberIFC.textContent = weekNumberIFCText
+
             const oneIndexedMonth = zeroIndexedMonth + 1
 
             digitalDate.textContent = `${year}-${padToTwoDigits(oneIndexedMonth)}-${padToTwoDigits(dayOfMonth)}`
             const base = dayOfMonth + 1
             digitalDateBaseDayOfMonthPlusOne.textContent = `${year.toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
-
-            const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date)
 
             const ifcOneIndexedMonth = ifcMAndD.zeroIndexedMonthNumber + 1
 
@@ -1552,6 +1593,10 @@ background-color:#111;
         //   https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
         // TODO show a playing card for each of the 53/54 IFC weeks
         //   Joker for the excess ones. Maybe make leap day and year day distinct somehow?
+        // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
+        //   78 cards total, 22 major arcana, 56 minor arcana of 4 suits of 14 cards each
+        //   One way to invent it would be to make weeks different lengths until all the days are accounted for
+        //   Fool's day should be April 1st, or maybe Feb 29th?
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
         //   Are there names for the different types of years? If not, use descriptions, like "Started on monday, leap year"
         //   Maybe show 14 whole year calendars and show a dot jumping from

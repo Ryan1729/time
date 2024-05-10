@@ -35,6 +35,9 @@ var Time = (function () {
     const SI_EXAANNUM_IN_MILLIS = 1000 * SI_PETAANNUM_IN_MILLIS
     const SI_ZETAANNUM_IN_MILLIS = 1000 * SI_EXAANNUM_IN_MILLIS
     const SI_YOTTAANNUM_IN_MILLIS = 1000 * SI_ZETAANNUM_IN_MILLIS
+    
+    const IFC_ZERO_INDEXED_LEAP_MONTH = 5
+    const IFC_ZERO_INDEXED_YEAR_DAY_MONTH = 13
 
 
     const calculateCalendarSpecs = (kind, date) => {
@@ -92,9 +95,6 @@ var Time = (function () {
                             dayOfMonth,
                         } = ifcZeroIndexedMonthAndDay(date)
 
-                        const ZERO_INDEXED_LEAP_MONTH = 5
-                        const ZERO_INDEXED_YEAR_DAY_MONTH = 13
-
                         let monthText
                         switch (zeroIndexedMonthNumber) {
                             default:
@@ -115,7 +115,7 @@ var Time = (function () {
                             case 4:
                                 monthText = "May"
                             break
-                            case ZERO_INDEXED_LEAP_MONTH:
+                            case IFC_ZERO_INDEXED_LEAP_MONTH:
                                 monthText = "June"
                             break
                             case 6:
@@ -139,7 +139,7 @@ var Time = (function () {
                             case 12:
                                 monthText = "December"
                             break
-                            case ZERO_INDEXED_YEAR_DAY_MONTH:
+                            case IFC_ZERO_INDEXED_YEAR_DAY_MONTH:
                                 monthText = "Year Day"
                             break
                         }
@@ -149,23 +149,23 @@ var Time = (function () {
                         const isLeap = isGregorianLeapYear(year)
 
                         const lastDateOfPreviousMonth =
-                            (isLeap && zeroIndexedMonthNumber === (ZERO_INDEXED_LEAP_MONTH + 1))
+                            (isLeap && zeroIndexedMonthNumber === (IFC_ZERO_INDEXED_LEAP_MONTH + 1))
                             ? IFC_NORMAL_DAYS_PER_MONTH + 1
                             : IFC_NORMAL_DAYS_PER_MONTH
                         // Always start the months on a sunday, even if
                         // there was a leap day.
                         const dayOfWeekOfLastOfPrevious = 6
                         const lastDateOfCurrentMonth =
-                            zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
+                            zeroIndexedMonthNumber === IFC_ZERO_INDEXED_YEAR_DAY_MONTH
                                 ? 1
-                                : (isLeap && zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH)
+                                : (isLeap && zeroIndexedMonthNumber === IFC_ZERO_INDEXED_LEAP_MONTH)
                                     ? IFC_NORMAL_DAYS_PER_MONTH + 1
                                     : IFC_NORMAL_DAYS_PER_MONTH
 
                         const appearance =
-                            zeroIndexedMonthNumber === ZERO_INDEXED_YEAR_DAY_MONTH
+                            zeroIndexedMonthNumber === IFC_ZERO_INDEXED_YEAR_DAY_MONTH
                                 ? HIDE_WEEK_ROW
-                                : (isLeap && zeroIndexedMonthNumber === ZERO_INDEXED_LEAP_MONTH)
+                                : (isLeap && zeroIndexedMonthNumber === IFC_ZERO_INDEXED_LEAP_MONTH)
                                     ? LAST_DAY_OUTSIDE_WEEK
                                     : DEFAULT_APPEARANCE
 
@@ -402,6 +402,9 @@ var Time = (function () {
         getStartOfYear,
         get0IndexedDayOfYear,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
+        IFC_ZERO_INDEXED_LEAP_MONTH,
+        IFC_ZERO_INDEXED_YEAR_DAY_MONTH,
+        IFC_NORMAL_DAYS_PER_MONTH,
         OTHER_MONTH,
         CURRENT_MONTH,
         CURRENT_DAY,
