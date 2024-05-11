@@ -206,6 +206,10 @@ background-color:#111;
                 <output class="verbal" id="week-number-ifc"></output>
                 <div class="labelled-row-label" > (International Fixed Calendar) </div>
             </div>
+            <div id="week-card-first-friday-row" class="labelled-row">
+                <output class="verbal" id="week-card-first-friday"></output>
+                <div class="labelled-row-label" > (Starts on Saturday before first Friday) </div>
+            </div>
             <div class="clock-row">
                 <output class="digital" id="digital-date"></output>
             </div>
@@ -330,6 +334,7 @@ background-color:#111;
             "week-number-first-sunday-row",
             "week-number-iso-8601-row",
             "week-number-ifc-row",
+            "week-card-first-friday-row",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
@@ -568,6 +573,7 @@ background-color:#111;
         const weekNumberFirstSunday = document.getElementById("week-number-first-sunday")
         const weekNumberISO8601 = document.getElementById("week-number-iso-8601")
         const weekNumberIFC = document.getElementById("week-number-ifc")
+        const weekCardFirstFriday = document.getElementById("week-card-first-friday")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -1155,6 +1161,7 @@ background-color:#111;
                 }
 
                 weekNumberFirstFriday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek;
+                weekCardFirstFriday.textContent = unicodePlayingCardForNumber(weekNumberCounter) + " of " + yearOfWeek
             })();
 
             // IIFE for a fresh scope
@@ -1493,6 +1500,20 @@ background-color:#111;
             return (s.length === 0 ? "00" : (s.length === 1 ? "0" : "")) + s
         }
 
+        const PLAYING_CARD_CHARS = [
+            "🂡", "🂢", "🂣", "🂤", "🂥", "🂦", "🂧", "🂨", "🂩", "🂪", "🂫", "🂭", "🂮",
+            "🂱", "🂲", "🂳", "🂴", "🂵", "🂶", "🂷", "🂸", "🂹", "🂺", "🂻", "🂽", "🂾",
+            "🃁", "🃂", "🃃", "🃄", "🃅", "🃆", "🃇", "🃈", "🃉", "🃊", "🃋", "🃍", "🃎",
+            "🃑", "🃒", "🃓", "🃔", "🃕", "🃖", "🃗", "🃘", "🃙", "🃚", "🃛", "🃝", "🃞",
+            "🃏", "🂠"
+        ]
+
+        const JOKER_INDEX = 52
+
+        const unicodePlayingCardForNumber = (n) => {
+            return PLAYING_CARD_CHARS[n - 1] || PLAYING_CARD_CHARS[JOKER_INDEX]
+        }
+
         const playPause = document.getElementById("play-pause");
         playPause.onclick = () => {
             switch (inputMode) {
@@ -1588,9 +1609,7 @@ background-color:#111;
         }
         renderStep()
 
-        // TODO show the IFC week number
-        // TODO show a playing card for each of the 52 gregorain weeks
-        //   https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
+        // TODO show a playing card for each of different types of 52 gregorian weeks we have implemented
         // TODO show a playing card for each of the 53/54 IFC weeks
         //   Joker for the excess ones. Maybe make leap day and year day distinct somehow?
         // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
@@ -1627,7 +1646,9 @@ background-color:#111;
         // TODO? Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
 
         // TODO a convenient way to show only a subset of the available time displays
-        //    A set of nice radio buttons like all, weird, standard etc.
+        //    We have some buttons to select only members of a given subset; add more!
+        //    Allow combining categories easily. For example, show calendars and week numbers
+        //    Allow negating categories, for example, hide all non-ascii unicode reliant time pieces
         //    A way to easily select one digital clock, one analogue clock and one calendar would be good.
     </script>
 </body>
