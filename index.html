@@ -17,6 +17,9 @@ textarea, input, button {
 color:#eee;
 background-color:#111;
 }
+button:hover {
+  background-color:#222;
+}
 :root {
   --thin-border: solid 0.125ex;
 }
@@ -25,6 +28,11 @@ background-color:#111;
   margin: 0;
   display: flex;
   justify-content: space-between;
+}
+.category-controls {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.5ex;
 }
 .seven-columns {
   display: grid;
@@ -119,8 +127,30 @@ background-color:#111;
                 <span>
                     <button id="subset-shift-up"> &lt;&lt; </button>
                     <button id="subset-shift-down"> &gt;&gt; </button>
-                    <button id="calendars-only"> calendars </button>
-                    <button id="week-numbers-only"> week numbers </button>
+                    <span class="category-controls">
+                        <span class="center-text">digital</span>
+                        <button id="remove-digital"> &amp;~ </button>
+                        <button id="digital-only"> = </button>
+                        <button id="add-digital"> | </button>
+                    </span>
+                    <span class="category-controls">
+                        <span class="center-text">analogue</span>
+                        <button id="remove-analogue"> &amp;~ </button>
+                        <button id="analogue-only"> = </button>
+                        <button id="add-analogue"> | </button>
+                    </span>
+                    <span class="category-controls">
+                        <span class="center-text">calendars</span>
+                        <button id="remove-calendars"> &amp;~ </button>
+                        <button id="calendars-only"> = </button>
+                        <button id="add-calendars"> | </button>
+                    </span>
+                    <span class="category-controls">
+                        <span class="center-text">week numbers</span>
+                        <button id="remove-week-numbers"> &amp;~ </button>
+                        <button id="week-numbers-only"> = </button>
+                        <button id="add-week-numbers"> | </button>
+                    </span>
                 </span>
             </div>
         </details>
@@ -366,9 +396,54 @@ background-color:#111;
             return subset
         }
 
-        const CALENDARS_SUBSET = subsetThatContains("calendar");
+        const setupCatergoryControls = ({addID, onlyID, removeID, subset}) => {
+            const add = document.getElementById(addID);
+            const onAdd = () => {
+                setSubsetMask(getCurrentSubsetMask() | subset)
+            }
+            add.onclick = onAdd
 
-        const WEEK_NUMBERS_SUBSET = subsetThatContains("week-number");
+            const only = document.getElementById(onlyID);
+            const onOnly = () => {
+                setSubsetMask(subset)
+            }
+            only.onclick = onOnly
+
+            const remove = document.getElementById(removeID);
+            const onRemove = () => {
+                setSubsetMask(getCurrentSubsetMask() & ~subset)
+            }
+            remove.onclick = onRemove
+        };
+
+        setupCatergoryControls({
+            addID: "add-digital",
+            onlyID: "digital-only",
+            removeID: "remove-digital",
+            subset: subsetThatContains("digital"),
+        });
+
+        setupCatergoryControls({
+            addID: "add-analogue",
+            onlyID: "analogue-only",
+            removeID: "remove-analogue",
+            subset: subsetThatContains("analogue"),
+        });
+
+        setupCatergoryControls({
+            addID: "add-calendars",
+            onlyID: "calendars-only",
+            removeID: "remove-calendars",
+            subset: subsetThatContains("calendar"),
+        });
+
+        setupCatergoryControls({
+            addID: "add-week-numbers",
+            onlyID: "week-numbers-only",
+            removeID: "remove-week-numbers",
+            subset: subsetThatContains("week-number"),
+        });
+
 
         const setSubsetMask = (mask) => {
             subsetNumber.value = mask
@@ -412,18 +487,6 @@ background-color:#111;
             setSubsetMask(getCurrentSubsetMask() >> 1n)
         }
         subsetShiftDown.onclick = onShiftDown
-
-        const calendarsOnly = document.getElementById("calendars-only");
-        const onCalendarsOnly = () => {
-            setSubsetMask(CALENDARS_SUBSET)
-        }
-        calendarsOnly.onclick = onCalendarsOnly
-
-        const weekNumbersOnly = document.getElementById("week-numbers-only");
-        const onWeekNumbersOnly = () => {
-            setSubsetMask(WEEK_NUMBERS_SUBSET)
-        }
-        weekNumbersOnly.onclick = onWeekNumbersOnly
 
         const startTime = new Date().getTime()
         const TIME_ROUND_TO = 1_000_000_000_000
@@ -1618,7 +1681,8 @@ background-color:#111;
         //   Fool's day should be April 1st, or maybe Feb 29th?
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
         //   Are there names for the different types of years? If not, use descriptions, like "Started on monday, leap year"
-        //   Maybe show 14 whole year calendars and show a dot jumping from
+        //       Looks like there's the Dominical letters that function as year names https://en.wikipedia.org/wiki/Dominical_letter
+        //   Maybe show 14 whole year calendars and show a dot jumping from day to day
         // TODO? The different types of years thing but for the IFC? Or is that too boring?
         // TODO show position in the Sexagenary cycle/ganzhi
         //    Any other similar cycles like this? Mayan calendar maybe?
@@ -1645,11 +1709,7 @@ background-color:#111;
 
         // TODO? Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
 
-        // TODO a convenient way to show only a subset of the available time displays
-        //    We have some buttons to select only members of a given subset; add more!
-        //    Allow combining categories easily. For example, show calendars and week numbers
-        //    Allow negating categories, for example, hide all non-ascii unicode reliant time pieces
-        //    A way to easily select one digital clock, one analogue clock and one calendar would be good.
+        // TODO Consider adding more controllable categories
     </script>
 </body>
 </html>
