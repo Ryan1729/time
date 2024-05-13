@@ -151,6 +151,12 @@ button:hover {
                         <button id="week-numbers-only"> = </button>
                         <button id="add-week-numbers"> | </button>
                     </span>
+                    <span class="category-controls">
+                        <span class="center-text">week cards</span>
+                        <button id="remove-week-cards"> &amp;~ </button>
+                        <button id="week-cards-only"> = </button>
+                        <button id="add-week-cards"> | </button>
+                    </span>
                 </span>
             </div>
         </details>
@@ -239,6 +245,22 @@ button:hover {
             <div id="week-card-first-friday-row" class="labelled-row">
                 <output class="verbal" id="week-card-first-friday"></output>
                 <div class="labelled-row-label" > (Starts on Saturday before first Friday) </div>
+            </div>
+            <div id="week-card-first-saturday-row" class="labelled-row">
+                <output class="verbal" id="week-card-first-saturday"></output>
+                <div class="labelled-row-label" > (Starts on Sunday before first Saturday) </div>
+            </div>
+            <div id="week-card-first-sunday-row" class="labelled-row">
+                <output class="verbal" id="week-card-first-sunday"></output>
+                <div class="labelled-row-label" > (Starts on Monday before first Sunday) </div>
+            </div>
+            <div id="week-card-iso-8601-row" class="labelled-row">
+                <output class="verbal" id="week-card-iso-8601"></output>
+                <div class="labelled-row-label" > (ISO 8601) </div>
+            </div>
+            <div id="week-card-ifc-row" class="labelled-row">
+                <output class="verbal" id="week-card-ifc"></output>
+                <div class="labelled-row-label" > (International Fixed Calendar) </div>
             </div>
             <div class="clock-row">
                 <output class="digital" id="digital-date"></output>
@@ -365,6 +387,10 @@ button:hover {
             "week-number-iso-8601-row",
             "week-number-ifc-row",
             "week-card-first-friday-row",
+            "week-card-first-saturday-row",
+            "week-card-first-sunday-row",
+            "week-card-iso-8601-row",
+            "week-card-ifc-row",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
@@ -442,6 +468,13 @@ button:hover {
             onlyID: "week-numbers-only",
             removeID: "remove-week-numbers",
             subset: subsetThatContains("week-number"),
+        });
+
+        setupCatergoryControls({
+            addID: "add-week-cards",
+            onlyID: "week-cards-only",
+            removeID: "remove-week-cards",
+            subset: subsetThatContains("week-card"),
         });
 
 
@@ -637,6 +670,10 @@ button:hover {
         const weekNumberISO8601 = document.getElementById("week-number-iso-8601")
         const weekNumberIFC = document.getElementById("week-number-ifc")
         const weekCardFirstFriday = document.getElementById("week-card-first-friday")
+        const weekCardFirstSaturday = document.getElementById("week-card-first-saturday")
+        const weekCardFirstSunday = document.getElementById("week-card-first-sunday")
+        const weekCardISO8601 = document.getElementById("week-card-iso-8601")
+        const weekCardIFC = document.getElementById("week-card-ifc")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -1202,6 +1239,7 @@ button:hover {
                 }
 
                 weekNumberFirstSaturday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek;
+                weekCardFirstSaturday.textContent = unicodePlayingCardForNumber(weekNumberCounter) + " of " + yearOfWeek
             })();
 
             // IIFE for a fresh scope
@@ -1247,19 +1285,23 @@ button:hover {
                 }
 
                 weekNumberFirstSunday.textContent = "Week " + weekNumberCounter + " of " + yearOfWeek;
+                weekCardFirstSunday.textContent = unicodePlayingCardForNumber(weekNumberCounter) + " of " + yearOfWeek
             })();
 
             const {iso8601WeekNumber, yearOfISO8601Week} = getISO8601WeekNumber(date);
 
             weekNumberISO8601.textContent = "Week " + iso8601WeekNumber + " of " + yearOfISO8601Week;
+            weekCardISO8601.textContent = unicodePlayingCardForNumber(iso8601WeekNumber) + " of " + yearOfISO8601Week
 
             const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
 
-            let weekNumberIFCText
+            const YEAR_DAY_CARD_NUMBER = 53
+            const LEAP_DAY_CARD_NUMBER = 54
+            let weekCardNumberIFC
             switch (ifcMAndD.zeroIndexedMonthNumber) {
                 case Time.IFC_ZERO_INDEXED_LEAP_MONTH:
                     if (ifcMAndD.dayOfMonth > Time.IFC_NORMAL_DAYS_PER_MONTH) {
-                        weekNumberIFCText = "Leap day";
+                        weekCardNumberIFC = LEAP_DAY_CARD_NUMBER
                         break
                     }
                     // fallthrough
@@ -1275,16 +1317,22 @@ button:hover {
                 case 10:
                 case 11:
                 case 12:
-                    weekNumberIFCText = "Week " + (ifcMAndD.zeroIndexedMonthNumber * 4 + Math.floor((ifcMAndD.dayOfMonth - 1) / 7) + 1) + " of " + year;
+                    weekCardNumberIFC = ifcMAndD.zeroIndexedMonthNumber * 4 + Math.floor((ifcMAndD.dayOfMonth - 1) / 7) + 1;
                 break
                 default:
                 case Time.IFC_ZERO_INDEXED_YEAR_DAY_MONTH:
-                    weekNumberIFCText = "Year day";
+                    weekCardNumberIFC = YEAR_DAY_CARD_NUMBER
                 break
 
             }
 
-            weekNumberIFC.textContent = weekNumberIFCText
+            weekNumberIFC.textContent =
+                (weekCardNumberIFC == YEAR_DAY_CARD_NUMBER)
+                    ? "Year day"
+                    : (weekCardNumberIFC == LEAP_DAY_CARD_NUMBER)
+                        ? "Leap day"
+                        : "Week " + weekCardNumberIFC + " of " + year;
+            weekCardIFC.textContent = unicodePlayingCardForNumber(weekCardNumberIFC) + " of " + year
 
             const oneIndexedMonth = zeroIndexedMonth + 1
 
@@ -1672,18 +1720,16 @@ button:hover {
         }
         renderStep()
 
-        // TODO show a playing card for each of different types of 52 gregorian weeks we have implemented
-        // TODO show a playing card for each of the 53/54 IFC weeks
-        //   Joker for the excess ones. Maybe make leap day and year day distinct somehow?
+        // TODO show the Dominical letters for the given gregorian year (https://en.wikipedia.org/wiki/Dominical_letter)
+        // TODO show the equivalent of the Dominical letters for the given year based on the IFC
+        //   So one of two types of letters, indicating whether it is a leap year or not
         // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
         //   78 cards total, 22 major arcana, 56 minor arcana of 4 suits of 14 cards each
         //   One way to invent it would be to make weeks different lengths until all the days are accounted for
         //   Fool's day should be April 1st, or maybe Feb 29th?
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
-        //   Are there names for the different types of years? If not, use descriptions, like "Started on monday, leap year"
-        //       Looks like there's the Dominical letters that function as year names https://en.wikipedia.org/wiki/Dominical_letter
         //   Maybe show 14 whole year calendars and show a dot jumping from day to day
-        // TODO? The different types of years thing but for the IFC? Or is that too boring?
+        // TODO? The different types of whole year calendar thing but for the IFC? Or is that too boring?
         // TODO show position in the Sexagenary cycle/ganzhi
         //    Any other similar cycles like this? Mayan calendar maybe?
         // TODO show a continued Julian calendar
