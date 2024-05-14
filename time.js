@@ -233,6 +233,14 @@ var Time = (function () {
         return startOfYear
     }
 
+    const getGregorianOctoberFirst = (date) => {
+        const output = new Date(0);
+        output.setUTCFullYear(date.getUTCFullYear())
+        output.setUTCMonth(10 - 1)
+        output.setUTCDate(1)
+        return output
+    }
+
     const get0IndexedDayOfYear = (date) => {
         const startOfYear = getStartOfYear(date)
 
@@ -400,7 +408,9 @@ var Time = (function () {
         INTERNATIONAL_FIXED,
         CALENDAR_KIND_COUNT,
         getStartOfYear,
+        getGregorianOctoberFirst,
         get0IndexedDayOfYear,
+        isGregorianLeapYear,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         IFC_ZERO_INDEXED_LEAP_MONTH,
         IFC_ZERO_INDEXED_YEAR_DAY_MONTH,

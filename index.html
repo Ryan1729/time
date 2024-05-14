@@ -262,6 +262,10 @@ button:hover {
                 <output class="verbal" id="week-card-ifc"></output>
                 <div class="labelled-row-label" > (International Fixed Calendar) </div>
             </div>
+            <div id="gregorian-dominical-letters-row" class="labelled-row">
+                <output class="verbal" id="gregorian-dominical-letters"></output>
+                <div class="labelled-row-label" > (Gregorian Dominical Letters for Year) </div>
+            </div>
             <div class="clock-row">
                 <output class="digital" id="digital-date"></output>
             </div>
@@ -391,6 +395,7 @@ button:hover {
             "week-card-first-sunday-row",
             "week-card-iso-8601-row",
             "week-card-ifc-row",
+            "gregorian-dominical-letters-row",
             "digital-date",
             "digital-date-base-day-of-month-plus-one",
             "digital-ifc-date-base-day-of-month-plus-one",
@@ -674,6 +679,7 @@ button:hover {
         const weekCardFirstSunday = document.getElementById("week-card-first-sunday")
         const weekCardISO8601 = document.getElementById("week-card-iso-8601")
         const weekCardIFC = document.getElementById("week-card-ifc")
+        const gregorianDominicalLetters = document.getElementById("gregorian-dominical-letters")
         const digitalDate = document.getElementById("digital-date")
         const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
@@ -1208,12 +1214,27 @@ button:hover {
 
             verbalEnglishWeekday.textContent = weekdayWord
 
-
             const year = date.getUTCFullYear()
+            const isLeap = Time.isGregorianLeapYear(year)
+
+            const startOfYear = Time.getStartOfYear(date)
+            const startOfYearWeekdayNumber = startOfYear.getUTCDay()
+
+            const DOMINICAL_LETTER_BY_WEEKDAY_NUMBER = ['A', 'G', 'F', 'E', 'D', 'C', 'B']
+
+            let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[startOfYearWeekdayNumber]
+            if (isLeap) {
+                const octoberFirst = Time.getGregorianOctoberFirst(date)
+                const octoberFirstWeekdayNumber = octoberFirst.getUTCDay()
+                dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
+            }
+            gregorianDominicalLetters.textContent = dominicalLetters
+
+
             const zeroIndexedMonth = date.getUTCMonth()
             const dayOfMonth = date.getUTCDate()
 
-            const startOfYear = Time.getStartOfYear(date)
+
             const weekdayNumberOfFirstDay = startOfYear.getUTCDay();
 
             // TODO pull these week number calculations into a single,
@@ -1720,11 +1741,12 @@ button:hover {
         }
         renderStep()
 
-        // TODO show the Dominical letters for the given gregorian year (https://en.wikipedia.org/wiki/Dominical_letter)
         // TODO show the equivalent of the Dominical letters for the given year based on the IFC
         //   So one of two types of letters, indicating whether it is a leap year or not
         // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
         //   78 cards total, 22 major arcana, 56 minor arcana of 4 suits of 14 cards each
+        //       A positive diophatine solver reveals that 3*56 + 9*22 = 366, but no solutions for a*56 + b*22 = 365 exist
+        //           So a repeating pattern of minor arcana, waxing major arcana, full major arcana, waning major arcana, and back around to minor arcana?
         //   One way to invent it would be to make weeks different lengths until all the days are accounted for
         //   Fool's day should be April 1st, or maybe Feb 29th?
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
@@ -1733,6 +1755,7 @@ button:hover {
         // TODO show position in the Sexagenary cycle/ganzhi
         //    Any other similar cycles like this? Mayan calendar maybe?
         // TODO show a continued Julian calendar
+        // TODO show the Dominical letters for the given Julian year (https://en.wikipedia.org/wiki/Dominical_letter)
         // TODO show the day of the Pawukon as described in the article mentioned below. Apparently a particular date in the Julian calendar is a traditional base.
         //    https://en.wikipedia.org/wiki/Pawukon_calendar
         // TODO show French Republican decimal time
