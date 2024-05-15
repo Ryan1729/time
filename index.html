@@ -220,6 +220,9 @@ button:hover {
                 </canvas>
             </div>
             <div class="clock-row">
+                <output class="verbal" id="analogue-clock-emoji"></output>
+            </div>
+            <div class="clock-row">
                 <output class="verbal" id="verbal-english-weekday"></output>
             </div>
             <div id="week-number-first-friday-row" class="labelled-row">
@@ -384,6 +387,7 @@ button:hover {
             "analogue-clock-verbal-24",
             "verbal-time",
             "analogue-clock-12-0-offset",
+            "analogue-clock-emoji",
             "verbal-english-weekday",
             "week-number-first-friday-row",
             "week-number-first-saturday-row",
@@ -685,6 +689,7 @@ button:hover {
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
         const digitalDateBaseFactorial = document.getElementById("digital-date-base-factorial")
         const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
+        const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
 
 
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
@@ -1047,7 +1052,7 @@ button:hover {
             applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
 
             const hours = date.getUTCHours(); // 0 - 23
-            const hours12 = hours % 12 // 0 - 12
+            const hours12 = hours % 12 // 0 - 11
             const minutes = date.getUTCMinutes(); // 0 - 59
             const seconds = date.getUTCSeconds(); // 0 - 59
 
@@ -1062,6 +1067,8 @@ button:hover {
             digitalClock24Base12.innerHTML = "&nbsp;" + padToTwoDigitsBase12(hours) + ":" + padToTwoDigitsBase12(minutes) + ":" + padToTwoDigitsBase12(seconds)
             digitalClockBaseFactorial.innerHTML = (hours >= 12 ? "˙" : "&nbsp;") + padToNDigitsBaseFactorial(3, hours12) + ":" + padToNDigitsBaseFactorial(4, minutes) + ":" + padToNDigitsBaseFactorial(4, seconds)
             digitalClock24BaseFactorial.innerHTML = "&nbsp;" + padToNDigitsBaseFactorial(3, hours) + ":" + padToNDigitsBaseFactorial(4, minutes) + ":" + padToNDigitsBaseFactorial(4, seconds)
+
+            analogueClockEmoji.textContent = analogueClockEmojiForHoursAndMinutes(hours12, minutes)
 
             const nextHours12 = (hours12 + 1) % 12
             const nextHours24 = (hours + 1) % 24
@@ -1646,6 +1653,48 @@ button:hover {
             return PLAYING_CARD_CHARS[n - 1] || PLAYING_CARD_CHARS[JOKER_INDEX]
         }
 
+        const ANALOGUE_CLOCK_CHARS = [
+            "🕛",
+            "🕧",
+            "🕐",
+            "🕜",
+            "🕑",
+            "🕝",
+            "🕒",
+            "🕞",
+            "🕓",
+            "🕟",
+            "🕔",
+            "🕠",
+            "🕕",
+            "🕡",
+            "🕖",
+            "🕢",
+            "🕗",
+            "🕣",
+            "🕘",
+            "🕤",
+            "🕙",
+            "🕥",
+            "🕚",
+            "🕦",
+        ]
+
+        const analogueClockEmojiForHoursAndMinutes = (hours, minutes) => {
+            let thirty
+            if (minutes < 15) {
+                thirty = 0
+            } else if (minutes >= 15 && minutes < 45) {
+                thirty = 1
+            } else {
+                hours += 1
+                thirty = 0
+            }
+            hours %= 12
+
+            return ANALOGUE_CLOCK_CHARS[(hours * 2) + thirty]
+        }
+
         const playPause = document.getElementById("play-pause");
         playPause.onclick = () => {
             switch (inputMode) {
@@ -1752,8 +1801,6 @@ button:hover {
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
         //   Maybe show 14 whole year calendars and show a dot jumping from day to day
         // TODO? The different types of whole year calendar thing but for the IFC? Or is that too boring?
-        // TODO show position in the Sexagenary cycle/ganzhi
-        //    Any other similar cycles like this? Mayan calendar maybe?
         // TODO show a continued Julian calendar
         // TODO show the Dominical letters for the given Julian year (https://en.wikipedia.org/wiki/Dominical_letter)
         // TODO show the day of the Pawukon as described in the article mentioned below. Apparently a particular date in the Julian calendar is a traditional base.
@@ -1770,9 +1817,13 @@ button:hover {
         // TODO? invent and show an "analogue date"?
         //     I guess numbers for the months? Maybe this would only make sense for a calandar with truly fixed length months? What if a "year" is 4 years to bake in leap year stuff?
         // TODO show phases of the moon with symbols, as seen in northern and southern hemispheres (This is apparently hard to do accurately!)
+        // TODO show position in the Sexagenary cycle/ganzhi
+        //    Doing this properly depends on the lunar new year, which in turn depends on the phases of the moon
+        //    Any other similar cycles like this? Mayan calendar maybe?
         // TODO? show if the current day or other time period is mildy interesting in a different calendar than usual?
         //    For example, IFC April fool's day, King of hearts week
         //    But is there enough of these to be worth it? There are more of these if there's more calendars
+        // TODO? Find a random generator of something, say names, and define a total order to its output and thus map the output to some appropriate time period with a repeating cycle, e.g. name of the day or hour
 
         // TODO? add labels to more of the timepieces, maybe making them optional?
 
