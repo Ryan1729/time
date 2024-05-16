@@ -223,6 +223,9 @@ button:hover {
                 <output class="verbal" id="analogue-clock-emoji"></output>
             </div>
             <div class="clock-row">
+                <output class="verbal" id="chinese-telegraph-month-day-hour"></output>
+            </div>
+            <div class="clock-row">
                 <output class="verbal" id="verbal-english-weekday"></output>
             </div>
             <div id="week-number-first-friday-row" class="labelled-row">
@@ -388,6 +391,7 @@ button:hover {
             "verbal-time",
             "analogue-clock-12-0-offset",
             "analogue-clock-emoji",
+            "chinese-telegraph-month-day-hour",
             "verbal-english-weekday",
             "week-number-first-friday-row",
             "week-number-first-saturday-row",
@@ -690,6 +694,7 @@ button:hover {
         const digitalDateBaseFactorial = document.getElementById("digital-date-base-factorial")
         const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
         const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
+        const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
 
 
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
@@ -1070,6 +1075,13 @@ button:hover {
 
             analogueClockEmoji.textContent = analogueClockEmojiForHoursAndMinutes(hours12, minutes)
 
+            const zeroIndexedMonth = date.getUTCMonth()
+            const dayOfMonth = date.getUTCDate()
+
+            chineseTelegraphMDH.textContent = chineseTelegraphSymbolForZeroIndexedMonth(zeroIndexedMonth)
+                + chineseTelegraphSymbolForDayOfMonth(dayOfMonth)
+                + chineseTelegraphSymbolForHour(hours)
+
             const nextHours12 = (hours12 + 1) % 12
             const nextHours24 = (hours + 1) % 24
 
@@ -1236,11 +1248,6 @@ button:hover {
                 dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
             }
             gregorianDominicalLetters.textContent = dominicalLetters
-
-
-            const zeroIndexedMonth = date.getUTCMonth()
-            const dayOfMonth = date.getUTCDate()
-
 
             const weekdayNumberOfFirstDay = startOfYear.getUTCDay();
 
@@ -1695,6 +1702,94 @@ button:hover {
             return ANALOGUE_CLOCK_CHARS[(hours * 2) + thirty]
         }
 
+        const CHINESE_TELEGRAPH_MONTH_CHARS = [
+            "㋀",
+            "㋁",
+            "㋂",
+            "㋃",
+            "㋄",
+            "㋅",
+            "㋆",
+            "㋇",
+            "㋈",
+            "㋉",
+            "㋊",
+            "㋋"
+        ]
+
+        const chineseTelegraphSymbolForZeroIndexedMonth = (month) => {
+            return CHINESE_TELEGRAPH_MONTH_CHARS[month]
+        }
+
+        const CHINESE_TELEGRAPH_DAY_CHARS = [
+            "㏠",
+            "㏡",
+            "㏢",
+            "㏣",
+            "㏤",
+            "㏥",
+            "㏦",
+            "㏧",
+            "㏨",
+            "㏩",
+            "㏪",
+            "㏫",
+            "㏬",
+            "㏭",
+            "㏮",
+            "㏯",
+            "㏰",
+            "㏱",
+            "㏲",
+            "㏳",
+            "㏴",
+            "㏵",
+            "㏶",
+            "㏷",
+            "㏸",
+            "㏹",
+            "㏺",
+            "㏼",
+            "㏽",
+            "㏾"
+        ]
+
+        const chineseTelegraphSymbolForDayOfMonth = (dayOfMonth) => {
+            return CHINESE_TELEGRAPH_DAY_CHARS[dayOfMonth - 1]
+        }
+
+        const CHINESE_TELEGRAPH_HOUR_CHARS = [
+            "㍘",
+            "㍙",
+            "㍚",
+            "㍛",
+            "㍜",
+            "㍝",
+            "㍞",
+            "㍟",
+            "㍠",
+            "㍡",
+            "㍢",
+            "㍣",
+            "㍤",
+            "㍥",
+            "㍦",
+            "㍧",
+            "㍨",
+            "㍩",
+            "㍪",
+            "㍫",
+            "㍬",
+            "㍭",
+            "㍮",
+            "㍯",
+            "㍰",
+        ]
+
+        const chineseTelegraphSymbolForHour = (hour) => {
+            return CHINESE_TELEGRAPH_HOUR_CHARS[hour]
+        }
+
         const playPause = document.getElementById("play-pause");
         playPause.onclick = () => {
             switch (inputMode) {
@@ -1790,6 +1885,10 @@ button:hover {
         }
         renderStep()
 
+        // TODO show Chinese telegraph characters for time like ㋀, ㏠, and ㍙
+        //    as an aside you can look up the digits for these here: https://www.njstar.com/cms/chinese-commercial-telegraph-code-lookup
+        //        Could show the digits as a separate timepiece?
+        // TODO show a 12 and 24 hour analogue clock with ㍙ symbols
         // TODO show the equivalent of the Dominical letters for the given year based on the IFC
         //   So one of two types of letters, indicating whether it is a leap year or not
         // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
