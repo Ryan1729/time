@@ -224,6 +224,15 @@ button:hover {
             </div>
             <div class="clock-row">
                 <output class="verbal" id="chinese-telegraph-month-day-hour"></output>
+                <canvas width=0 height=0 id="analogue-clock-chinese-telegraph">
+                    A 12-hour analogue clock that uses chinese telegraph hour symbols instead of numbers
+                </canvas>
+            </div>
+            <div class="clock-row">
+                <output class="verbal" id="chinese-telegraph-month-day-hour-24"></output>
+                <canvas width=0 height=0 id="analogue-clock-chinese-telegraph-24">
+                    A 24-hour analogue clock that uses chinese telegraph hour symbols instead of numbers
+                </canvas>
             </div>
             <div class="clock-row">
                 <output class="verbal" id="chinese-telegraph-digits-month-day-hour"></output>
@@ -395,6 +404,9 @@ button:hover {
             "analogue-clock-12-0-offset",
             "analogue-clock-emoji",
             "chinese-telegraph-month-day-hour",
+            "analogue-clock-chinese-telegraph",
+            "chinese-telegraph-month-day-hour-24",
+            "analogue-clock-chinese-telegraph-24",
             "chinese-telegraph-digits-month-day-hour",
             "verbal-english-weekday",
             "week-number-first-friday-row",
@@ -699,6 +711,7 @@ button:hover {
         const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
         const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
         const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
+        const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
         const chineseTelegraphDigitsMDH = document.getElementById("chinese-telegraph-digits-month-day-hour")
 
 
@@ -804,6 +817,8 @@ button:hover {
         const analogueClockVerbalCtx = getAnalogueClockCtx("analogue-clock-verbal", 2)
         const analogueClockVerbal24Ctx = getAnalogueClockCtx("analogue-clock-verbal-24", 2)
         const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
+        const analogueClockChineseTelegraphCtx = getAnalogueClockCtx("analogue-clock-chinese-telegraph", 2)
+        const analogueClockChineseTelegraph24Ctx = getAnalogueClockCtx("analogue-clock-chinese-telegraph-24", 2)
 
 
         const setFromTimeAndRender = (time) => {
@@ -1083,9 +1098,13 @@ button:hover {
             const zeroIndexedMonth = date.getUTCMonth()
             const dayOfMonth = date.getUTCDate()
 
-            chineseTelegraphMDH.textContent = chineseTelegraphSymbolForZeroIndexedMonth(zeroIndexedMonth)
+            chineseTelegraphMDH.innerHTML = chineseTelegraphSymbolForZeroIndexedMonth(zeroIndexedMonth)
                 + chineseTelegraphSymbolForDayOfMonth(dayOfMonth)
-                + chineseTelegraphSymbolForHour(hours)
+                + (hours >= 12 ? "˙" : "&nbsp;") + chineseTelegraphSymbolForHour(hours12)
+
+            chineseTelegraphMDH24.innerHTML = chineseTelegraphSymbolForZeroIndexedMonth(zeroIndexedMonth)
+                + chineseTelegraphSymbolForDayOfMonth(dayOfMonth)
+                + "&nbsp;" + chineseTelegraphSymbolForHour(hours)
 
             chineseTelegraphDigitsMDH.textContent = chineseTelegraphDigitsForZeroIndexedMonth(zeroIndexedMonth)
                 + " "
@@ -1211,6 +1230,8 @@ button:hover {
                 divisor: 24
             })
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
+            renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 12 : i)})
+            renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 24 : i), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
 
             const weekdayNumber = date.getUTCDay()
 
@@ -1909,7 +1930,7 @@ button:hover {
         }
         renderStep()
 
-        // TODO show a 12 and 24 hour analogue clock with ㍙ symbols
+        // TODO show an analogue clock with clock emoji instead of numbers
         // TODO show the equivalent of the Dominical letters for the given year based on the IFC
         //   So one of two types of letters, indicating whether it is a leap year or not
         // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
@@ -1921,6 +1942,7 @@ button:hover {
         // TODO show a gregorian calendar using a subset of the years that covers the possible years
         //   Maybe show 14 whole year calendars and show a dot jumping from day to day
         // TODO? The different types of whole year calendar thing but for the IFC? Or is that too boring?
+        // TODO? show a 12 and 24 hour analogue clock with chinese telegraph digits? Or is that too boring? Also, a 12 hour verbal version
         // TODO show a continued Julian calendar
         // TODO show the Dominical letters for the given Julian year (https://en.wikipedia.org/wiki/Dominical_letter)
         // TODO show the day of the Pawukon as described in the article mentioned below. Apparently a particular date in the Julian calendar is a traditional base.
@@ -1948,6 +1970,7 @@ button:hover {
         // TODO? add labels to more of the timepieces, maybe making them optional?
 
         // TODO? Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
+        // TODO? Abstract over having both 12 and 24 hour versions of clocks?
 
         // TODO Consider adding more controllable categories
     </script>
