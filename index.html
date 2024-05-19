@@ -221,11 +221,14 @@ button:hover {
             </div>
             <div class="clock-row">
                 <output class="verbal" id="analogue-clock-emoji"></output>
+                <canvas width=0 height=0 id="analogue-clock-emoji-numbers">
+                    A standard analogue clock that uses analogue clock emoji instead of numbers
+                </canvas>
             </div>
             <div class="clock-row">
                 <output class="verbal" id="chinese-telegraph-month-day-hour"></output>
                 <canvas width=0 height=0 id="analogue-clock-chinese-telegraph">
-                    A 12-hour analogue clock that uses chinese telegraph hour symbols instead of numbers
+                    A standard analogue clock that uses chinese telegraph hour symbols instead of numbers
                 </canvas>
             </div>
             <div class="clock-row">
@@ -403,6 +406,7 @@ button:hover {
             "verbal-time",
             "analogue-clock-12-0-offset",
             "analogue-clock-emoji",
+            "analogue-clock-emoji-numbers",
             "chinese-telegraph-month-day-hour",
             "analogue-clock-chinese-telegraph",
             "chinese-telegraph-month-day-hour-24",
@@ -817,6 +821,7 @@ button:hover {
         const analogueClockVerbalCtx = getAnalogueClockCtx("analogue-clock-verbal", 2)
         const analogueClockVerbal24Ctx = getAnalogueClockCtx("analogue-clock-verbal-24", 2)
         const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
+        const analogueClockEmojiNumbersCtx = getAnalogueClockCtx("analogue-clock-emoji-numbers", 2)
         const analogueClockChineseTelegraphCtx = getAnalogueClockCtx("analogue-clock-chinese-telegraph", 2)
         const analogueClockChineseTelegraph24Ctx = getAnalogueClockCtx("analogue-clock-chinese-telegraph-24", 2)
 
@@ -1230,6 +1235,7 @@ button:hover {
                 divisor: 24
             })
             renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
+            renderClock({time, ctx: analogueClockEmojiNumbersCtx, textForIndex: i => analogueClockEmojiForHoursAndMinutes(i == 0 ? 12 : i, 0)})
             renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 12 : i)})
             renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 24 : i), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
 
@@ -1930,7 +1936,6 @@ button:hover {
         }
         renderStep()
 
-        // TODO show an analogue clock with clock emoji instead of numbers
         // TODO show the equivalent of the Dominical letters for the given year based on the IFC
         //   So one of two types of letters, indicating whether it is a leap year or not
         // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
