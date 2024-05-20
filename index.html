@@ -351,7 +351,7 @@ button:hover {
             </div>
             <div id="international-fixed-calendar", class="thin-border">
                 <div id="international-fixed-calendar-month" class="month-label"> January </div>
-                <div class="calendar-type-label"> International Fixed</div>
+                <div class="calendar-type-label"> International Fixed </div>
                 <div id="international-fixed-calendar-week-labels" class="seven-columns thin-border-row">
                     <div> Sun </div>
                     <div> Mon </div>
@@ -366,6 +366,25 @@ button:hover {
                 <div id="international-fixed-calendar-extra-label" class="thin-border-row center-text" style="display: none">
                 </div>
                 <div id="international-fixed-calendar-extra-boxes" class="seven-columns" style="display: none">
+                </div>
+            </div>
+            <div id="julian-calendar", class="thin-border">
+                <div id="julian-calendar-month" class="month-label"> January </div>
+                <div class="calendar-type-label"> Julian </div>
+                <div id="julian-calendar-week-labels" class="seven-columns thin-border-row">
+                    <div> Sun </div>
+                    <div> Mon </div>
+                    <div> Tue </div>
+                    <div> Wed </div>
+                    <div> Thu </div>
+                    <div> Fri </div>
+                    <div> Sat </div>
+                </div>
+                <div id="julian-calendar-boxes" class="seven-columns">
+                </div>
+                <div id="julian-calendar-extra-label" class="thin-border-row center-text" style="display: none">
+                </div>
+                <div id="julian-calendar-extra-boxes" class="seven-columns" style="display: none">
                 </div>
             </div>
         </div>
@@ -438,7 +457,12 @@ button:hover {
             "dragonic-month-row",
             "gregorian-calendar",
             "international-fixed-calendar",
+            //"julian-calendar",
         ]
+        
+        if (DEBUG_MODE) {
+            document.getElementById("julian-calendar").style.display = "none"
+        }
 
         const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
         subsetNumber.value = ALL_TIMEPIECES_SUBSET
@@ -648,6 +672,13 @@ button:hover {
             boxes: document.getElementById("international-fixed-calendar-boxes"),
             extraBoxesLabel: document.getElementById("international-fixed-calendar-extra-label"),
             extraBoxes: document.getElementById("international-fixed-calendar-extra-boxes"),
+        };
+        const julianCalendarElements = {
+            monthLabel: document.getElementById("julian-calendar-month"),
+            weekLabels: document.getElementById("julian-calendar-week-labels"),
+            boxes: document.getElementById("julian-calendar-boxes"),
+            extraBoxesLabel: document.getElementById("julian-calendar-extra-label"),
+            extraBoxes: document.getElementById("julian-calendar-extra-boxes"),
         };
 
         let clockLengthsMemo = {}
@@ -1080,6 +1111,10 @@ button:hover {
             const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
 
             applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
+            
+            const julianCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.JULIAN, date)
+            
+            applyCalendarSpecs(julianCalendarElements, julianCalendarBoxSpecs)
 
             const hours = date.getUTCHours(); // 0 - 23
             const hours12 = hours % 12 // 0 - 11

@@ -3,7 +3,8 @@ var Time = (function () {
 
     const GREGORIAN = 0
     const INTERNATIONAL_FIXED = 1
-    const CALENDAR_KIND_COUNT = 2
+    const JULIAN = 2
+    const CALENDAR_KIND_COUNT = 3
 
     const GREGORIAN_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 
@@ -189,6 +190,98 @@ var Time = (function () {
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
                         return ifcLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
                     },
+                }
+            break
+            case JULIAN:
+                boundsProvider = {
+                    date,
+                    pageBounds() {
+                        const date = this.date
+
+                        const gYear = date.getUTCFullYear()
+                        const gMonth = date.getUTCMonth()
+                        const gDayOfMonth = date.getUTCDate()
+
+                        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(gYear, gMonth + 1, gDayOfMonth)
+
+                        const {year, month, dayOfMonth} = (() => {
+                            if (DEBUG_MODE) {
+                                console.log(daysSinceJulianEpoch)
+                            }
+                            const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
+                            const year = rawYear - 4712
+                            const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
+                            
+                            let dayOfMonth = dayOfYear
+                            let zeroBasedMonth = 1;
+                            
+                            const MONTH_LENGTHS = [
+                                31,
+                                year % 4 === 0 ? 29 : 28,
+                                31,
+                                30,
+                                31,
+                                30,
+                                31,
+                                31,
+                                30,
+                                31,
+                                30,
+                                31,
+                            ]
+                            
+                            while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
+                                dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
+                                zeroBasedMonth += 1
+                            }
+                            
+                            const month = zeroBasedMonth + 1
+                            
+                            return {
+                                year,
+                                month,
+                                dayOfMonth,
+                            }
+                        })()
+                        if (DEBUG_MODE) {
+                            // FIXME 1900 March 14 gregorian is supposed to be 1900 March 1 and that is currently not the case
+                            // The time -2202700000000 is 1900 March 14 gregorian
+                            console.log(year,
+                                    month,
+                                    dayOfMonth)
+                        }
+                        // TODO confirm that these always get the right answer
+
+                        const firstOfCurrentMonth = new Date(year, month, 1)
+                        // Using just `date` instead of firstOfCurrentMonth has timezone issues.
+                        const monthText = GREGORIAN_MONTH_FORMATTER.format(firstOfCurrentMonth)
+
+                        const lastOfPreviousMonth = new Date(year, month, 0)
+
+                        const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
+                        const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
+                        const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
+                        const dayOfWeekOfFirstOfCurrent = firstOfCurrentMonth.getUTCDay()
+                        const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
+
+                        return {
+                            dayOfMonth,
+                            lastDateOfPreviousMonth,
+                            dayOfWeekOfLastOfPrevious,
+                            lastDateOfCurrentMonth,
+                            dayOfWeekOfFirstOfCurrent,
+                            dayOfWeekOfFirstOfNext,
+                            maxBoxesPerPage: 42,
+                            monthText,
+                            appearance: DEFAULT_APPEARANCE,
+                        };
+                    },
+                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
+                        if (DEBUG_MODE) {
+                            console.log("TODO JULIAN")
+                        }
+                        return gregorianLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
+                    }
                 }
             break
         }
@@ -402,10 +495,26 @@ var Time = (function () {
         }
     }
 
+    // One based month. Example: (1970, 1, 1) == 2440588
+    const gregorianYMDToJulianDaysSinceJulianEpoch = (y, m, d) => {
+        // https://dl.acm.org/doi/pdf/10.1145/364096.364097
+        // This other website says that this only works for gregorian years 1801 - 2099
+        // TODO should check that at some point
+        // https://docs.kde.org/trunk5/en/kstars/kstars/ai-julianday.html
+        // This site has code in the public domain that appratenly does relevant calculations
+        // https://www.fourmilab.ch/documents/calendar/
+        return Math.floor(
+            d - 32075 + 1461 * (y + 4800 + (m - 14)/12)/4
+            + 367 * (m - 2 - (m - 14)/12 * 12)/12 - 3
+            *((y + 4900 + (m - 14)/12)/100)/4
+        )
+    };
+
     return {
         calculateCalendarSpecs,
         GREGORIAN,
         INTERNATIONAL_FIXED,
+        JULIAN,
         CALENDAR_KIND_COUNT,
         getStartOfYear,
         getGregorianOctoberFirst,
