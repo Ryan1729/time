@@ -495,19 +495,42 @@ var Time = (function () {
         }
     }
 
-    // One based month. Example: (1970, 1, 1) == 2440588
-    const gregorianYMDToJulianDaysSinceJulianEpoch = (y, m, d) => {
-        // https://dl.acm.org/doi/pdf/10.1145/364096.364097
-        // This other website says that this only works for gregorian years 1801 - 2099
-        // TODO should check that at some point
-        // https://docs.kde.org/trunk5/en/kstars/kstars/ai-julianday.html
-        // This site has code in the public domain that appratenly does relevant calculations
-        // https://www.fourmilab.ch/documents/calendar/
-        return Math.floor(
-            d - 32075 + 1461 * (y + 4800 + (m - 14)/12)/4
-            + 367 * (m - 2 - (m - 14)/12 * 12)/12 - 3
-            *((y + 4900 + (m - 14)/12)/100)/4
-        )
+    const JOHN_WALKER = 0
+    const FLIEGEL_AND_VAN_FLANDERN = 1
+
+    const GREGORIAN_EPOCH = 1721425.5;
+
+    // One based month. Example for time 0: gregorianYMDToJulianDaysSinceJulianEpoch(1970, 1, 1)
+    const gregorianYMDToJulianDaysSinceJulianEpoch = (year, month, day, algorithm) => {
+        switch (algorithm) {
+            default:
+            case JOHN_WALKER:
+                // https://www.fourmilab.ch/documents/calendar/
+                return (GREGORIAN_EPOCH - 1) +
+                   (365 * (year - 1)) +
+                   Math.floor((year - 1) / 4) +
+                   (-Math.floor((year - 1) / 100)) +
+                   Math.floor((year - 1) / 400) +
+                   Math.floor((((367 * month) - 362) / 12) +
+                   ((month <= 2) ? 0 :
+                                       (isGregorianLeapYear(year) ? -1 : -2)
+                   ) +
+                   day);
+            case FLIEGEL_AND_VAN_FLANDERN:
+                // https://dl.acm.org/doi/pdf/10.1145/364096.364097
+                // This other website says that this only works for gregorian years 1801 - 2099
+                // TODO? Check that at some point, and maybe add a disclaimer?
+                // https://docs.kde.org/trunk5/en/kstars/kstars/ai-julianday.html
+                // TODO Since I, J and K are integers in default in Fortran, this
+                // would have used integer division. Check whether this makes a
+                // material difference in this case, and if so, add appropriate disclaimer
+                // and a working version of the Fortran algorithm
+                return (
+                    day - 32075 + 1461 * (year + 4800 + (month - 14)/12)/4
+                    + 367 * (month - 2 - (month - 14)/12 * 12)/12 - 3
+                    *((year + 4900 + (month - 14)/12)/100)/4
+                );
+        }
     };
 
     return {
@@ -551,5 +574,9 @@ var Time = (function () {
         HOUR_IN_MILLIS,
         MINUTE_IN_MILLIS,
         SECOND_IN_MILLIS,
+        //
+        gregorianYMDToJulianDaysSinceJulianEpoch,
+        JOHN_WALKER,
+        FLIEGEL_AND_VAN_FLANDERN,
     }
 }())

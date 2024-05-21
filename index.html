@@ -23,6 +23,12 @@ button:hover {
 :root {
   --thin-border: solid 0.125ex;
 }
+a {
+  color: #5a7d8bcc;
+}
+a:visited {
+  color: #533354;
+}
 .button-container {
   padding: 0;
   margin: 0;
@@ -302,6 +308,14 @@ button:hover {
             <div class="clock-row">
                 <output class="digital" id="digital-ifc-date-base-factorial"></output>
             </div>
+            <div id="julian-day-john-walker-row" class="labelled-row">
+                <output class="verbal" id="julian-day-john-walker"></output>
+                <div class="labelled-row-label" > (Days since Julian Epoch, <a href="https://web.archive.org/web/20240208062946/https://www.fourmilab.ch/documents/calendar/">John Walker's algorithm</a>) </div>
+            </div>
+            <div id="julian-day-fliegel-and-van-flandern-row" class="labelled-row">
+                <output class="verbal" id="julian-day-fliegel-and-van-flandern"></output>
+                <div class="labelled-row-label" > (Days since Julian Epoch, <a href="https://web.archive.org/web/20231016010207/https://dl.acm.org/doi/pdf/10.1145/364096.364097">Fliegel &amp; Van Flandern's algorithm</a>) </div>
+            </div>
             <div id="metrological-seasons-north-row" class="labelled-row">
                 <output class="verbal" id="metrological-seasons-north"></output>
                 <div class="labelled-row-label" > (metrological; northern hemisphere) </div>
@@ -448,6 +462,8 @@ button:hover {
             "digital-ifc-date-base-day-of-month-plus-one",
             "digital-date-base-factorial",
             "digital-ifc-date-base-factorial",
+            "julian-day-john-walker-row",
+            "julian-day-fliegel-and-van-flandern-row",
             "metrological-seasons-north-row",
             "metrological-seasons-south-row",
             "synodic-month-row",
@@ -744,6 +760,8 @@ button:hover {
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
         const digitalDateBaseFactorial = document.getElementById("digital-date-base-factorial")
         const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
+        const julianDayJohnWalker = document.getElementById("julian-day-john-walker")
+        const julianDayFliegelAndVanFlandern = document.getElementById("julian-day-fliegel-and-van-flandern")
         const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
         const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
         const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
@@ -1455,6 +1473,9 @@ button:hover {
 
             digitalDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
             digitalIFCDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
+
+            julianDayJohnWalker.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch(year, oneIndexedMonth, dayOfMonth, Time.JOHN_WALKER)
+            julianDayFliegelAndVanFlandern.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch(year, oneIndexedMonth, dayOfMonth, Time.FLIEGEL_AND_VAN_FLANDERN)
 
             let northernMetrologicalSeason
             let southernMetrologicalSeason
