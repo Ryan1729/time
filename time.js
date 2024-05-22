@@ -36,7 +36,7 @@ var Time = (function () {
     const SI_EXAANNUM_IN_MILLIS = 1000 * SI_PETAANNUM_IN_MILLIS
     const SI_ZETAANNUM_IN_MILLIS = 1000 * SI_EXAANNUM_IN_MILLIS
     const SI_YOTTAANNUM_IN_MILLIS = 1000 * SI_ZETAANNUM_IN_MILLIS
-    
+
     const IFC_ZERO_INDEXED_LEAP_MONTH = 5
     const IFC_ZERO_INDEXED_YEAR_DAY_MONTH = 13
 
@@ -211,10 +211,10 @@ var Time = (function () {
                             const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
                             const year = rawYear - 4712
                             const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
-                            
+
                             let dayOfMonth = dayOfYear
                             let zeroBasedMonth = 1;
-                            
+
                             const MONTH_LENGTHS = [
                                 31,
                                 year % 4 === 0 ? 29 : 28,
@@ -229,14 +229,14 @@ var Time = (function () {
                                 30,
                                 31,
                             ]
-                            
+
                             while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
                                 dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
                                 zeroBasedMonth += 1
                             }
-                            
+
                             const month = zeroBasedMonth + 1
-                            
+
                             return {
                                 year,
                                 month,
@@ -497,6 +497,7 @@ var Time = (function () {
 
     const JOHN_WALKER = 0
     const FLIEGEL_AND_VAN_FLANDERN = 1
+    const FLIEGEL_AND_VAN_FLANDERN_FLOORED = 2
 
     const GREGORIAN_EPOCH = 1721425.5;
 
@@ -521,14 +522,27 @@ var Time = (function () {
                 // This other website says that this only works for gregorian years 1801 - 2099
                 // TODO? Check that at some point, and maybe add a disclaimer?
                 // https://docs.kde.org/trunk5/en/kstars/kstars/ai-julianday.html
-                // TODO Since I, J and K are integers in default in Fortran, this
-                // would have used integer division. Check whether this makes a
-                // material difference in this case, and if so, add appropriate disclaimer
-                // and a working version of the Fortran algorithm
                 return (
-                    day - 32075 + 1461 * (year + 4800 + (month - 14)/12)/4
+                    day - 32075 + 1461 * (
+                        year + 4800 + (month - 14)/12
+                    )/4
                     + 367 * (month - 2 - (month - 14)/12 * 12)/12 - 3
                     *((year + 4900 + (month - 14)/12)/100)/4
+                );
+            case FLIEGEL_AND_VAN_FLANDERN_FLOORED:
+                // Since I, J and K are integers in default in Fortran, it appears that
+                // the FLIEGEL_AND_VAN_FLANDERN algorithm would have used integer division.
+                // But this version returns a different value for 1970, 1, 1 than is mentioned in
+                // https://dl.acm.org/doi/pdf/10.1145/364096.364097
+                // So that's confusing.
+                const monthOffset = Math.floor((month - 14)/12)
+
+                return Math.floor(
+                    day - 32075 + 1461 * Math.floor((
+                        year + 4800 + monthOffset
+                    )/4)
+                    + 367 * Math.floor((month - 2 - monthOffset * 12)/12) - 3
+                    * Math.floor(Math.floor(((year + 4900 + monthOffset)/100))/4)
                 );
         }
     };
