@@ -522,27 +522,17 @@ var Time = (function () {
                 // This other website says that this only works for gregorian years 1801 - 2099
                 // TODO? Check that at some point, and maybe add a disclaimer?
                 // https://docs.kde.org/trunk5/en/kstars/kstars/ai-julianday.html
-                return (
-                    day - 32075 + 1461 * (
-                        year + 4800 + (month - 14)/12
-                    )/4
-                    + 367 * (month - 2 - (month - 14)/12 * 12)/12 - 3
-                    *((year + 4900 + (month - 14)/12)/100)/4
-                );
-            case FLIEGEL_AND_VAN_FLANDERN_FLOORED:
-                // Since I, J and K are integers in default in Fortran, it appears that
-                // the FLIEGEL_AND_VAN_FLANDERN algorithm would have used integer division.
-                // But this version returns a different value for 1970, 1, 1 than is mentioned in
-                // https://dl.acm.org/doi/pdf/10.1145/364096.364097
-                // So that's confusing.
-                const monthOffset = Math.floor((month - 14)/12)
+                // Since I, J and K are integers in default in Fortran, this algorithm uses integer division.
+                const I = BigInt(year)
+                const J = BigInt(month)
+                const K = BigInt(day)
 
-                return Math.floor(
-                    day - 32075 + 1461 * Math.floor((
-                        year + 4800 + monthOffset
-                    )/4)
-                    + 367 * Math.floor((month - 2 - monthOffset * 12)/12) - 3
-                    * Math.floor(Math.floor(((year + 4900 + monthOffset)/100))/4)
+                const output = K - 32075n + 1461n * (I + 4800n + (J - 14n)/12n)/4n
+                        + 367n * (J - 2n - (J - 14n)/12n  * 12n)/12n - 3n
+                        * ((I + 4900n + (J - 14n)/12n)/100n)/4n
+
+                return Number(
+                    output
                 );
         }
     };
