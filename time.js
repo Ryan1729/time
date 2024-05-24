@@ -198,51 +198,8 @@ var Time = (function () {
                     pageBounds() {
                         const date = this.date
 
-                        const gYear = date.getUTCFullYear()
-                        const gMonth = date.getUTCMonth()
-                        const gDayOfMonth = date.getUTCDate()
+                        const {year, month, dayOfMonth} = julianYMD(date)
 
-                        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(gYear, gMonth + 1, gDayOfMonth)
-
-                        const {year, month, dayOfMonth} = (() => {
-                            if (DEBUG_MODE) {
-                                console.log(daysSinceJulianEpoch)
-                            }
-                            const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
-                            const year = rawYear - 4712
-                            const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
-
-                            let dayOfMonth = dayOfYear
-                            let zeroBasedMonth = 1;
-
-                            const MONTH_LENGTHS = [
-                                31,
-                                year % 4 === 0 ? 29 : 28,
-                                31,
-                                30,
-                                31,
-                                30,
-                                31,
-                                31,
-                                30,
-                                31,
-                                30,
-                                31,
-                            ]
-
-                            while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
-                                dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
-                                zeroBasedMonth += 1
-                            }
-
-                            const month = zeroBasedMonth + 1
-
-                            return {
-                                year,
-                                month,
-                                dayOfMonth,
-                            }
-                        })()
                         if (DEBUG_MODE) {
                             // FIXME 1900 March 14 gregorian is supposed to be 1900 March 1 and that is currently not the case
                             // The time -2202700000000 is 1900 March 14 gregorian
@@ -319,6 +276,53 @@ var Time = (function () {
         // Not a multiple of 100; leap year.
         return true
     };
+
+    const julianYMD = (date) => {
+        const gYear = date.getUTCFullYear()
+        const gMonth = date.getUTCMonth()
+        const gDayOfMonth = date.getUTCDate()
+
+        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(gYear, gMonth + 1, gDayOfMonth)
+
+        if (DEBUG_MODE) {
+            console.log(daysSinceJulianEpoch)
+        }
+
+        const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
+        const year = rawYear - 4712
+        const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
+
+        let dayOfMonth = dayOfYear
+        let zeroBasedMonth = 1;
+
+        const MONTH_LENGTHS = [
+            31,
+            year % 4 === 0 ? 29 : 28,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
+        ]
+
+        while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
+            dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
+            zeroBasedMonth += 1
+        }
+
+        const month = zeroBasedMonth + 1
+
+        return {
+            year,
+            month,
+            dayOfMonth,
+        }
+    }
 
     const getStartOfYear = (date) => {
         const startOfYear = new Date(0);
@@ -579,6 +583,7 @@ var Time = (function () {
         MINUTE_IN_MILLIS,
         SECOND_IN_MILLIS,
         //
+        julianYMD,
         gregorianYMDToJulianDaysSinceJulianEpoch,
         JOHN_WALKER,
         FLIEGEL_AND_VAN_FLANDERN,

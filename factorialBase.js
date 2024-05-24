@@ -51,7 +51,7 @@ var FactorialBase = (function () {
     const toString = (factorialBaseN) => {
         return factorialBaseN.join("")
     }
-    
+
     const stringOf = (n) => toString(of(n))
 
     return {

@@ -193,6 +193,34 @@ it(() => {
     }
 })
 
+const getDateForUTCYMD = (year, oneIndexedMonth, day) => {
+    const output = new Date(0);
+    output.setUTCFullYear(year)
+    output.setUTCMonth(oneIndexedMonth - 1)
+    output.setUTCDate(day)
+    return output
+}
+
+DEBUG_MODE = false
+
+it(() => {
+    const inputOutputPairs = [
+        // (Using leading zeroes to line things up works for 0 to 9,
+        // even though 010 is interpreted as octal.)
+        // Input         Output
+        [[1900, 03, 14], [1900, 03, 01]],
+    ]
+    for (let i = 0; i < inputOutputPairs.length; i += 1) {
+        const [[inY, inM, InD], [outY, outM, outD]] = inputOutputPairs[i]
+
+        const {year, month, dayOfMonth} = Time.julianYMD(getDateForUTCYMD(inY, inM, InD))
+        assert(
+            year === outY && month === outM && dayOfMonth === outD,
+            "mismatch for " + [inY, inM, InD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
+        )
+    }
+})
+
 it(() => {
     const expecteds = [
         [0],
