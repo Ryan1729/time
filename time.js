@@ -277,51 +277,63 @@ var Time = (function () {
         return true
     };
 
-    const julianYMD = (date) => {
-        const gYear = date.getUTCFullYear()
-        const gMonth = date.getUTCMonth()
-        const gDayOfMonth = date.getUTCDate()
-
-        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(gYear, gMonth + 1, gDayOfMonth)
-
-        if (DEBUG_MODE) {
-            console.log(daysSinceJulianEpoch)
-        }
-
-        const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
-        const year = rawYear - 4712
-        const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
-
-        let dayOfMonth = dayOfYear
-        let zeroBasedMonth = 1;
-
-        const MONTH_LENGTHS = [
-            31,
-            year % 4 === 0 ? 29 : 28,
-            31,
-            30,
-            31,
-            30,
-            31,
-            31,
-            30,
-            31,
-            30,
-            31,
-        ]
-
-        while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
-            dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
-            zeroBasedMonth += 1
-        }
-
-        const month = zeroBasedMonth + 1
-
+    const rollJulianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
+        // TODO implement
         return {
             year,
             month,
             dayOfMonth,
         }
+    }
+    
+    const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
+        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
+        
+        // TODO implement
+        return 0
+    }
+
+    const julianYMD = (date) => {
+        const gYear = date.getUTCFullYear()
+        const gMonth = date.getUTCMonth()
+        const gDayOfMonth = date.getUTCDate()
+        
+        const gYMD = {year: gYear, month: gMonth + 1, dayOfMonth: gDayOfMonth}
+        
+        const daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
+        
+        const jYMD = rollJulianYMDByDays(gYMD, daysDifference)
+        
+        //~ const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
+        //~ const year = rawYear - 4712
+        //~ const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
+
+        //~ let dayOfMonth = dayOfYear
+        //~ let zeroBasedMonth = 1;
+
+        //~ const MONTH_LENGTHS = [
+            //~ 31,
+            //~ year % 4 === 0 ? 29 : 28,
+            //~ 31,
+            //~ 30,
+            //~ 31,
+            //~ 30,
+            //~ 31,
+            //~ 31,
+            //~ 30,
+            //~ 31,
+            //~ 30,
+            //~ 31,
+        //~ ]
+
+        //~ while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
+            //~ dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
+            //~ zeroBasedMonth += 1
+        //~ }
+
+        //~ const month = zeroBasedMonth + 1
+
+        return jYMD
     }
 
     const getStartOfYear = (date) => {
