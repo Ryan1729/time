@@ -208,6 +208,43 @@ it(() => {
         // (Using leading zeroes to line things up works for 0 to 9,
         // even though 010 is interpreted as octal.)
         // Input         Output
+        [[1900, 02, 28, -12], [1900, 02, 16]],
+        [[1900, 02, 13, -12], [1900, 02, 01]],
+        [[1900, 02, 13, -13], [1900, 01, 31]],
+        [[1900, 03, 01, -01], [1900, 02, 29]], // Julian so yes leap year
+        [[1900, 05, 01, -01], [1900, 04, 30]],
+        [[1900, 01, 01, -01], [1899, 12, 31]],
+        [[1900, 01, 01, 366], [1901, 01, 01]],
+        [[1901, 01, 01, 365], [1902, 01, 01]],
+        [[1900, 01, 01, 731], [1902, 01, 01]],
+        [[1900, 01, 01, 400], [1901, 02, 04]] // 400 = 366 + 31 + 3
+    ]
+    for (let i = 0; i < inputOutputPairs.length; i += 1) {
+        const [[inY, inM, inD, daysOffset], [outY, outM, outD]] = inputOutputPairs[i];
+
+        (() => {
+            const {year, month, dayOfMonth} = Time.rollJulianYMDByDays({year: inY, month: inM, dayOfMonth: inD}, daysOffset)
+            assert(
+                year === outY && month === outM && dayOfMonth === outD,
+                "rollJulianYMDByDays mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
+            )
+        })();
+        
+        (() => {
+            const {year, month, dayOfMonth} = Time.rollJulianYMDByDays({year: outY, month: outM, dayOfMonth: outD}, -daysOffset)
+            assert(
+                year === inY && month === inM && dayOfMonth === inD,
+                "rollJulianYMDByDays reverse mismatch for " + [outY, outM, outD] + ", expected " + [inY, inM, inD] + " got " + [year, month, dayOfMonth]
+            )
+        })();
+    }
+})
+
+it(() => {
+    const inputOutputPairs = [
+        // (Using leading zeroes to line things up works for 0 to 9,
+        // even though 010 is interpreted as octal.)
+        // Input         Output
         [[1900, 02, 28], [1900, 02, 16]],
         [[1900, 03, 01], [1900, 02, 17]],
         [[1900, 03, 12], [1900, 02, 28]],
@@ -232,12 +269,12 @@ it(() => {
         [[2100, 03, 14], [2100, 02, 29]],
     ]
     for (let i = 0; i < inputOutputPairs.length; i += 1) {
-        const [[inY, inM, InD], [outY, outM, outD]] = inputOutputPairs[i]
+        const [[inY, inM, inD], [outY, outM, outD]] = inputOutputPairs[i]
 
-        const {year, month, dayOfMonth} = Time.julianYMD(getDateForUTCYMD(inY, inM, InD))
+        const {year, month, dayOfMonth} = Time.julianYMD(getDateForUTCYMD(inY, inM, inD))
         assert(
             year === outY && month === outM && dayOfMonth === outD,
-            "mismatch for " + [inY, inM, InD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
+            "mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
         )
     }
 })

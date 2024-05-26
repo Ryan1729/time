@@ -277,54 +277,94 @@ var Time = (function () {
         return true
     };
 
+    const isJulianLeapYear = (year) => {
+        // If it is a multiple of 4 it is always a Julian leap year
+        return (year & 3) === 0
+    }
+
     const rollJulianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
-        // TODO implement
+        let currentMonthLength = julianOneIndexedMonthLength({year, month})
+
+        let outYear = year
+        let outMonth = month
+        let outDayOfMonth = dayOfMonth + offsetInDays
+
+        while (outDayOfMonth > currentMonthLength) {
+            outDayOfMonth -= currentMonthLength;
+            outDayOfMonth += 1;
+            outMonth += 1;
+            if (outMonth > 12) {
+                outYear += 1;
+                outMonth -= 12;
+                outMonth += 1;
+            }
+            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: outMonth})
+        }
+
+        while (outDayOfMonth < 1) {
+            outMonth -= 1;
+            if (outMonth < 1) {
+                outYear -= 1;
+                outMonth = 12;
+            }
+            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: outMonth})
+            outDayOfMonth = currentMonthLength;
+        }
+
         return {
-            year,
-            month,
-            dayOfMonth,
+            year: outYear,
+            month: outMonth,
+            dayOfMonth: outDayOfMonth,
         }
     }
-    
+
     const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
         const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
-        
-        // TODO implement
+
+        if (daysSinceJulianEpoch > 2415078.5) {
+            return 13
+        }
+
+        // TODO implement fully
         return 0
     }
+
+    const julianOneIndexedMonthLength = ({year, month}) => {
+        const MONTH_LENGTHS = [
+            31,
+            isJulianLeapYear(year) ? 29 : 28,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
+        ]
+        return MONTH_LENGTHS[month - 1]
+    }
+
 
     const julianYMD = (date) => {
         const gYear = date.getUTCFullYear()
         const gMonth = date.getUTCMonth()
         const gDayOfMonth = date.getUTCDate()
-        
+
         const gYMD = {year: gYear, month: gMonth + 1, dayOfMonth: gDayOfMonth}
-        
+
         const daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
-        
+
         const jYMD = rollJulianYMDByDays(gYMD, daysDifference)
-        
+
         //~ const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
         //~ const year = rawYear - 4712
         //~ const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
 
         //~ let dayOfMonth = dayOfYear
         //~ let zeroBasedMonth = 1;
-
-        //~ const MONTH_LENGTHS = [
-            //~ 31,
-            //~ year % 4 === 0 ? 29 : 28,
-            //~ 31,
-            //~ 30,
-            //~ 31,
-            //~ 30,
-            //~ 31,
-            //~ 31,
-            //~ 30,
-            //~ 31,
-            //~ 30,
-            //~ 31,
-        //~ ]
 
         //~ while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
             //~ dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
@@ -595,6 +635,7 @@ var Time = (function () {
         MINUTE_IN_MILLIS,
         SECOND_IN_MILLIS,
         //
+        rollJulianYMDByDays,
         julianYMD,
         gregorianYMDToJulianDaysSinceJulianEpoch,
         JOHN_WALKER,
