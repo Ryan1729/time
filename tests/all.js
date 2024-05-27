@@ -245,6 +245,20 @@ it(() => {
         // (Using leading zeroes to line things up works for 0 to 9,
         // even though 010 is interpreted as octal.)
         // Input         Output
+        [[1500, 03, 11], [1500, 03, 01]],
+        [[1582, 10, 14], [1582, 10, 04]],
+        [[1582, 10, 15], [1582, 10, 05]],
+        [[1582, 10, 16], [1582, 10, 06]],
+        [[1700, 02, 28], [1700, 02, 18]],
+        [[1700, 03, 01], [1700, 02, 19]],
+        [[1700, 03, 10], [1700, 02, 28]],
+        [[1700, 03, 11], [1700, 02, 29]],
+        [[1700, 03, 12], [1700, 03, 01]],
+        [[1800, 02, 28], [1800, 02, 17]],
+        [[1800, 03, 01], [1800, 02, 18]],
+        [[1800, 03, 11], [1800, 02, 28]],
+        [[1800, 03, 12], [1800, 02, 29]],
+        [[1800, 03, 13], [1800, 03, 01]],
         [[1900, 02, 28], [1900, 02, 16]],
         [[1900, 03, 01], [1900, 02, 17]],
         [[1900, 03, 12], [1900, 02, 28]],
@@ -274,7 +288,7 @@ it(() => {
         const {year, month, dayOfMonth} = Time.julianYMD(getDateForUTCYMD(inY, inM, inD))
         assert(
             year === outY && month === outM && dayOfMonth === outD,
-            "mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
+            "julianYMD mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
         )
     }
 })

@@ -291,12 +291,10 @@ var Time = (function () {
 
         while (outDayOfMonth > currentMonthLength) {
             outDayOfMonth -= currentMonthLength;
-            outDayOfMonth += 1;
             outMonth += 1;
             if (outMonth > 12) {
                 outYear += 1;
                 outMonth -= 12;
-                outMonth += 1;
             }
             currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: outMonth})
         }
@@ -308,7 +306,7 @@ var Time = (function () {
                 outMonth = 12;
             }
             currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: outMonth})
-            outDayOfMonth = currentMonthLength;
+            outDayOfMonth += currentMonthLength;
         }
 
         return {
@@ -320,12 +318,44 @@ var Time = (function () {
 
     const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
         const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
-
+     
+        // TODO make this less fixed/table driven by starting at zero 
+        // difference and scanning forward/backward based on what the
+        // daysSinceJulianEpoch is. 
+        // 
+        // To do that I think the thing we'd want is a function that 
+        // takes a ymd and returns either the next or previous date that
+        // changes the difference. That is, a date where the one of the 
+        // calendars has a leap day but the other one doesn't.
+        // The output difference is then the count of those that were 
+        // reached on the way to the segment that contains the target 
+        // date
+        const K1 = 73049
+        
+        if (daysSinceJulianEpoch > 2488127.5) {
+            return 14
+        }
         if (daysSinceJulianEpoch > 2415078.5) {
             return 13
         }
+        if (daysSinceJulianEpoch > 2415078.5 - K1) {
+            console.log("return 12")
+            console.log("daysSinceJulianEpoch ", daysSinceJulianEpoch)
+            return 12
+        }
+        if (daysSinceJulianEpoch > 2415078.5 - K1 * 2) {
+            console.log("return 11")
+            console.log("daysSinceJulianEpoch ", daysSinceJulianEpoch)
+            return 11
+        }
+        if (daysSinceJulianEpoch > 2415078.5 - K1 * 3) {
+            console.log("return 10")
+            console.log("daysSinceJulianEpoch ", daysSinceJulianEpoch)
+            return 10
+        }
 
         // TODO implement fully
+        console.log("return 0")
         return 0
     }
 
@@ -356,24 +386,9 @@ var Time = (function () {
         const gYMD = {year: gYear, month: gMonth + 1, dayOfMonth: gDayOfMonth}
 
         const daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
+console.log(gYMD, "daysDifference " + daysDifference)
 
-        const jYMD = rollJulianYMDByDays(gYMD, daysDifference)
-
-        //~ const rawYear = Math.floor(daysSinceJulianEpoch / 365.25);
-        //~ const year = rawYear - 4712
-        //~ const dayOfYear = daysSinceJulianEpoch - (rawYear * 365.25);
-
-        //~ let dayOfMonth = dayOfYear
-        //~ let zeroBasedMonth = 1;
-
-        //~ while (zeroBasedMonth < 12 && dayOfMonth > MONTH_LENGTHS[zeroBasedMonth]) {
-            //~ dayOfMonth -= MONTH_LENGTHS[zeroBasedMonth]
-            //~ zeroBasedMonth += 1
-        //~ }
-
-        //~ const month = zeroBasedMonth + 1
-
-        return jYMD
+        return rollJulianYMDByDays(gYMD, -daysDifference)
     }
 
     const getStartOfYear = (date) => {
