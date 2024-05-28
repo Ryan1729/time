@@ -316,47 +316,93 @@ var Time = (function () {
         }
     }
 
-    const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
-        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
-     
-        // TODO make this less fixed/table driven by starting at zero 
-        // difference and scanning forward/backward based on what the
-        // daysSinceJulianEpoch is. 
-        // 
-        // To do that I think the thing we'd want is a function that 
-        // takes a ymd and returns either the next or previous date that
-        // changes the difference. That is, a date where the one of the 
-        // calendars has a leap day but the other one doesn't.
-        // The output difference is then the count of those that were 
-        // reached on the way to the segment that contains the target 
-        // date
-        const K1 = 73049
-        
-        if (daysSinceJulianEpoch > 2488127.5) {
-            return 14
-        }
-        if (daysSinceJulianEpoch > 2415078.5) {
-            return 13
-        }
-        if (daysSinceJulianEpoch > 2415078.5 - K1) {
-            console.log("return 12")
-            console.log("daysSinceJulianEpoch ", daysSinceJulianEpoch)
-            return 12
-        }
-        if (daysSinceJulianEpoch > 2415078.5 - K1 * 2) {
-            console.log("return 11")
-            console.log("daysSinceJulianEpoch ", daysSinceJulianEpoch)
-            return 11
-        }
-        if (daysSinceJulianEpoch > 2415078.5 - K1 * 3) {
-            console.log("return 10")
-            console.log("daysSinceJulianEpoch ", daysSinceJulianEpoch)
-            return 10
+    // Year Month Day Less-Than
+    const ymdLt = (a, b) => {
+        const yearDiff = a.year - b.year
+        if (yearDiff !== 0) {
+            return yearDiff < 0
         }
 
-        // TODO implement fully
-        console.log("return 0")
-        return 0
+        const monthDiff = a.month - b.month
+        if (monthDiff !== 0) {
+            return monthDiff < 0
+        }
+
+        const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
+        return dayOfMonthDiff < 0
+    }
+
+    // Year Month Day Greater-Than
+    const ymdGt = (a, b) => {
+        const yearDiff = a.year - b.year
+        if (yearDiff !== 0) {
+            return yearDiff > 0
+        }
+
+        const monthDiff = a.month - b.month
+        if (monthDiff !== 0) {
+            return monthDiff > 0
+        }
+
+        const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
+        return dayOfMonthDiff > 0
+    }
+
+    const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
+        // TODO fix infinite looping and remove this early return
+        if (true) {
+            return 0
+        }
+
+        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
+
+        let currentYmd = {year, month, dayOfMonth};
+
+        let difference = 0
+
+        const K = 1830691.5
+        // The ymd at K
+        let prospectiveJulianYmd = { year: 300, month: 2, dayOfMonth: 29 };
+        console.log(daysSinceJulianEpoch)
+        if (daysSinceJulianEpoch >= K) {
+            console.log(currentYmd, prospectiveJulianYmd, ymdGt(currentYmd, prospectiveJulianYmd))
+            while (ymdGt(currentYmd, prospectiveJulianYmd)) {
+                console.log("prospective", prospectiveJulianYmd)
+                while (true) {
+                    console.log("prospective", prospectiveJulianYmd)
+                    // TODO? something faster than this rolling by one?
+                    while (!(prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29)) {
+                        prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
+                    }
+
+                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference)
+                    if (isJulianLeapYear(prospectiveJulianYmd.year) && !isGregorianLeapYear(gregorianYear)) {
+                        break
+                    }
+
+                    prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
+                }
+                difference += 1;
+            }
+        } else {
+            while (ymdLt(currentYmd, prospectiveJulianYmd)) {
+                while (true) {
+                    // TODO? something faster than this rolling by one?
+                    while (!(prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29)) {
+                        prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, -1);
+                    }
+
+                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference)
+
+                    if (isJulianLeapYear(prospectiveJulianYmd.year) && !isGregorianLeapYear(gregorianYear)) {
+                        break
+                    }
+                }
+                difference -= 1;
+            }
+        }
+
+        return difference
     }
 
     const julianOneIndexedMonthLength = ({year, month}) => {
