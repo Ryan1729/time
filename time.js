@@ -349,11 +349,6 @@ var Time = (function () {
     }
 
     const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
-        // TODO fix infinite looping and remove this early return
-        if (true) {
-            return 0
-        }
-
         const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
 
         let currentYmd = {year, month, dayOfMonth};
@@ -367,20 +362,20 @@ var Time = (function () {
         if (daysSinceJulianEpoch >= K) {
             console.log(currentYmd, prospectiveJulianYmd, ymdGt(currentYmd, prospectiveJulianYmd))
             while (ymdGt(currentYmd, prospectiveJulianYmd)) {
-                console.log("prospective", prospectiveJulianYmd)
                 while (true) {
-                    console.log("prospective", prospectiveJulianYmd)
                     // TODO? something faster than this rolling by one?
                     while (!(prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29)) {
                         prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
                     }
 
-                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference)
-                    if (isJulianLeapYear(prospectiveJulianYmd.year) && !isGregorianLeapYear(gregorianYear)) {
-                        break
-                    }
+                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference).year
+                    const julianYear = prospectiveJulianYmd.year
 
                     prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
+
+                    if (isJulianLeapYear(julianYear) && !isGregorianLeapYear(gregorianYear)) {
+                        break
+                    }
                 }
                 difference += 1;
             }
@@ -392,9 +387,12 @@ var Time = (function () {
                         prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, -1);
                     }
 
-                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference)
+                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference).year
+                    const julianYear = prospectiveJulianYmd.year
 
-                    if (isJulianLeapYear(prospectiveJulianYmd.year) && !isGregorianLeapYear(gregorianYear)) {
+                    prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, -1);
+
+                    if (isJulianLeapYear(julianYear) && !isGregorianLeapYear(gregorianYear)) {
                         break
                     }
                 }
