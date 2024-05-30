@@ -316,6 +316,19 @@ var Time = (function () {
         }
     }
 
+    const rollGregorianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
+        const output = new Date(0);
+        output.setUTCFullYear(year)
+        output.setUTCMonth(month - 1)
+        output.setUTCDate(dayOfMonth + offsetInDays)
+
+        return {
+            year: output.getUTCFullYear(),
+            month: output.getUTCMonth() + 1,
+            dayOfMonth: output.getUTCDate(),
+        }
+    }
+
     // Year Month Day Less-Than
     const ymdLt = (a, b) => {
         const yearDiff = a.year - b.year
@@ -330,6 +343,22 @@ var Time = (function () {
 
         const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
         return dayOfMonthDiff < 0
+    }
+
+    // Year Month Day Greater-than or Equal to
+    const ymdGe = (a, b) => {
+        const yearDiff = a.year - b.year
+        if (yearDiff !== 0) {
+            return yearDiff > 0
+        }
+
+        const monthDiff = a.month - b.month
+        if (monthDiff !== 0) {
+            return monthDiff > 0
+        }
+
+        const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
+        return dayOfMonthDiff >= 0
     }
 
     // Year Month Day Greater-Than
@@ -351,52 +380,57 @@ var Time = (function () {
     const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
         const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
 
-        let currentYmd = {year, month, dayOfMonth};
-
-        let difference = 0
+        let targetYmd = {year, month, dayOfMonth};
 
         const K = 1830691.5
         // The ymd at K
         let prospectiveJulianYmd = { year: 300, month: 2, dayOfMonth: 29 };
-        console.log(daysSinceJulianEpoch)
+        let prospectiveGregorianYmd = {...prospectiveJulianYmd};
+
+        let difference = 0
+
         if (daysSinceJulianEpoch >= K) {
-            console.log(currentYmd, prospectiveJulianYmd, ymdGt(currentYmd, prospectiveJulianYmd))
-            while (ymdGt(currentYmd, prospectiveJulianYmd)) {
-                while (true) {
-                    // TODO? something faster than this rolling by one?
-                    while (!(prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29)) {
-                        prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
+            while (ymdGe(targetYmd, prospectiveGregorianYmd)) {
+                const julianYear = prospectiveJulianYmd.year
+                const gregorianYear = prospectiveGregorianYmd.year
+
+                if (julianYear <= 1582) {
+                    if (
+                        prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29
+                        && isJulianLeapYear(julianYear)
+                        && !isGregorianLeapYear(gregorianYear)
+                    ) {
+                        difference += 1
                     }
-
-                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference).year
-                    const julianYear = prospectiveJulianYmd.year
-
-                    prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
-
-                    if (isJulianLeapYear(julianYear) && !isGregorianLeapYear(gregorianYear)) {
-                        break
+                } else {
+                    if (
+                        prospectiveGregorianYmd.month === 3 && prospectiveGregorianYmd.dayOfMonth === 1
+                        && isJulianLeapYear(julianYear)
+                        && !isGregorianLeapYear(gregorianYear)
+                    ) {
+                        difference += 1
                     }
                 }
-                difference += 1;
+                // FIXME something faster than counting every single day!
+                prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
+                prospectiveGregorianYmd = rollGregorianYMDByDays(prospectiveGregorianYmd, 1);
             }
         } else {
-            while (ymdLt(currentYmd, prospectiveJulianYmd)) {
-                while (true) {
-                    // TODO? something faster than this rolling by one?
-                    while (!(prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29)) {
-                        prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, -1);
-                    }
+            // TODO test this part
+            while (ymdLt(targetYmd, prospectiveJulianYmd)) {
+                prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
+                prospectiveGregorianYmd = rollGregorianYMDByDays(prospectiveGregorianYmd, 1);
 
-                    const gregorianYear = rollJulianYMDByDays(prospectiveJulianYmd, -difference).year
-                    const julianYear = prospectiveJulianYmd.year
+                const julianYear = prospectiveJulianYmd.year
+                const gregorianYear = prospectiveGregorianYmd.year
 
-                    prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, -1);
-
-                    if (isJulianLeapYear(julianYear) && !isGregorianLeapYear(gregorianYear)) {
-                        break
-                    }
+                if (
+                    prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29
+                    && isJulianLeapYear(julianYear)
+                    && !isGregorianLeapYear(gregorianYear)
+                ) {
+                    difference -= 1
                 }
-                difference -= 1;
             }
         }
 
