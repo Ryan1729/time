@@ -400,6 +400,7 @@ var Time = (function () {
                         && isJulianLeapYear(julianYear)
                         && !isGregorianLeapYear(gregorianYear)
                     ) {
+                        //console.log("pro", prospectiveJulianYmd)
                         difference += 1
                     }
                 } else {
@@ -415,12 +416,23 @@ var Time = (function () {
                 prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
                 prospectiveGregorianYmd = rollGregorianYMDByDays(prospectiveGregorianYmd, 1);
             }
+            
+            const julianYear = prospectiveJulianYmd.year
+            const gregorianYear = prospectiveGregorianYmd.year
+            if (julianYear <= 1582) {
+                if (
+                    prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29
+                    && isJulianLeapYear(julianYear)
+                    && !isGregorianLeapYear(gregorianYear)
+                ) {
+                    //console.log("pro", prospectiveJulianYmd)
+                    difference += 1
+                }
+            }
         } else {
-            // TODO test this part
             while (ymdLt(targetYmd, prospectiveJulianYmd)) {
-                prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
-                prospectiveGregorianYmd = rollGregorianYMDByDays(prospectiveGregorianYmd, 1);
-
+                prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, -1);
+                prospectiveGregorianYmd = rollGregorianYMDByDays(prospectiveGregorianYmd, -1);
                 const julianYear = prospectiveJulianYmd.year
                 const gregorianYear = prospectiveGregorianYmd.year
 
@@ -463,7 +475,7 @@ var Time = (function () {
 
         const gYMD = {year: gYear, month: gMonth + 1, dayOfMonth: gDayOfMonth}
 
-        const daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
+        let daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
 console.log(gYMD, "daysDifference " + daysDifference)
 
         return rollJulianYMDByDays(gYMD, -daysDifference)
