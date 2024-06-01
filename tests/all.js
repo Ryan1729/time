@@ -329,6 +329,7 @@ it(() => {
         [[2100, 03, 13], [2100, 02, 28]],
         [[2100, 03, 14], [2100, 02, 29]],
     ]
+    const start = performance.now()
     for (let i = 0; i < inputOutputPairs.length; i += 1) {
         const [[inY, inM, inD], [outY, outM, outD]] = inputOutputPairs[i]
 
@@ -338,6 +339,7 @@ it(() => {
             "julianYMD mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
         )
     }
+    console.log(performance.now() - start, "ms")
 })
 
 it(() => {

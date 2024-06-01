@@ -251,7 +251,7 @@ var Time = (function () {
         // and not a multiple 100, unless it is a multiple of 400,
         // in which case it is a leap year.
 
-        // ANDing by only less than a power of two produces 0 for
+        // ANDing by one less than a power of two produces 0 for
         // multiples of the given power of two and a non zero number
         // otherwise
 
@@ -384,65 +384,93 @@ var Time = (function () {
 
         const K = 1830691.5
         // The ymd at K
-        let prospectiveJulianYmd = { year: 300, month: 2, dayOfMonth: 29 };
-        let prospectiveGregorianYmd = {...prospectiveJulianYmd};
+        let prospectiveJulianYear = 300;
+        let prospectiveJulianMonth = 2;
+        let prospectiveJulianDayOfMonth = 29;
+        let prospectiveGregorianYear = 300;
+        let prospectiveGregorianMonth = 2;
+        let prospectiveGregorianDayOfMonth = 29;
+
+        const MONTH_LENGTHS = [
+            31,
+            0,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
+        ]
+
+        const rollJulianYMDByDaysMutating = (offsetInDays) => {
+            let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1] || (((prospectiveJulianYear & 3) === 0) ? 29 : 28);
+
+            prospectiveJulianDayOfMonth += offsetInDays
+
+            while (prospectiveJulianDayOfMonth > currentMonthLength) {
+                prospectiveJulianDayOfMonth -= currentMonthLength;
+                prospectiveJulianMonth += 1;
+                if (prospectiveJulianMonth > 12) {
+                    prospectiveJulianYear += 1;
+                    prospectiveJulianMonth -= 12;
+                }
+                currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1] || (((prospectiveJulianYear & 3) === 0) ? 29 : 28)
+            }
+
+            while (prospectiveJulianDayOfMonth < 1) {
+                prospectiveJulianMonth -= 1;
+                if (prospectiveJulianMonth < 1) {
+                    prospectiveJulianYear -= 1;
+                    prospectiveJulianMonth = 12;
+                }
+                prospectiveJulianDayOfMonth += MONTH_LENGTHS[prospectiveJulianMonth - 1] || (((prospectiveJulianYear & 3) === 0) ? 29 : 28);
+            }
+        }
+
+        const gregorianRollDate = new Date(0);
+        const rollGregorianYMDByDaysMutating = (offsetInDays) => {
+            gregorianRollDate.setUTCFullYear(prospectiveGregorianYear)
+            gregorianRollDate.setUTCMonth(prospectiveGregorianMonth - 1)
+            gregorianRollDate.setUTCDate(prospectiveGregorianDayOfMonth + offsetInDays)
+
+            prospectiveGregorianYear = gregorianRollDate.getUTCFullYear();
+            prospectiveGregorianMonth = gregorianRollDate.getUTCMonth() + 1;
+            prospectiveGregorianDayOfMonth = gregorianRollDate.getUTCDate();
+        }
 
         let difference = 0
 
         if (daysSinceJulianEpoch >= K) {
-            while (ymdGe(targetYmd, prospectiveGregorianYmd)) {
-                const julianYear = prospectiveJulianYmd.year
-                const gregorianYear = prospectiveGregorianYmd.year
+            while (ymdGe(targetYmd, { year: prospectiveGregorianYear, month: prospectiveGregorianMonth, dayOfMonth: prospectiveGregorianDayOfMonth })) {
+                difference += ((prospectiveJulianYear & 3) === 0)
+                    & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
+                    & (prospectiveJulianYear <= 1582 ? prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29 : prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
 
-                if (julianYear <= 1582) {
-                    if (
-                        prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29
-                        && isJulianLeapYear(julianYear)
-                        && !isGregorianLeapYear(gregorianYear)
-                    ) {
-                        //console.log("pro", prospectiveJulianYmd)
-                        difference += 1
-                    }
-                } else {
-                    if (
-                        prospectiveGregorianYmd.month === 3 && prospectiveGregorianYmd.dayOfMonth === 1
-                        && isJulianLeapYear(julianYear)
-                        && !isGregorianLeapYear(gregorianYear)
-                    ) {
-                        difference += 1
-                    }
-                }
-                // FIXME something faster than counting every single day!
-                prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, 1);
-                prospectiveGregorianYmd = rollGregorianYMDByDays(prospectiveGregorianYmd, 1);
+                let offset = 1
+
+                rollJulianYMDByDaysMutating(offset);
+                rollGregorianYMDByDaysMutating(offset);
             }
-            
-            const julianYear = prospectiveJulianYmd.year
-            const gregorianYear = prospectiveGregorianYmd.year
-            if (julianYear <= 1582) {
-                if (
-                    prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29
-                    && isJulianLeapYear(julianYear)
-                    && !isGregorianLeapYear(gregorianYear)
-                ) {
-                    //console.log("pro", prospectiveJulianYmd)
-                    difference += 1
-                }
+
+            if (prospectiveJulianYear <= 1582) {
+                difference += ((prospectiveJulianYear & 3) === 0)
+                    & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
+                    & (prospectiveJulianMonth=== 2 && prospectiveJulianDayOfMonth === 29)
             }
         } else {
-            while (ymdLt(targetYmd, prospectiveJulianYmd)) {
-                prospectiveJulianYmd = rollJulianYMDByDays(prospectiveJulianYmd, -1);
-                prospectiveGregorianYmd = rollGregorianYMDByDays(prospectiveGregorianYmd, -1);
-                const julianYear = prospectiveJulianYmd.year
-                const gregorianYear = prospectiveGregorianYmd.year
+            while (ymdLt(targetYmd, { year: prospectiveJulianYear, month: prospectiveJulianMonth, dayOfMonth: prospectiveJulianDayOfMonth })) {
+                let offset = -1
 
-                if (
-                    prospectiveJulianYmd.month === 2 && prospectiveJulianYmd.dayOfMonth === 29
-                    && isJulianLeapYear(julianYear)
-                    && !isGregorianLeapYear(gregorianYear)
-                ) {
-                    difference -= 1
-                }
+                rollJulianYMDByDaysMutating(offset);
+                rollGregorianYMDByDaysMutating(offset);
+
+                difference -= ((prospectiveJulianYear & 3) === 0)
+                    & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
+                    & (prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29)
             }
         }
 
@@ -476,7 +504,6 @@ var Time = (function () {
         const gYMD = {year: gYear, month: gMonth + 1, dayOfMonth: gDayOfMonth}
 
         let daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
-console.log(gYMD, "daysDifference " + daysDifference)
 
         return rollJulianYMDByDays(gYMD, -daysDifference)
     }
