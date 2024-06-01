@@ -445,12 +445,14 @@ var Time = (function () {
         let difference = 0
 
         if (daysSinceJulianEpoch >= K) {
+            // TODO avoid needing to create an object everytime by passing numbers
             while (ymdGe(targetYmd, { year: prospectiveGregorianYear, month: prospectiveGregorianMonth, dayOfMonth: prospectiveGregorianDayOfMonth })) {
                 difference += ((prospectiveJulianYear & 3) === 0)
                     & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
                     & (prospectiveJulianYear <= 1582 ? prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29 : prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
 
-                let offset = 1
+                // An attempt at something faster than counting every single day.
+                const offset = prospectiveJulianMonth === 3 ? 270 : 1
 
                 rollJulianYMDByDaysMutating(offset);
                 rollGregorianYMDByDaysMutating(offset);
@@ -462,8 +464,10 @@ var Time = (function () {
                     & (prospectiveJulianMonth=== 2 && prospectiveJulianDayOfMonth === 29)
             }
         } else {
+            // TODO avoid needing to create an object everytime by passing numbers
             while (ymdLt(targetYmd, { year: prospectiveJulianYear, month: prospectiveJulianMonth, dayOfMonth: prospectiveJulianDayOfMonth })) {
-                let offset = -1
+                // An attempt at something faster than counting every single day.
+                const offset = prospectiveJulianMonth === 1 ? -270 : -1
 
                 rollJulianYMDByDaysMutating(offset);
                 rollGregorianYMDByDaysMutating(offset);
