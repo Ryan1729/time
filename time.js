@@ -451,8 +451,14 @@ var Time = (function () {
                     & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
                     & (prospectiveJulianYear <= 1582 ? prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29 : prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
 
-                // An attempt at something faster than counting every single day.
-                const offset = prospectiveJulianMonth === 3 ? 270 : 1
+                // Significatly faster than counting every single day.
+                const modulous = prospectiveJulianYear % 100
+                let offset;
+                if (modulous > 0 && modulous < 99) {
+                    offset = 365 * (100 - modulous)
+                } else {
+                    offset = prospectiveJulianMonth === 3 ? 270 : 1
+                }
 
                 rollJulianYMDByDaysMutating(offset);
                 rollGregorianYMDByDaysMutating(offset);
@@ -466,8 +472,16 @@ var Time = (function () {
         } else {
             // TODO avoid needing to create an object everytime by passing numbers
             while (ymdLt(targetYmd, { year: prospectiveJulianYear, month: prospectiveJulianMonth, dayOfMonth: prospectiveJulianDayOfMonth })) {
-                // An attempt at something faster than counting every single day.
-                const offset = prospectiveJulianMonth === 1 ? -270 : -1
+                // Significatly faster than counting every single day.
+                const modulous = prospectiveJulianYear % 100
+                let offset;
+                if (modulous > 0 && modulous < 99) {
+                    offset = 365 * -modulous
+                } else if (modulous > -99 && modulous < -0) {
+                    offset = 365 * -(100 + modulous)
+                } else {
+                    offset = prospectiveJulianMonth === 1 ? -270 : -1
+                }
 
                 rollJulianYMDByDaysMutating(offset);
                 rollGregorianYMDByDaysMutating(offset);
