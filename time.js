@@ -289,6 +289,8 @@ var Time = (function () {
         let outMonth = month
         let outDayOfMonth = dayOfMonth + offsetInDays
 
+        // TODO skip over years at once so we don't need to loop so
+        // many times
         while (outDayOfMonth > currentMonthLength) {
             outDayOfMonth -= currentMonthLength;
             outMonth += 1;
@@ -299,6 +301,8 @@ var Time = (function () {
             currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: outMonth})
         }
 
+        // TODO skip over years at once so we don't need to loop so
+        // many times
         while (outDayOfMonth < 1) {
             outMonth -= 1;
             if (outMonth < 1) {
@@ -316,6 +320,9 @@ var Time = (function () {
         }
     }
 
+    // TODO This is apparently slower than doing calculations as in
+    // rollJulianYMDByDays, so eventaully make it more like that
+    // function if this gets used enough for that to matter
     const rollGregorianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
         const output = new Date(0);
         output.setUTCFullYear(year)
@@ -380,8 +387,6 @@ var Time = (function () {
     const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
         const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
 
-        let targetYmd = {year, month, dayOfMonth};
-
         const K = 1830691.5
         // The ymd at K
         let prospectiveJulianYear = 300;
@@ -411,6 +416,8 @@ var Time = (function () {
 
             prospectiveJulianDayOfMonth += offsetInDays
 
+            // TODO skip over years at once so we don't need to loop so
+            // many times
             while (prospectiveJulianDayOfMonth > currentMonthLength) {
                 prospectiveJulianDayOfMonth -= currentMonthLength;
                 prospectiveJulianMonth += 1;
@@ -421,6 +428,8 @@ var Time = (function () {
                 currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1] || (((prospectiveJulianYear & 3) === 0) ? 29 : 28)
             }
 
+            // TODO skip over years at once so we don't need to loop so
+            // many times
             while (prospectiveJulianDayOfMonth < 1) {
                 prospectiveJulianMonth -= 1;
                 if (prospectiveJulianMonth < 1) {
@@ -437,6 +446,8 @@ var Time = (function () {
 
             prospectiveGregorianDayOfMonth += offsetInDays
 
+            // TODO skip over years at once so we don't need to loop so
+            // many times
             while (prospectiveGregorianDayOfMonth > currentMonthLength) {
                 prospectiveGregorianDayOfMonth -= currentMonthLength;
                 prospectiveGregorianMonth += 1;
@@ -448,6 +459,8 @@ var Time = (function () {
                     || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
             }
 
+            // TODO skip over years at once so we don't need to loop so
+            // many times
             while (prospectiveGregorianDayOfMonth < 1) {
                 prospectiveGregorianMonth -= 1;
                 if (prospectiveGregorianMonth < 1) {
@@ -462,8 +475,17 @@ var Time = (function () {
         let difference = 0
 
         if (daysSinceJulianEpoch >= K) {
-            // TODO avoid needing to create an object everytime by passing numbers
-            while (ymdGe(targetYmd, { year: prospectiveGregorianYear, month: prospectiveGregorianMonth, dayOfMonth: prospectiveGregorianDayOfMonth })) {
+            while (1) {
+                const yearDiff = year - prospectiveGregorianYear
+                const monthDiff = month - prospectiveGregorianMonth
+
+                if (
+                    // is prospectiveGregorian date less than target
+                    (yearDiff < 0) | yearDiff === 0 & ((monthDiff < 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveGregorianDayOfMonth) < 0)))
+                ) {
+                    break
+                }
+
                 difference += ((prospectiveJulianYear & 3) === 0)
                     & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
                     & (prospectiveJulianYear <= 1582 ? prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29 : prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
@@ -487,8 +509,17 @@ var Time = (function () {
                     & (prospectiveJulianMonth=== 2 && prospectiveJulianDayOfMonth === 29)
             }
         } else {
-            // TODO avoid needing to create an object everytime by passing numbers
-            while (ymdLt(targetYmd, { year: prospectiveJulianYear, month: prospectiveJulianMonth, dayOfMonth: prospectiveJulianDayOfMonth })) {
+            while (1) {
+                const yearDiff = year - prospectiveJulianYear
+                const monthDiff = month - prospectiveJulianMonth
+
+                if (
+                    // is prospectiveJulian date greater than or than target
+                    (yearDiff > 0) | yearDiff === 0 & ((monthDiff > 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveJulianDayOfMonth) >= 0)))
+                ) {
+                    break
+                }
+
                 // Significatly faster than counting every single day.
                 const modulous = prospectiveJulianYear % 100
                 let offset;
