@@ -431,15 +431,32 @@ var Time = (function () {
             }
         }
 
-        const gregorianRollDate = new Date(0);
         const rollGregorianYMDByDaysMutating = (offsetInDays) => {
-            gregorianRollDate.setUTCFullYear(prospectiveGregorianYear)
-            gregorianRollDate.setUTCMonth(prospectiveGregorianMonth - 1)
-            gregorianRollDate.setUTCDate(prospectiveGregorianDayOfMonth + offsetInDays)
+            let currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1]
+                || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
 
-            prospectiveGregorianYear = gregorianRollDate.getUTCFullYear();
-            prospectiveGregorianMonth = gregorianRollDate.getUTCMonth() + 1;
-            prospectiveGregorianDayOfMonth = gregorianRollDate.getUTCDate();
+            prospectiveGregorianDayOfMonth += offsetInDays
+
+            while (prospectiveGregorianDayOfMonth > currentMonthLength) {
+                prospectiveGregorianDayOfMonth -= currentMonthLength;
+                prospectiveGregorianMonth += 1;
+                if (prospectiveGregorianMonth > 12) {
+                    prospectiveGregorianYear += 1;
+                    prospectiveGregorianMonth -= 12;
+                }
+                currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1]
+                    || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
+            }
+
+            while (prospectiveGregorianDayOfMonth < 1) {
+                prospectiveGregorianMonth -= 1;
+                if (prospectiveGregorianMonth < 1) {
+                    prospectiveGregorianYear -= 1;
+                    prospectiveGregorianMonth = 12;
+                }
+                prospectiveGregorianDayOfMonth += MONTH_LENGTHS[prospectiveGregorianMonth - 1]
+                    || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
+            }
         }
 
         let difference = 0
