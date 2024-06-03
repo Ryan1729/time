@@ -198,31 +198,24 @@ var Time = (function () {
                     pageBounds() {
                         const date = this.date
 
-                        const {year, month, dayOfMonth} = julianYMD(date)
+                        const ymd = julianYMD(date)
 
-                        if (DEBUG_MODE) {
-                            // FIXME 1900 March 14 gregorian is supposed to be 1900 March 1 and that is currently not the case
-                            // The time -2202700000000 is 1900 March 14 gregorian
-                            console.log(year,
-                                    month,
-                                    dayOfMonth)
-                        }
                         // TODO confirm that these always get the right answer
 
-                        const firstOfCurrentMonth = new Date(year, month, 1)
+                        const firstOfCurrentMonth = new Date(ymd.year, ymd.month, 1)
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
                         const monthText = GREGORIAN_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
-                        const lastOfPreviousMonth = new Date(year, month, 0)
+                        const lastOfPreviousMonthYmd = rollJulianYMDByDays(ymd, -ymd.dayOfMonth)
 
-                        const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
-                        const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
-                        const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
-                        const dayOfWeekOfFirstOfCurrent = firstOfCurrentMonth.getUTCDay()
-                        const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
+                        const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.dayOfMonth
+                        const dayOfWeekOfLastOfPrevious = julianDayOfWeek(lastOfPreviousMonthYmd)
+                        const lastDateOfCurrentMonth = julianOneIndexedMonthLength(ymd)
+                        const dayOfWeekOfFirstOfCurrent = julianDayOfWeek({...ymd, dayOfMonth: 1})
+                        const dayOfWeekOfFirstOfNext = julianDayOfWeek(rollJulianYMDByDays(ymd, lastDateOfCurrentMonth - ymd.dayOfMonth + 1))
 
                         return {
-                            dayOfMonth,
+                            dayOfMonth: ymd.dayOfMonth,
                             lastDateOfPreviousMonth,
                             dayOfWeekOfLastOfPrevious,
                             lastDateOfCurrentMonth,
@@ -234,10 +227,7 @@ var Time = (function () {
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        if (DEBUG_MODE) {
-                            console.log("TODO JULIAN")
-                        }
-                        return gregorianLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
+                        return julianLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
                     }
                 }
             break
@@ -280,6 +270,15 @@ var Time = (function () {
     const isJulianLeapYear = (year) => {
         // If it is a multiple of 4 it is always a Julian leap year
         return (year & 3) === 0
+    }
+
+    // TODO use as a timepiece
+    const julianDayOfWeek = ({year, month, dayOfMonth}) => {
+        if (DEBUG_MODE) {
+            console.log("julianDayOfWeek")
+        }
+        // TODO implement
+        return 0
     }
 
     const rollJulianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
@@ -382,6 +381,16 @@ var Time = (function () {
 
         const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
         return dayOfMonthDiff > 0
+    }
+
+    // TODO write tests to confirm that this fits with julianDaysDifferenceFromGregorianYMD
+    const gregorianDaysDifferenceFromJulianYMD = ({year, month, dayOfMonth}) => {
+        if (DEBUG_MODE) {
+            console.log("gregorianDaysDifferenceFromJulianYMD")
+        }
+
+        // TODO implment correctly
+        return 0
     }
 
     const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
@@ -514,7 +523,7 @@ var Time = (function () {
                 const monthDiff = month - prospectiveJulianMonth
 
                 if (
-                    // is prospectiveJulian date greater than or than target
+                    // is prospectiveJulian date greater than or equal to target
                     (yearDiff > 0) | yearDiff === 0 & ((monthDiff > 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveJulianDayOfMonth) >= 0)))
                 ) {
                     break
@@ -569,9 +578,19 @@ var Time = (function () {
 
         const gYMD = {year: gYear, month: gMonth + 1, dayOfMonth: gDayOfMonth}
 
+        return gregorianYMDToJulian(gYMD)
+    }
+
+    const gregorianYMDToJulian = (gYMD) => {
         let daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
 
         return rollJulianYMDByDays(gYMD, -daysDifference)
+    }
+
+    const julianYMDToGregorian = (jYMD) => {
+        let daysDifference = gregorianDaysDifferenceFromJulianYMD(jYMD)
+
+        return rollJulianYMDByDays(jYMD, -daysDifference)
     }
 
     const getStartOfYear = (date) => {
@@ -673,6 +692,34 @@ var Time = (function () {
         startOfDay.setUTCFullYear(date.getUTCFullYear())
         startOfDay.setUTCMonth(date.getUTCMonth() + monthDelta)
         startOfDay.setUTCDate(dayOfMonth)
+
+        return startOfDay.getTime()
+    }
+
+    const julianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        const oldYMD = julianYMD(date)
+
+        let newYMD = oldYMD
+        switch (monthDelta) {
+            case PREVIOUS:
+                newYMD = rollJulianYMDByDays(oldYMD, -oldYMD.dayOfMonth)
+            break
+            default:
+                console.error("Unexpected monthDelta: " + monthDelta)
+                // fallthrough
+            case CURRENT:
+            break
+            case NEXT:
+                newYMD = rollJulianYMDByDays(oldYMD, julianOneIndexedMonthLength(oldYMD) - oldYMD.dayOfMonth + 1)
+            break
+        }
+
+        const gYMD = julianYMDToGregorian(newYMD)
+
+        const startOfDay = new Date(0);
+        startOfDay.setUTCFullYear(gYMD.year)
+        startOfDay.setUTCMonth(gYMD.month)
+        startOfDay.setUTCDate(gYMD.dayOfMonth)
 
         return startOfDay.getTime()
     }
