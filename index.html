@@ -1483,8 +1483,8 @@ a:visited {
             const julianYMD = Time.julianYMD(date)
             digitalJulianDate.textContent = `${julianYMD.year}-${padToTwoDigits(julianYMD.month)}-${padToTwoDigits(julianYMD.dayOfMonth)}`
 
-            julianDayJohnWalker.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch(year, oneIndexedMonth, dayOfMonth, Time.JOHN_WALKER)
-            julianDayFliegelAndVanFlandern.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch(year, oneIndexedMonth, dayOfMonth, Time.FLIEGEL_AND_VAN_FLANDERN)
+            julianDayJohnWalker.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch({year, month: oneIndexedMonth, dayOfMonth}, Time.JOHN_WALKER)
+            julianDayFliegelAndVanFlandern.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch({year, month: oneIndexedMonth, dayOfMonth}, Time.FLIEGEL_AND_VAN_FLANDERN)
 
             let northernMetrologicalSeason
             let southernMetrologicalSeason

@@ -383,18 +383,168 @@ var Time = (function () {
         return dayOfMonthDiff > 0
     }
 
-    // TODO write tests to confirm that this fits with julianDaysDifferenceFromGregorianYMD
     const gregorianDaysDifferenceFromJulianYMD = ({year, month, dayOfMonth}) => {
-        if (DEBUG_MODE) {
-            console.log("gregorianDaysDifferenceFromJulianYMD")
+        const daysSinceJulianEpoch = julianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
+
+        const K = 1830691.5
+        // The ymd at K
+        let prospectiveGregorianYear = 300;
+        let prospectiveGregorianMonth = 2;
+        let prospectiveGregorianDayOfMonth = 29;
+        let prospectiveJulianYear = 300;
+        let prospectiveJulianMonth = 2;
+        let prospectiveJulianDayOfMonth = 29;
+
+        const MONTH_LENGTHS = [
+            31,
+            0,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
+        ]
+
+        const rollGregorianYMDByDaysMutating = (offsetInDays) => {
+            let currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1] || (((prospectiveGregorianYear & 3) === 0) ? 29 : 28);
+
+            prospectiveGregorianDayOfMonth += offsetInDays
+
+            // TODO skip over years at once so we don't need to loop so
+            // many times
+            while (prospectiveGregorianDayOfMonth > currentMonthLength) {
+                prospectiveGregorianDayOfMonth -= currentMonthLength;
+                prospectiveGregorianMonth += 1;
+                if (prospectiveGregorianMonth > 12) {
+                    prospectiveGregorianYear += 1;
+                    prospectiveGregorianMonth -= 12;
+                }
+                currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1] || (((prospectiveGregorianYear & 3) === 0) ? 29 : 28)
+            }
+
+            // TODO skip over years at once so we don't need to loop so
+            // many times
+            while (prospectiveGregorianDayOfMonth < 1) {
+                prospectiveGregorianMonth -= 1;
+                if (prospectiveGregorianMonth < 1) {
+                    prospectiveGregorianYear -= 1;
+                    prospectiveGregorianMonth = 12;
+                }
+                prospectiveGregorianDayOfMonth += MONTH_LENGTHS[prospectiveGregorianMonth - 1] || (((prospectiveGregorianYear & 3) === 0) ? 29 : 28);
+            }
         }
 
-        // TODO implment correctly
-        return 0
+        const rollJulianYMDByDaysMutating = (offsetInDays) => {
+            let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
+                || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+
+            prospectiveJulianDayOfMonth += offsetInDays
+
+            // TODO skip over years at once so we don't need to loop so
+            // many times
+            while (prospectiveJulianDayOfMonth > currentMonthLength) {
+                prospectiveJulianDayOfMonth -= currentMonthLength;
+                prospectiveJulianMonth += 1;
+                if (prospectiveJulianMonth > 12) {
+                    prospectiveJulianYear += 1;
+                    prospectiveJulianMonth -= 12;
+                }
+                currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
+                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+            }
+
+            // TODO skip over years at once so we don't need to loop so
+            // many times
+            while (prospectiveJulianDayOfMonth < 1) {
+                prospectiveJulianMonth -= 1;
+                if (prospectiveJulianMonth < 1) {
+                    prospectiveJulianYear -= 1;
+                    prospectiveJulianMonth = 12;
+                }
+                prospectiveJulianDayOfMonth += MONTH_LENGTHS[prospectiveJulianMonth - 1]
+                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+            }
+        }
+
+        let difference = 0
+
+        if (daysSinceJulianEpoch >= K) {
+            while (1) {
+                const yearDiff = year - prospectiveJulianYear
+                const monthDiff = month - prospectiveJulianMonth
+
+                if (
+                    // is prospectiveJulian date less than target
+                    (yearDiff < 0) | yearDiff === 0 & ((monthDiff < 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveJulianDayOfMonth) < 0)))
+                ) {
+                    break
+                }
+
+                difference += ((prospectiveGregorianYear & 3) === 0)
+                    & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
+                    & (prospectiveGregorianYear <= 1582 ? prospectiveGregorianMonth === 2 && prospectiveGregorianDayOfMonth === 29 : prospectiveJulianMonth === 3 && prospectiveJulianDayOfMonth === 1)
+
+                // Significatly faster than counting every single day.
+                const modulous = prospectiveGregorianYear % 100
+                let offset;
+                if (modulous > 0 && modulous < 99) {
+                    offset = 365 * (100 - modulous)
+                } else {
+                    offset = prospectiveGregorianMonth === 3 ? 270 : 1
+                }
+
+                rollGregorianYMDByDaysMutating(offset);
+                rollJulianYMDByDaysMutating(offset);
+            }
+
+            if (prospectiveGregorianYear <= 1582) {
+                difference += ((prospectiveGregorianYear & 3) === 0)
+                    & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
+                    & (prospectiveGregorianMonth=== 2 && prospectiveGregorianDayOfMonth === 29)
+            }
+        } else {
+            while (1) {
+                const yearDiff = year - prospectiveGregorianYear
+                const monthDiff = month - prospectiveGregorianMonth
+
+                if (
+                    // is prospectiveGregorian date greater than or equal to target
+                    (yearDiff > 0) | yearDiff === 0 & ((monthDiff > 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveGregorianDayOfMonth) >= 0)))
+                ) {
+                    break
+                }
+
+                // Significatly faster than counting every single day.
+                const modulous = prospectiveGregorianYear % 100
+                let offset;
+                if (modulous > 0 && modulous < 99) {
+                    offset = 365 * -modulous
+                } else if (modulous > -99 && modulous < -0) {
+                    offset = 365 * -(100 + modulous)
+                } else {
+                    offset = prospectiveGregorianMonth === 1 ? -270 : -1
+                }
+
+                rollGregorianYMDByDaysMutating(offset);
+                rollJulianYMDByDaysMutating(offset);
+
+                difference -= ((prospectiveGregorianYear & 3) === 0)
+                    & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
+                    & (prospectiveGregorianMonth === 2 && prospectiveGregorianDayOfMonth === 29)
+            }
+        }
+
+        return difference
     }
 
-    const julianDaysDifferenceFromGregorianYMD = ({year, month, dayOfMonth}) => {
-        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
+    const julianDaysDifferenceFromGregorianYMD = (ymd) => {
+        const {year, month, dayOfMonth} = ymd
+        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(ymd)
 
         const K = 1830691.5
         // The ymd at K
@@ -802,8 +952,8 @@ var Time = (function () {
 
     const GREGORIAN_EPOCH = 1721425.5;
 
-    // One based month. Example for time 0: gregorianYMDToJulianDaysSinceJulianEpoch(1970, 1, 1)
-    const gregorianYMDToJulianDaysSinceJulianEpoch = (year, month, day, algorithm) => {
+    // One based month. Example for time 0: gregorianYMDToJulianDaysSinceJulianEpoch({year: 1970, month: 1, dayOfMonth: 1})
+    const gregorianYMDToJulianDaysSinceJulianEpoch = ({year, month, dayOfMonth}, algorithm) => {
         switch (algorithm) {
             default:
             case JOHN_WALKER:
@@ -817,7 +967,7 @@ var Time = (function () {
                    ((month <= 2) ? 0 :
                                        (isGregorianLeapYear(year) ? -1 : -2)
                    ) +
-                   day);
+                   dayOfMonth);
             case FLIEGEL_AND_VAN_FLANDERN:
                 // https://dl.acm.org/doi/pdf/10.1145/364096.364097
                 // This other website says that this only works for gregorian years 1801 - 2099
@@ -826,7 +976,7 @@ var Time = (function () {
                 // Since I, J and K are integers in default in Fortran, this algorithm uses integer division.
                 const I = BigInt(year)
                 const J = BigInt(month)
-                const K = BigInt(day)
+                const K = BigInt(dayOfMonth)
 
                 const output = K - 32075n + 1461n * (I + 4800n + (J - 14n)/12n)/4n
                         + 367n * (J - 2n - (J - 14n)/12n  * 12n)/12n - 3n
@@ -836,6 +986,14 @@ var Time = (function () {
                     output
                 );
         }
+    };
+    
+    const julianYMDToJulianDaysSinceJulianEpoch = (year, month, day) => {
+        if (DEBUG_MODE) {
+            console.log("julianYMDToJulianDaysSinceJulianEpoch")
+        }
+        // TODO implement fully
+        return 0
     };
 
     return {
@@ -882,7 +1040,10 @@ var Time = (function () {
         //
         rollJulianYMDByDays,
         julianYMD,
+        gregorianYMDToJulian,
+        julianYMDToGregorian,
         gregorianYMDToJulianDaysSinceJulianEpoch,
+        julianYMDToJulianDaysSinceJulianEpoch,
         JOHN_WALKER,
         FLIEGEL_AND_VAN_FLANDERN,
     }
