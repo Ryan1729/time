@@ -988,12 +988,13 @@ var Time = (function () {
         }
     };
     
-    const julianYMDToJulianDaysSinceJulianEpoch = (year, month, day) => {
+    const julianYMDToJulianDaysSinceJulianEpoch = ({year, month, dayOfMonth}) => {
         if (DEBUG_MODE) {
             console.log("julianYMDToJulianDaysSinceJulianEpoch")
         }
+        const K = 1721036.5
         // TODO implement fully
-        return 0
+        return K + year * 365.25 + month * 30 + dayOfMonth
     };
 
     return {

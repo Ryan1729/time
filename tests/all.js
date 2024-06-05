@@ -243,7 +243,10 @@ it(() => {
 const GREGORIAN_JULIAN_PAIRS = [
     // (Using leading zeroes to line things up works for 0 to 9,
     // even though 010 is interpreted as octal.)
+    // This uses the (non-standrd) convention that both Gregorian and
+    // Julian calendars have a year 0
     // Gregorian     Julian
+    [[-4712,11, 24], [-4712,01, 01]],
     [[-500, 02, 28], [-500, 03, 05]],
     [[-500, 03, 01], [-500, 03, 06]],
     [[-300, 02, 27], [-300, 03, 03]],
