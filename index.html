@@ -1128,7 +1128,7 @@ a:visited {
             raw.textContent = time.toLocaleString()
             utcString.textContent = date.toUTCString()
 
-            const gregorianCalendarSpecs = Time.calculateCalendarSpecs(Time.GREGORIAN, date)
+            const gregorianCalendarSpecs = Time.calculateCalendarSpecs(Time.GREGORIAN0, date)
 
             applyCalendarSpecs(gregorianCalendarElements, gregorianCalendarSpecs)
 
@@ -1136,7 +1136,7 @@ a:visited {
 
             applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
             
-            const julianCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.JULIAN, date)
+            const julianCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.JULIAN0, date)
             
             applyCalendarSpecs(julianCalendarElements, julianCalendarBoxSpecs)
 
@@ -1480,11 +1480,13 @@ a:visited {
             digitalDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
             digitalIFCDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
             
-            const julianYMD = Time.julianYMD(date)
-            digitalJulianDate.textContent = `${julianYMD.year}-${padToTwoDigits(julianYMD.month)}-${padToTwoDigits(julianYMD.dayOfMonth)}`
+            const julian0YMD = Time.julian0YMD(date)
+            digitalJulianDate.textContent = `${julian0YMD.year}-${padToTwoDigits(julian0YMD.month)}-${padToTwoDigits(julian0YMD.dayOfMonth)}`
 
-            julianDayJohnWalker.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch({year, month: oneIndexedMonth, dayOfMonth}, Time.JOHN_WALKER)
-            julianDayFliegelAndVanFlandern.textContent = Time.gregorianYMDToJulianDaysSinceJulianEpoch({year, month: oneIndexedMonth, dayOfMonth}, Time.FLIEGEL_AND_VAN_FLANDERN)
+            const g0YMD = Time.G0.ymd(year, oneIndexedMonth, dayOfMonth)
+
+            julianDayJohnWalker.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.JOHN_WALKER)
+            julianDayFliegelAndVanFlandern.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.FLIEGEL_AND_VAN_FLANDERN)
 
             let northernMetrologicalSeason
             let southernMetrologicalSeason

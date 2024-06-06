@@ -1,12 +1,12 @@
 var Time = (function () {
     "use strict";
 
-    const GREGORIAN = 0
+    const GREGORIAN0 = 0
     const INTERNATIONAL_FIXED = 1
-    const JULIAN = 2
+    const JULIAN0 = 2
     const CALENDAR_KIND_COUNT = 3
 
-    const GREGORIAN_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
+    const GREGORIAN0_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 
     const PREVIOUS = -1
     const CURRENT = 0
@@ -41,12 +41,37 @@ var Time = (function () {
     const IFC_ZERO_INDEXED_YEAR_DAY_MONTH = 13
 
 
+    const G0 = {
+        ymd: (g0Year, g0Month, g0DayOfMonth) => (
+            {g0Year, g0Month, g0DayOfMonth}
+        )
+    }
+    
+    const G1 = {
+        ymd: (g1Year, g1Month, g1DayOfMonth) => (
+            {g1Year: g1Year === 0 ? -1 : g1Year, g1Month, g1DayOfMonth}
+        )
+    }
+    
+    const J0 = {
+        ymd: (j0Year, j0Month, j0DayOfMonth) => (
+            {j0Year, j0Month, j0DayOfMonth}
+        )
+    }
+    
+    const J1 = {
+        ymd: (j1Year, j1Month, j1DayOfMonth) => (
+            {j1Year: j1Year === 0 ? -1 : j1Year, j1Month, j1DayOfMonth}
+        )
+    }
+   
+
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
         switch (kind) {
             default:
                 console.error("Invalid calendar kind: " + kind)
-            case GREGORIAN:
+            case GREGORIAN0:
                 boundsProvider = {
                     date,
                     pageBounds() {
@@ -58,7 +83,7 @@ var Time = (function () {
 
                         const firstOfCurrentMonth = new Date(year, month, 1)
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
-                        const monthText = GREGORIAN_MONTH_FORMATTER.format(firstOfCurrentMonth)
+                        const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
                         const lastOfPreviousMonth = new Date(year, month, 0)
 
@@ -192,27 +217,27 @@ var Time = (function () {
                     },
                 }
             break
-            case JULIAN:
+            case JULIAN0:
                 boundsProvider = {
                     date,
                     pageBounds() {
                         const date = this.date
 
-                        const ymd = julianYMD(date)
+                        const ymd = julian0YMD(date)
 
                         // TODO confirm that these always get the right answer
 
-                        const firstOfCurrentMonth = new Date(ymd.year, ymd.month, 1)
+                        const firstOfCurrentMonth = new Date(ymd.j0Year, ymd.j0Month, 1)
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
-                        const monthText = GREGORIAN_MONTH_FORMATTER.format(firstOfCurrentMonth)
+                        const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
-                        const lastOfPreviousMonthYmd = rollJulianYMDByDays(ymd, -ymd.dayOfMonth)
+                        const lastOfPreviousMonthYmd = rollJulian0YMDByDays(ymd, -ymd.j0DayOfMonth)
 
-                        const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.dayOfMonth
-                        const dayOfWeekOfLastOfPrevious = julianDayOfWeek(lastOfPreviousMonthYmd)
-                        const lastDateOfCurrentMonth = julianOneIndexedMonthLength(ymd)
-                        const dayOfWeekOfFirstOfCurrent = julianDayOfWeek({...ymd, dayOfMonth: 1})
-                        const dayOfWeekOfFirstOfNext = julianDayOfWeek(rollJulianYMDByDays(ymd, lastDateOfCurrentMonth - ymd.dayOfMonth + 1))
+                        const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.j0DayOfMonth
+                        const dayOfWeekOfLastOfPrevious = julian0DayOfWeek(lastOfPreviousMonthYmd)
+                        const lastDateOfCurrentMonth = julianOneIndexedMonthLength({year: ymd.j0Year, month: ymd.j0Month})
+                        const dayOfWeekOfFirstOfCurrent = julian0DayOfWeek({...ymd, j0DayOfMonth: 1})
+                        const dayOfWeekOfFirstOfNext = julian0DayOfWeek(rollJulian0YMDByDays(ymd, lastDateOfCurrentMonth - ymd.j0DayOfMonth + 1))
 
                         return {
                             dayOfMonth: ymd.dayOfMonth,
@@ -273,20 +298,20 @@ var Time = (function () {
     }
 
     // TODO use as a timepiece
-    const julianDayOfWeek = ({year, month, dayOfMonth}) => {
+    const julian0DayOfWeek = ({year, month, dayOfMonth}) => {
         if (DEBUG_MODE) {
-            console.log("julianDayOfWeek")
+            console.log("julian0DayOfWeek")
         }
         // TODO implement
         return 0
     }
 
-    const rollJulianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
-        let currentMonthLength = julianOneIndexedMonthLength({year, month})
+    const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
+        let currentMonthLength = julianOneIndexedMonthLength({year: j0Year, month: j0Month})
 
-        let outYear = year
-        let outMonth = month
-        let outDayOfMonth = dayOfMonth + offsetInDays
+        let outYear = j0Year
+        let outMonth = j0Month
+        let outDayOfMonth = j0DayOfMonth + offsetInDays
 
         // TODO skip over years at once so we don't need to loop so
         // many times
@@ -312,15 +337,15 @@ var Time = (function () {
             outDayOfMonth += currentMonthLength;
         }
 
-        return {
-            year: outYear,
-            month: outMonth,
-            dayOfMonth: outDayOfMonth,
-        }
+        return J0.ymd(
+            outYear,
+            outMonth,
+            outDayOfMonth,
+        )
     }
 
     // TODO This is apparently slower than doing calculations as in
-    // rollJulianYMDByDays, so eventaully make it more like that
+    // rollJulian0YMDByDays, so eventaully make it more like that
     // function if this gets used enough for that to matter
     const rollGregorianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
         const output = new Date(0);
@@ -383,8 +408,9 @@ var Time = (function () {
         return dayOfMonthDiff > 0
     }
 
-    const gregorianDaysDifferenceFromJulianYMD = ({year, month, dayOfMonth}) => {
-        const daysSinceJulianEpoch = julianYMDToJulianDaysSinceJulianEpoch(year, month, dayOfMonth)
+    const gregorianDaysDifferenceFromJulian0YMD = (j0YMD) => {
+        const daysSinceJulianEpoch = julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
+        const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = j0YMD
 
         const K = 1830691.5
         // The ymd at K
@@ -439,7 +465,7 @@ var Time = (function () {
             }
         }
 
-        const rollJulianYMDByDaysMutating = (offsetInDays) => {
+        const rollJulian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
                 || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
 
@@ -499,7 +525,7 @@ var Time = (function () {
                 }
 
                 rollGregorianYMDByDaysMutating(offset);
-                rollJulianYMDByDaysMutating(offset);
+                rollJulian0YMDByDaysMutating(offset);
             }
 
             if (prospectiveGregorianYear <= 1582) {
@@ -531,7 +557,7 @@ var Time = (function () {
                 }
 
                 rollGregorianYMDByDaysMutating(offset);
-                rollJulianYMDByDaysMutating(offset);
+                rollJulian0YMDByDaysMutating(offset);
 
                 difference -= ((prospectiveGregorianYear & 3) === 0)
                     & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
@@ -542,9 +568,9 @@ var Time = (function () {
         return difference
     }
 
-    const julianDaysDifferenceFromGregorianYMD = (ymd) => {
-        const {year, month, dayOfMonth} = ymd
-        const daysSinceJulianEpoch = gregorianYMDToJulianDaysSinceJulianEpoch(ymd)
+    const julian0DaysDifferenceFromGregorian0YMD = (ymd) => {
+        const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = ymd
+        const daysSinceJulianEpoch = gregorian0YMDToJulianDaysSinceJulianEpoch(ymd)
 
         const K = 1830691.5
         // The ymd at K
@@ -570,7 +596,7 @@ var Time = (function () {
             31,
         ]
 
-        const rollJulianYMDByDaysMutating = (offsetInDays) => {
+        const rollJulian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1] || (((prospectiveJulianYear & 3) === 0) ? 29 : 28);
 
             prospectiveJulianDayOfMonth += offsetInDays
@@ -658,7 +684,7 @@ var Time = (function () {
                     offset = prospectiveJulianMonth === 3 ? 270 : 1
                 }
 
-                rollJulianYMDByDaysMutating(offset);
+                rollJulian0YMDByDaysMutating(offset);
                 rollGregorianYMDByDaysMutating(offset);
             }
 
@@ -690,7 +716,7 @@ var Time = (function () {
                     offset = prospectiveJulianMonth === 1 ? -270 : -1
                 }
 
-                rollJulianYMDByDaysMutating(offset);
+                rollJulian0YMDByDaysMutating(offset);
                 rollGregorianYMDByDaysMutating(offset);
 
                 difference -= ((prospectiveJulianYear & 3) === 0)
@@ -721,26 +747,26 @@ var Time = (function () {
     }
 
 
-    const julianYMD = (date) => {
+    const julian0YMD = (date) => {
         const gYear = date.getUTCFullYear()
         const gMonth = date.getUTCMonth()
         const gDayOfMonth = date.getUTCDate()
 
-        const gYMD = {year: gYear, month: gMonth + 1, dayOfMonth: gDayOfMonth}
-
-        return gregorianYMDToJulian(gYMD)
+        return gregorian0YMDToJulian0(G0.ymd(gYear, gMonth + 1,gDayOfMonth))
     }
 
-    const gregorianYMDToJulian = (gYMD) => {
-        let daysDifference = julianDaysDifferenceFromGregorianYMD(gYMD)
+    const gregorian0YMDToJulian0 = (g0YMD) => {
+        let daysDifference = julian0DaysDifferenceFromGregorian0YMD(g0YMD)
 
-        return rollJulianYMDByDays(gYMD, -daysDifference)
+        return rollJulian0YMDByDays(J0.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
     }
 
-    const julianYMDToGregorian = (jYMD) => {
-        let daysDifference = gregorianDaysDifferenceFromJulianYMD(jYMD)
+    const julian0YMDToGregorian0 = (j0YMD) => {
+        let daysDifference = gregorianDaysDifferenceFromJulian0YMD(j0YMD)
 
-        return rollJulianYMDByDays(jYMD, -daysDifference)
+        const {j0Year, j0Month, j0DayOfMonth} = rollJulian0YMDByDays(j0YMD, -daysDifference)
+
+        return G0.ymd(j0Year, j0Month, j0DayOfMonth)
     }
 
     const getStartOfYear = (date) => {
@@ -847,12 +873,12 @@ var Time = (function () {
     }
 
     const julianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        const oldYMD = julianYMD(date)
+        const oldYMD = julian0YMD(date)
 
         let newYMD = oldYMD
         switch (monthDelta) {
             case PREVIOUS:
-                newYMD = rollJulianYMDByDays(oldYMD, -oldYMD.dayOfMonth)
+                newYMD = rollJulian0YMDByDays(oldYMD, -oldYMD.dayOfMonth)
             break
             default:
                 console.error("Unexpected monthDelta: " + monthDelta)
@@ -860,11 +886,11 @@ var Time = (function () {
             case CURRENT:
             break
             case NEXT:
-                newYMD = rollJulianYMDByDays(oldYMD, julianOneIndexedMonthLength(oldYMD) - oldYMD.dayOfMonth + 1)
+                newYMD = rollJulian0YMDByDays(oldYMD, julianOneIndexedMonthLength({year: oldYMD.j0Year, month: oldYMD.j0Month}) - oldYMD.dayOfMonth + 1)
             break
         }
 
-        const gYMD = julianYMDToGregorian(newYMD)
+        const gYMD = julian0YMDToGregorian0(newYMD)
 
         const startOfDay = new Date(0);
         startOfDay.setUTCFullYear(gYMD.year)
@@ -950,15 +976,15 @@ var Time = (function () {
     const FLIEGEL_AND_VAN_FLANDERN = 1
     const FLIEGEL_AND_VAN_FLANDERN_FLOORED = 2
 
-    const GREGORIAN_EPOCH = 1721425.5;
+    const GREGORIAN0_EPOCH = 1721425.5;
 
-    // One based month. Example for time 0: gregorianYMDToJulianDaysSinceJulianEpoch({year: 1970, month: 1, dayOfMonth: 1})
-    const gregorianYMDToJulianDaysSinceJulianEpoch = ({year, month, dayOfMonth}, algorithm) => {
+    // One based month. Example for time 0: gregorian0YMDToJulianDaysSinceJulianEpoch(G0.ymd(1970, 1, 1))
+    const gregorian0YMDToJulianDaysSinceJulianEpoch = ({g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth}, algorithm) => {
         switch (algorithm) {
             default:
             case JOHN_WALKER:
                 // https://www.fourmilab.ch/documents/calendar/
-                return (GREGORIAN_EPOCH - 1) +
+                return (GREGORIAN0_EPOCH - 1) +
                    (365 * (year - 1)) +
                    Math.floor((year - 1) / 4) +
                    (-Math.floor((year - 1) / 100)) +
@@ -988,21 +1014,25 @@ var Time = (function () {
         }
     };
     
-    const julianYMDToJulianDaysSinceJulianEpoch = ({year, month, dayOfMonth}) => {
+    const julian0YMDToJulianDaysSinceJulianEpoch = ({j0Year, j0Month, j0DayOfMonth}) => {
         if (DEBUG_MODE) {
-            console.log("julianYMDToJulianDaysSinceJulianEpoch")
+            console.log("julian0YMDToJulianDaysSinceJulianEpoch")
         }
         const K = 1721036.5
         // TODO implement fully
-        return K + year * 365.25 + month * 30 + dayOfMonth
+        return K + j0Year * 365.25 + j0Month * 30 + j0DayOfMonth
     };
 
     return {
         calculateCalendarSpecs,
-        GREGORIAN,
+        GREGORIAN0,
         INTERNATIONAL_FIXED,
-        JULIAN,
+        JULIAN0,
         CALENDAR_KIND_COUNT,
+        G0,
+        G1,
+        J0,
+        J1,
         getStartOfYear,
         getGregorianOctoberFirst,
         get0IndexedDayOfYear,
@@ -1039,12 +1069,12 @@ var Time = (function () {
         MINUTE_IN_MILLIS,
         SECOND_IN_MILLIS,
         //
-        rollJulianYMDByDays,
-        julianYMD,
-        gregorianYMDToJulian,
-        julianYMDToGregorian,
-        gregorianYMDToJulianDaysSinceJulianEpoch,
-        julianYMDToJulianDaysSinceJulianEpoch,
+        rollJulian0YMDByDays,
+        julian0YMD,
+        gregorian0YMDToJulian0,
+        julian0YMDToGregorian0,
+        gregorian0YMDToJulianDaysSinceJulianEpoch,
+        julian0YMDToJulianDaysSinceJulianEpoch,
         JOHN_WALKER,
         FLIEGEL_AND_VAN_FLANDERN,
     }
