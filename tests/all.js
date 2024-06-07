@@ -223,18 +223,18 @@ it(() => {
         const [[inY, inM, inD, daysOffset], [outY, outM, outD]] = inputOutputPairs[i];
 
         (() => {
-            const {year, month, dayOfMonth} = Time.rollJulianYMDByDays({year: inY, month: inM, dayOfMonth: inD}, daysOffset)
+            const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = Time.rollJulian0YMDByDays(Time.J0.ymd(inY, inM, inD), daysOffset)
             assert(
                 year === outY && month === outM && dayOfMonth === outD,
-                "rollJulianYMDByDays mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
+                "rollJulian0YMDByDays mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
             )
         })();
         
         (() => {
-            const {year, month, dayOfMonth} = Time.rollJulianYMDByDays({year: outY, month: outM, dayOfMonth: outD}, -daysOffset)
+            const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = Time.rollJulian0YMDByDays(Time.J0.ymd(outY, outM, outD), -daysOffset)
             assert(
                 year === inY && month === inM && dayOfMonth === inD,
-                "rollJulianYMDByDays reverse mismatch for " + [outY, outM, outD] + ", expected " + [inY, inM, inD] + " got " + [year, month, dayOfMonth]
+                "rollJulian0YMDByDays reverse mismatch for " + [outY, outM, outD] + ", expected " + [inY, inM, inD] + " got " + [year, month, dayOfMonth]
             )
         })();
     }
@@ -243,10 +243,10 @@ it(() => {
 const GREGORIAN_JULIAN_PAIRS = [
     // (Using leading zeroes to line things up works for 0 to 9,
     // even though 010 is interpreted as octal.)
-    // This uses the (non-standrd) convention that both Gregorian and
+    // This uses the (non-standard) convention that both Gregorian and
     // Julian calendars have a year 0
-    // Gregorian     Julian
-    [[-4712,11, 24], [-4712,01, 01]],
+    // Gregorian 0   Julian 0
+    //[[-4712,11, 24], [-4712,01, 01]],
     [[-500, 02, 28], [-500, 03, 05]],
     [[-500, 03, 01], [-500, 03, 06]],
     [[-300, 02, 27], [-300, 03, 03]],
@@ -258,42 +258,43 @@ const GREGORIAN_JULIAN_PAIRS = [
     [[-100, 02, 27], [-100, 03, 01]],
     [[-100, 02, 28], [-100, 03, 02]],
     [[-100, 03, 01], [-100, 03, 03]],
+    [[   0, 03, 01], [   0, 03, 03]],
     [[ 100, 02, 27], [ 100, 02, 29]],
-    [[ 100, 02, 28], [ 100, 03, 1]],
+    [[ 100, 02, 28], [ 100, 03, 01]],
     [[ 100, 03, 01], [ 100, 03, 2]],
     [[ 200, 02, 27], [ 200, 02, 28]],
     [[ 200, 02, 28], [ 200, 02, 29]],
-    [[ 200, 03, 01], [ 200, 03, 1]],
+    [[ 200, 03, 01], [ 200, 03, 01]],
     [[ 300, 02, 28], [ 300, 02, 28]],
     [[ 300, 03, 01], [ 300, 02, 29]],
-    [[ 300, 03, 02], [ 300, 03, 1]],
+    [[ 300, 03, 02], [ 300, 03, 01]],
     [[ 500, 03, 01], [ 500, 02, 28]],
     [[ 500, 03, 02], [ 500, 02, 29]],
-    [[ 500, 03, 03], [ 500, 03, 1]],
+    [[ 500, 03, 03], [ 500, 03, 01]],
     [[ 600, 03, 02], [ 600, 02, 28]],
     [[ 600, 03, 03], [ 600, 02, 29]],
-    [[ 600, 03, 04], [ 600, 03, 1]],
+    [[ 600, 03, 04], [ 600, 03, 01]],
     [[ 700, 03, 03], [ 700, 02, 28]],
     [[ 700, 03, 04], [ 700, 02, 29]],
-    [[ 700, 03, 05], [ 700, 03, 1]],
+    [[ 700, 03, 05], [ 700, 03, 01]],
     [[ 900, 03, 04], [ 900, 02, 28]],
     [[ 900, 03, 05], [ 900, 02, 29]],
-    [[ 900, 03, 06], [ 900, 03, 1]],
+    [[ 900, 03, 06], [ 900, 03, 01]],
     [[1000, 03, 05], [1000, 02, 28]],
     [[1000, 03, 06], [1000, 02, 29]],
-    [[1000, 03, 07], [1000, 03, 1]],
+    [[1000, 03, 07], [1000, 03, 01]],
     [[1100, 03, 06], [1100, 02, 28]],
     [[1100, 03, 07], [1100, 02, 29]],
-    [[1100, 03, 08], [1100, 03, 1]],
+    [[1100, 03, 08], [1100, 03, 01]],
     [[1300, 03, 07], [1300, 02, 28]],
     [[1300, 03, 08], [1300, 02, 29]],
-    [[1300, 03, 09], [1300, 03, 1]],
+    [[1300, 03, 09], [1300, 03, 01]],
     [[1400, 03, 08], [1400, 02, 28]],
     [[1400, 03, 09], [1400, 02, 29]],
-    [[1400, 03, 10], [1400, 03, 1]],
+    [[1400, 03, 10], [1400, 03, 01]],
     [[1500, 03, 09], [1500, 02, 28]],
     [[1500, 03, 10], [1500, 02, 29]],
-    [[1500, 03, 11], [1500, 03, 1]],
+    [[1500, 03, 11], [1500, 03, 01]],
     [[1500, 03, 11], [1500, 03, 01]],
     [[1582, 10, 14], [1582, 10, 04]],
     [[1582, 10, 15], [1582, 10, 05]],
@@ -332,13 +333,13 @@ const GREGORIAN_JULIAN_PAIRS = [
     [[2100, 03, 14], [2100, 02, 29]],
 ]
 
-// We have gregorianYMDToJulian and julianYMDToGregorian and we further 
-// have gregorianYMDToJulianDaysSinceJulianEpoch and 
-// julianYMDToJulianDaysSinceJulianEpoch. These functions are related 
+// We have gregorian0YMDToJulian0 and julian0YMDToGregorian0 and we further 
+// have gregorian0YMDToJulian0DaysSinceJulianEpoch and 
+// julian0YMDToJulianDaysSinceJulianEpoch. These functions are related 
 // in the following way:
-// Call gregorianYMDToJulian A, julianYMDToGregorian B, 
-// gregorianYMDToJulianDaysSinceJulianEpoch C, and
-// julianYMDToJulianDaysSinceJulianEpoch D
+// Call gregorian0YMDToJulian0 A, julian0YMDToGregorian0 B, 
+// gregorian0YMDToJulian0DaysSinceJulianEpoch C, and
+// julian0YMDToJulianDaysSinceJulianEpoch D
 // 
 // gymd--A-->jymd
 // jymd--B-->gymd
@@ -364,36 +365,35 @@ it(() => {
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
         const [[inY, inM, inD], [outY, outM, outD]] = GREGORIAN_JULIAN_PAIRS[i]
 
-        const {year, month, dayOfMonth} = Time.gregorianYMDToJulian({year: inY, month: inM, dayOfMonth: inD})
+        const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = Time.gregorian0YMDToJulian0(Time.G0.ymd(inY, inM, inD))
         assert(
             year === outY && month === outM && dayOfMonth === outD,
-            "gregorianYMDToJulian mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
+            "gregorian0YMDToJulian0 mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
         )
-        
-        const looped = Time.julianYMDToGregorian({year, month, dayOfMonth})
+
+        const looped = Time.julian0YMDToGregorian0(Time.J0.ymd(outY, outM, outD))
         assert(
-            inY === looped.year && inM === looped.month && inD === looped.dayOfMonth,
-            "julianYMDToGregorian mismatch for " + [year, month, dayOfMonth] + ", expected " + [inY, inM, inD] + " got " + [looped.year, looped.month, looped.dayOfMonth]
+            inY === looped.g0Year && inM === looped.g0Month && inD === looped.g0DayOfMonth,
+            "julian0YMDToGregorian0 mismatch for " + [outY, outM, outD] + ", expected " + [inY, inM, inD] + " got " + [looped.g0Year, looped.g0Month, looped.g0DayOfMonth]
         )
     }
     console.log(performance.now() - start, "ms")
 })
-
 // This tests checks the path * -B-> * -C-> * above is the same as
 // * -D-> *
 it(() => {
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
         const [[gY, gM, gD], [jY, jM, jD]] = GREGORIAN_JULIAN_PAIRS[i]
 
-        const jYMD = {year: jY, month: jM, dayOfMonth: jD}
+        const j0YMD = Time.J0.ymd(jY, jM, jD);
 
-        const JD1 = Time.gregorianYMDToJulianDaysSinceJulianEpoch(Time.julianYMDToGregorian(jYMD))
+        const JD1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.julian0YMDToGregorian0(j0YMD))
         
-        const JD2 = Time.julianYMDToJulianDaysSinceJulianEpoch(jYMD)
+        const JD2 = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
         
         assert(
-            JD1 === JD2,
-            "julianYMDToJulianDaysSinceJulianEpoch mismatch for " + [jY, jM, jD] + ", expected " + JD1 + " got " + JD2
+            JD1.j0Year === JD2.j0Year && JD1.j0Month === JD2.j0Month && JD1.j0DayOfMonth === JD2.j0DayOfMonth,
+            "julian0YMDToJulianDaysSinceJulianEpoch mismatch for " + [jY, jM, jD] + ", expected " + JD1 + " got " + JD2
         )
     }
 })

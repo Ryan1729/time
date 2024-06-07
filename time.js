@@ -408,7 +408,7 @@ var Time = (function () {
         return dayOfMonthDiff > 0
     }
 
-    const gregorianDaysDifferenceFromJulian0YMD = (j0YMD) => {
+    const gregorian0DaysDifferenceFromJulian0YMD = (j0YMD) => {
         const daysSinceJulianEpoch = julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
         const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = j0YMD
 
@@ -762,8 +762,9 @@ var Time = (function () {
     }
 
     const julian0YMDToGregorian0 = (j0YMD) => {
-        let daysDifference = gregorianDaysDifferenceFromJulian0YMD(j0YMD)
+        let daysDifference = gregorian0DaysDifferenceFromJulian0YMD(j0YMD)
 
+        // TODO Do we need a different roll funciton for this to work properly?
         const {j0Year, j0Month, j0DayOfMonth} = rollJulian0YMDByDays(j0YMD, -daysDifference)
 
         return G0.ymd(j0Year, j0Month, j0DayOfMonth)
