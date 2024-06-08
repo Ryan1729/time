@@ -347,17 +347,17 @@ var Time = (function () {
     // TODO This is apparently slower than doing calculations as in
     // rollJulian0YMDByDays, so eventaully make it more like that
     // function if this gets used enough for that to matter
-    const rollGregorianYMDByDays = ({year, month, dayOfMonth}, offsetInDays) => {
+    const rollGregorian0YMDByDays = ({g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth}, offsetInDays) => {
         const output = new Date(0);
         output.setUTCFullYear(year)
         output.setUTCMonth(month - 1)
         output.setUTCDate(dayOfMonth + offsetInDays)
 
-        return {
-            year: output.getUTCFullYear(),
-            month: output.getUTCMonth() + 1,
-            dayOfMonth: output.getUTCDate(),
-        }
+        return G0.ymd(
+            output.getUTCFullYear(),
+            output.getUTCMonth() + 1,
+            output.getUTCDate(),
+        )
     }
 
     // Year Month Day Less-Than
@@ -436,7 +436,7 @@ var Time = (function () {
             31,
         ]
 
-        const rollGregorianYMDByDaysMutating = (offsetInDays) => {
+        const rollGregorian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1] || (((prospectiveGregorianYear & 3) === 0) ? 29 : 28);
 
             prospectiveGregorianDayOfMonth += offsetInDays
@@ -524,7 +524,7 @@ var Time = (function () {
                     offset = prospectiveGregorianMonth === 3 ? 270 : 1
                 }
 
-                rollGregorianYMDByDaysMutating(offset);
+                rollGregorian0YMDByDaysMutating(offset);
                 rollJulian0YMDByDaysMutating(offset);
             }
 
@@ -556,7 +556,7 @@ var Time = (function () {
                     offset = prospectiveGregorianMonth === 1 ? -270 : -1
                 }
 
-                rollGregorianYMDByDaysMutating(offset);
+                rollGregorian0YMDByDaysMutating(offset);
                 rollJulian0YMDByDaysMutating(offset);
 
                 difference -= ((prospectiveGregorianYear & 3) === 0)
@@ -625,7 +625,7 @@ var Time = (function () {
             }
         }
 
-        const rollGregorianYMDByDaysMutating = (offsetInDays) => {
+        const rollGregorian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1]
                 || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
 
@@ -685,7 +685,7 @@ var Time = (function () {
                 }
 
                 rollJulian0YMDByDaysMutating(offset);
-                rollGregorianYMDByDaysMutating(offset);
+                rollGregorian0YMDByDaysMutating(offset);
             }
 
             if (prospectiveJulianYear <= 1582) {
@@ -717,7 +717,7 @@ var Time = (function () {
                 }
 
                 rollJulian0YMDByDaysMutating(offset);
-                rollGregorianYMDByDaysMutating(offset);
+                rollGregorian0YMDByDaysMutating(offset);
 
                 difference -= ((prospectiveJulianYear & 3) === 0)
                     & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
@@ -765,9 +765,9 @@ var Time = (function () {
         let daysDifference = gregorian0DaysDifferenceFromJulian0YMD(j0YMD)
 
         // TODO Do we need a different roll funciton for this to work properly?
-        const {j0Year, j0Month, j0DayOfMonth} = rollJulian0YMDByDays(j0YMD, -daysDifference)
+        const {j0Year, j0Month, j0DayOfMonth} = j0YMD
 
-        return G0.ymd(j0Year, j0Month, j0DayOfMonth)
+        return rollGregorian0YMDByDays(G0.ymd(j0Year, j0Month, j0DayOfMonth), daysDifference)
     }
 
     const getStartOfYear = (date) => {
