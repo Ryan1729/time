@@ -412,14 +412,14 @@ var Time = (function () {
         const daysSinceJulianEpoch = julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
         const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = j0YMD
 
-        const K = 1830691.5
+        const K = 1830690.5
         // The ymd at K
-        let prospectiveGregorianYear = 300;
-        let prospectiveGregorianMonth = 2;
-        let prospectiveGregorianDayOfMonth = 29;
         let prospectiveJulianYear = 300;
         let prospectiveJulianMonth = 2;
-        let prospectiveJulianDayOfMonth = 29;
+        let prospectiveJulianDayOfMonth = 28;
+        let prospectiveGregorianYear = 300;
+        let prospectiveGregorianMonth = 2;
+        let prospectiveGregorianDayOfMonth = 28;
 
         const MONTH_LENGTHS = [
             31,
@@ -528,11 +528,11 @@ var Time = (function () {
                 rollJulian0YMDByDaysMutating(offset);
             }
 
-            if (prospectiveGregorianYear <= 1582) {
-                difference += ((prospectiveGregorianYear & 3) === 0)
-                    & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
-                    & (prospectiveGregorianMonth=== 2 && prospectiveGregorianDayOfMonth === 29)
-            }
+            //~ if (prospectiveGregorianYear <= 1582) {
+                //~ difference += ((prospectiveGregorianYear & 3) === 0)
+                    //~ & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
+                    //~ & (prospectiveGregorianMonth=== 2 && prospectiveGregorianDayOfMonth === 29)
+            //~ }
         } else {
             while (1) {
                 const yearDiff = year - prospectiveGregorianYear
@@ -569,17 +569,19 @@ var Time = (function () {
     }
 
     const julian0DaysDifferenceFromGregorian0YMD = (ymd) => {
+        console.log("julian0DaysDifferenceFromGregorian0YMD", ymd)
         const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = ymd
+        
         const daysSinceJulianEpoch = gregorian0YMDToJulianDaysSinceJulianEpoch(ymd)
 
-        const K = 1830691.5
+        const K = 1830690.5
         // The ymd at K
         let prospectiveJulianYear = 300;
         let prospectiveJulianMonth = 2;
-        let prospectiveJulianDayOfMonth = 29;
+        let prospectiveJulianDayOfMonth = 28;
         let prospectiveGregorianYear = 300;
         let prospectiveGregorianMonth = 2;
-        let prospectiveGregorianDayOfMonth = 29;
+        let prospectiveGregorianDayOfMonth = 28;
 
         const MONTH_LENGTHS = [
             31,
@@ -756,18 +758,32 @@ var Time = (function () {
     }
 
     const gregorian0YMDToJulian0 = (g0YMD) => {
+        console.log("early gregorian0YMDToJulian0", g0YMD, daysDifference)
         let daysDifference = julian0DaysDifferenceFromGregorian0YMD(g0YMD)
-
+        console.log("gregorian0YMDToJulian0", g0YMD, daysDifference)
+        // Every Gregorian leap year is a Julian one as well
         return rollJulian0YMDByDays(J0.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
     }
 
     const julian0YMDToGregorian0 = (j0YMD) => {
         let daysDifference = gregorian0DaysDifferenceFromJulian0YMD(j0YMD)
 
-        // TODO Do we need a different roll funciton for this to work properly?
-        const {j0Year, j0Month, j0DayOfMonth} = j0YMD
+        // Being dumb is often the first step to being smart
+        const j0ToG0Dumb = ({j0Year, j0Month, j0DayOfMonth}) => {
+            if (
+                j0Month === 2
+                && j0DayOfMonth === 29
+                && isJulianLeapYear(j0Year)
+                && !isGregorianLeapYear(j0Year)
+            ) {
+                // Whichever makes the rest of the things work better
+                //return G0.ymd(j0Year, 2, 28)
+                return G0.ymd(j0Year, 3, 1)
+            }
+            return G0.ymd(j0Year, j0Month, j0DayOfMonth)
+        }
 
-        return rollGregorian0YMDByDays(G0.ymd(j0Year, j0Month, j0DayOfMonth), daysDifference)
+        return rollGregorian0YMDByDays(j0ToG0Dumb(j0YMD), daysDifference)
     }
 
     const getStartOfYear = (date) => {
@@ -1038,6 +1054,7 @@ var Time = (function () {
         getGregorianOctoberFirst,
         get0IndexedDayOfYear,
         isGregorianLeapYear,
+        isJulianLeapYear,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         IFC_ZERO_INDEXED_LEAP_MONTH,
         IFC_ZERO_INDEXED_YEAR_DAY_MONTH,
@@ -1076,6 +1093,8 @@ var Time = (function () {
         julian0YMDToGregorian0,
         gregorian0YMDToJulianDaysSinceJulianEpoch,
         julian0YMDToJulianDaysSinceJulianEpoch,
+        gregorian0DaysDifferenceFromJulian0YMD,
+        julian0DaysDifferenceFromGregorian0YMD,
         JOHN_WALKER,
         FLIEGEL_AND_VAN_FLANDERN,
     }
