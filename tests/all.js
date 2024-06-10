@@ -240,6 +240,40 @@ it(() => {
     }
 })
 
+it(() => {
+    const EXAMPLES = [
+        [[300, 2, 28], 0],
+        //[[300, 3, 1], 1],
+    ]
+
+    for (let i = 0; i < EXAMPLES.length; i += 1) {
+        const [[gY, gM, gD], expected] = EXAMPLES[i];
+        const actual = Time.julian0DaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
+
+        assert(
+            actual === expected,
+            "julian0DaysDifferenceFromGregorian0YMD mismatch for " + [gY, gM, gD] + ", expected " + expected + " got " + actual
+        )
+    }
+})
+
+it(() => {
+    const EXAMPLES = [
+        [[300, 2, 28], 0],
+        //[[300, 2, 29], 0], // Willing to change
+    ]
+
+    for (let i = 0; i < EXAMPLES.length; i += 1) {
+        const [[jY, jM, jD], expected] = EXAMPLES[i];
+        const actual = Time.gregorian0DaysDifferenceFromJulian0YMD(Time.J0.ymd(jY, jM, jD))
+
+        assert(
+            actual === expected,
+            "gregorian0DaysDifferenceFromJulian0YMD mismatch for " + [jY, jM, jD] + ", expected " + expected + " got " + actual
+        )
+    }
+})
+
 const GREGORIAN_JULIAN_PAIRS = [
     // (Using leading zeroes to line things up works for 0 to 9,
     // even though 010 is interpreted as octal.)
@@ -358,12 +392,38 @@ const GREGORIAN_JULIAN_PAIRS = [
 // both of any pair of paths, ithe value is transformed to the same 
 // final value in both paths.
 
+const isNormalEnoughNumber = (n) => {
+    return !Number.isNaN(n) && n !== (1/0) && n !== -(1/0)
+}
+
+// This tests checks that C and D above have the right domains
+it(() => {
+    for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
+        const [[gY, gM, gD], [jY, jM, jD]] = GREGORIAN_JULIAN_PAIRS[i]
+
+        const g0YMD = Time.G0.ymd(gY, gM, gD);
+        const j0YMD = Time.J0.ymd(jY, jM, jD);
+
+        const gJD = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD)
+        assert(
+            isNormalEnoughNumber(gJD),
+            "gJD is not in the expected range: " + gJD
+        )
+        
+        const jJD = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
+        assert(
+            isNormalEnoughNumber(jJD),
+            "jJD is not in the expected range: " + jJD
+        )
+    }
+})
+
 // This tests checks the path * -A-> * -B-> * above is the same as the 
 // null path
 it(() => {
     const start = performance.now()
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
-        const [[inY, inM, inD], [outY, outM, outD]] = GREGORIAN_JULIAN_PAIRS[i]
+        const [[inY, inM, inD], [outY, outM, outD]] = GREGORIAN_JULIAN_PAIRS[i];
 
         const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = Time.gregorian0YMDToJulian0(Time.G0.ymd(inY, inM, inD))
         assert(

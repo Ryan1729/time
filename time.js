@@ -569,7 +569,6 @@ var Time = (function () {
     }
 
     const julian0DaysDifferenceFromGregorian0YMD = (ymd) => {
-        console.log("julian0DaysDifferenceFromGregorian0YMD", ymd)
         const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = ymd
         
         const daysSinceJulianEpoch = gregorian0YMDToJulianDaysSinceJulianEpoch(ymd)
@@ -582,7 +581,7 @@ var Time = (function () {
         let prospectiveGregorianYear = 300;
         let prospectiveGregorianMonth = 2;
         let prospectiveGregorianDayOfMonth = 28;
-
+console.log("julian0DaysDifferenceFromGregorian0YMD", ymd, daysSinceJulianEpoch, K)
         const MONTH_LENGTHS = [
             31,
             0,
@@ -690,11 +689,11 @@ var Time = (function () {
                 rollGregorian0YMDByDaysMutating(offset);
             }
 
-            if (prospectiveJulianYear <= 1582) {
-                difference += ((prospectiveJulianYear & 3) === 0)
-                    & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
-                    & (prospectiveJulianMonth=== 2 && prospectiveJulianDayOfMonth === 29)
-            }
+            //~ if (prospectiveJulianYear <= 1582) {
+                //~ difference += ((prospectiveJulianYear & 3) === 0)
+                    //~ & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
+                    //~ & (prospectiveJulianMonth=== 2 && prospectiveJulianDayOfMonth === 29)
+            //~ }
         } else {
             while (1) {
                 const yearDiff = year - prospectiveJulianYear
@@ -758,7 +757,6 @@ var Time = (function () {
     }
 
     const gregorian0YMDToJulian0 = (g0YMD) => {
-        console.log("early gregorian0YMDToJulian0", g0YMD, daysDifference)
         let daysDifference = julian0DaysDifferenceFromGregorian0YMD(g0YMD)
         console.log("gregorian0YMDToJulian0", g0YMD, daysDifference)
         // Every Gregorian leap year is a Julian one as well
