@@ -82,6 +82,7 @@ var Time = (function () {
                         const dayOfMonth = date.getUTCDate()
 
                         const firstOfCurrentMonth = new Date(year, month, 1)
+
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
                         const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
@@ -227,7 +228,7 @@ var Time = (function () {
 
                         // TODO confirm that these always get the right answer
 
-                        const firstOfCurrentMonth = new Date(ymd.j0Year, ymd.j0Month, 1)
+                        const firstOfCurrentMonth = new Date(ymd.j0Year, ymd.j0Month - 1, 1)
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
                         const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
@@ -893,12 +894,12 @@ var Time = (function () {
             break
         }
 
-        const gYMD = julian0YMDToGregorian0(newYMD)
+        const g0YMD = julian0YMDToGregorian0(newYMD)
 
         const startOfDay = new Date(0);
-        startOfDay.setUTCFullYear(gYMD.year)
-        startOfDay.setUTCMonth(gYMD.month)
-        startOfDay.setUTCDate(gYMD.dayOfMonth)
+        startOfDay.setUTCFullYear(g0YMD.g0Year)
+        startOfDay.setUTCMonth(g0YMD.g0Month)
+        startOfDay.setUTCDate(g0YMD.g0DayOfMonth)
 
         return startOfDay.getTime()
     }
