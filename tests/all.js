@@ -201,7 +201,7 @@ const getDateForUTCYMD = (year, oneIndexedMonth, day) => {
     return output
 }
 
-DEBUG_MODE = false
+DEBUG_MODE = true
 
 it(() => {
     const inputOutputPairs = [
@@ -241,13 +241,14 @@ it(() => {
 })
 
 it(() => {
-    const EXAMPLES = [
+    const GREGORIAN_EXAMPLES = [
         [[300, 2, 28], 0],
-        //[[300, 3, 1], 1],
+        [[300, 3, 01], 1],
+        [[500, 3, 01], 2],
     ]
 
-    for (let i = 0; i < EXAMPLES.length; i += 1) {
-        const [[gY, gM, gD], expected] = EXAMPLES[i];
+    for (let i = 0; i < GREGORIAN_EXAMPLES.length; i += 1) {
+        const [[gY, gM, gD], expected] = GREGORIAN_EXAMPLES[i];
         const actual = Time.julian0DaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
 
         assert(
@@ -258,13 +259,14 @@ it(() => {
 })
 
 it(() => {
-    const EXAMPLES = [
+    const JULIAN_EXAMPLES = [
         [[300, 2, 28], 0],
-        //[[300, 2, 29], 0], // Willing to change
+        [[300, 2, 29], 0],
+        [[500, 3, 01], 2],
     ]
 
-    for (let i = 0; i < EXAMPLES.length; i += 1) {
-        const [[jY, jM, jD], expected] = EXAMPLES[i];
+    for (let i = 0; i < JULIAN_EXAMPLES.length; i += 1) {
+        const [[jY, jM, jD], expected] = JULIAN_EXAMPLES[i];
         const actual = Time.gregorian0DaysDifferenceFromJulian0YMD(Time.J0.ymd(jY, jM, jD))
 
         assert(
@@ -372,7 +374,7 @@ const GREGORIAN_JULIAN_PAIRS = [
 // julian0YMDToJulianDaysSinceJulianEpoch. These functions are related 
 // in the following way:
 // Call gregorian0YMDToJulian0 A, julian0YMDToGregorian0 B, 
-// gregorian0YMDToJulian0DaysSinceJulianEpoch C, and
+// gregorian0YMDToJulianDaysSinceJulianEpoch C, and
 // julian0YMDToJulianDaysSinceJulianEpoch D
 // 
 // gymd--A-->jymd
@@ -396,7 +398,7 @@ const isNormalEnoughNumber = (n) => {
     return !Number.isNaN(n) && n !== (1/0) && n !== -(1/0)
 }
 
-// This tests checks that C and D above have the right domains
+// This tests checks that C and D above have the right codomains
 it(() => {
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
         const [[gY, gM, gD], [jY, jM, jD]] = GREGORIAN_JULIAN_PAIRS[i]
@@ -454,6 +456,24 @@ it(() => {
         assert(
             JD1.j0Year === JD2.j0Year && JD1.j0Month === JD2.j0Month && JD1.j0DayOfMonth === JD2.j0DayOfMonth,
             "julian0YMDToJulianDaysSinceJulianEpoch mismatch for " + [jY, jM, jD] + ", expected " + JD1 + " got " + JD2
+        )
+    }
+})
+// This tests checks the path * -A-> * -D-> * above is the same as
+// * -C-> *
+it(() => {
+    for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
+        const [[gY, gM, gD], [jY, jM, jD]] = GREGORIAN_JULIAN_PAIRS[i]
+
+        const g0YMD = Time.G0.ymd(gY, gM, gD);
+
+        const JD1 = Time.julian0YMDToJulianDaysSinceJulianEpoch(Time.gregorian0YMDToJulian0(g0YMD))
+        
+        const JD2 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD)
+        
+        assert(
+            JD1.j0Year === JD2.j0Year && JD1.j0Month === JD2.j0Month && JD1.j0DayOfMonth === JD2.j0DayOfMonth,
+            "gregorian0YMDToJulian0DaysSinceJulianEpoch mismatch for " + [gY, gM, gD] + ", expected " + JD1 + " got " + JD2
         )
     }
 })

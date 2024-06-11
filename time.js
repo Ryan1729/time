@@ -513,7 +513,7 @@ var Time = (function () {
 
                 difference += ((prospectiveGregorianYear & 3) === 0)
                     & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
-                    & (prospectiveGregorianYear <= 1582 ? prospectiveGregorianMonth === 2 && prospectiveGregorianDayOfMonth === 29 : prospectiveJulianMonth === 3 && prospectiveJulianDayOfMonth === 1)
+                    & (prospectiveJulianMonth === 3 && prospectiveJulianDayOfMonth === 1)
 
                 // Significatly faster than counting every single day.
                 const modulous = prospectiveGregorianYear % 100
@@ -527,12 +527,6 @@ var Time = (function () {
                 rollGregorian0YMDByDaysMutating(offset);
                 rollJulian0YMDByDaysMutating(offset);
             }
-
-            //~ if (prospectiveGregorianYear <= 1582) {
-                //~ difference += ((prospectiveGregorianYear & 3) === 0)
-                    //~ & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
-                    //~ & (prospectiveGregorianMonth=== 2 && prospectiveGregorianDayOfMonth === 29)
-            //~ }
         } else {
             while (1) {
                 const yearDiff = year - prospectiveGregorianYear
@@ -581,7 +575,7 @@ var Time = (function () {
         let prospectiveGregorianYear = 300;
         let prospectiveGregorianMonth = 2;
         let prospectiveGregorianDayOfMonth = 28;
-console.log("julian0DaysDifferenceFromGregorian0YMD", ymd, daysSinceJulianEpoch, K)
+
         const MONTH_LENGTHS = [
             31,
             0,
@@ -674,7 +668,7 @@ console.log("julian0DaysDifferenceFromGregorian0YMD", ymd, daysSinceJulianEpoch,
 
                 difference += ((prospectiveJulianYear & 3) === 0)
                     & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
-                    & (prospectiveJulianYear <= 1582 ? prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29 : prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
+                    & (prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
 
                 // Significatly faster than counting every single day.
                 const modulous = prospectiveJulianYear % 100
@@ -688,12 +682,6 @@ console.log("julian0DaysDifferenceFromGregorian0YMD", ymd, daysSinceJulianEpoch,
                 rollJulian0YMDByDaysMutating(offset);
                 rollGregorian0YMDByDaysMutating(offset);
             }
-
-            //~ if (prospectiveJulianYear <= 1582) {
-                //~ difference += ((prospectiveJulianYear & 3) === 0)
-                    //~ & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
-                    //~ & (prospectiveJulianMonth=== 2 && prospectiveJulianDayOfMonth === 29)
-            //~ }
         } else {
             while (1) {
                 const yearDiff = year - prospectiveJulianYear
@@ -758,7 +746,7 @@ console.log("julian0DaysDifferenceFromGregorian0YMD", ymd, daysSinceJulianEpoch,
 
     const gregorian0YMDToJulian0 = (g0YMD) => {
         let daysDifference = julian0DaysDifferenceFromGregorian0YMD(g0YMD)
-        console.log("gregorian0YMDToJulian0", g0YMD, daysDifference)
+
         // Every Gregorian leap year is a Julian one as well
         return rollJulian0YMDByDays(J0.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
     }
@@ -1030,11 +1018,10 @@ console.log("julian0DaysDifferenceFromGregorian0YMD", ymd, daysSinceJulianEpoch,
     };
     
     const julian0YMDToJulianDaysSinceJulianEpoch = ({j0Year, j0Month, j0DayOfMonth}) => {
-        if (DEBUG_MODE) {
-            console.log("julian0YMDToJulianDaysSinceJulianEpoch")
-        }
+        // Arrived at through trial and error. Seems to be 23 days
+        // after gregorian 0-1-1. Unclear why this seems to just work.
         const K = 1721036.5
-        // TODO implement fully
+
         return K + j0Year * 365.25 + j0Month * 30 + j0DayOfMonth
     };
 
