@@ -46,25 +46,25 @@ var Time = (function () {
             {g0Year, g0Month, g0DayOfMonth}
         )
     }
-    
+
     const G1 = {
         ymd: (g1Year, g1Month, g1DayOfMonth) => (
             {g1Year: g1Year === 0 ? -1 : g1Year, g1Month, g1DayOfMonth}
         )
     }
-    
+
     const J0 = {
         ymd: (j0Year, j0Month, j0DayOfMonth) => (
             {j0Year, j0Month, j0DayOfMonth}
         )
     }
-    
+
     const J1 = {
         ymd: (j1Year, j1Month, j1DayOfMonth) => (
             {j1Year: j1Year === 0 ? -1 : j1Year, j1Month, j1DayOfMonth}
         )
     }
-   
+
 
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
@@ -298,13 +298,17 @@ var Time = (function () {
         return (year & 3) === 0
     }
 
-    // TODO use as a timepiece
-    const julian0DayOfWeek = ({year, month, dayOfMonth}) => {
-        if (DEBUG_MODE) {
-            console.log("julian0DayOfWeek")
+    const julian0DayOfWeek = (j0YMD) => {
+        const n = julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
+
+        // Map it to a positive number with the same modulous
+        // by adding a number we know is large enough, and is
+        // 0 after modding
+        if (n < 0) {
+            n += (-n) * 7
         }
-        // TODO implement
-        return 0
+        // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
+        return (n + 1) % 7
     }
 
     const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
@@ -565,7 +569,7 @@ var Time = (function () {
 
     const julian0DaysDifferenceFromGregorian0YMD = (ymd) => {
         const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = ymd
-        
+
         const daysSinceJulianEpoch = gregorian0YMDToJulianDaysSinceJulianEpoch(ymd)
 
         const K = 1830690.5
@@ -1017,7 +1021,7 @@ var Time = (function () {
                 );
         }
     };
-    
+
     const julian0YMDToJulianDaysSinceJulianEpoch = ({j0Year, j0Month, j0DayOfMonth}) => {
         // Arrived at through trial and error. Seems to be 23 days
         // after gregorian 0-1-1. Unclear why this seems to just work.
@@ -1041,6 +1045,7 @@ var Time = (function () {
         get0IndexedDayOfYear,
         isGregorianLeapYear,
         isJulianLeapYear,
+        julian0DayOfWeek,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         IFC_ZERO_INDEXED_LEAP_MONTH,
         IFC_ZERO_INDEXED_YEAR_DAY_MONTH,

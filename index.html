@@ -246,8 +246,13 @@ a:visited {
             <div class="clock-row">
                 <output class="verbal" id="chinese-telegraph-digits-month-day-hour"></output>
             </div>
-            <div class="clock-row">
-                <output class="verbal" id="verbal-english-weekday"></output>
+            <div id="verbal-english-gregorian-0-weekday-row" class="labelled-row">
+                <output class="verbal" id="verbal-english-gregorian-0-weekday"></output>
+                <div class="labelled-row-label" > (Gregorian 0 weekday) </div>
+            </div>
+            <div id="verbal-english-julian-0-weekday-row" class="labelled-row">
+                <output class="verbal" id="verbal-english-julian-0-weekday"></output>
+                <div class="labelled-row-label" > (Julian 0 weekday) </div>
             </div>
             <div id="week-number-first-friday-row" class="labelled-row">
                 <output class="verbal" id="week-number-first-friday"></output>
@@ -448,7 +453,8 @@ a:visited {
             "chinese-telegraph-month-day-hour-24",
             "analogue-clock-chinese-telegraph-24",
             "chinese-telegraph-digits-month-day-hour",
-            "verbal-english-weekday",
+            "verbal-english-gregorian-0-weekday-row",
+            "verbal-english-julian-0-weekday-row",
             "week-number-first-friday-row",
             "week-number-first-saturday-row",
             "week-number-first-sunday-row",
@@ -465,7 +471,7 @@ a:visited {
             "digital-ifc-date-base-day-of-month-plus-one",
             "digital-date-base-factorial",
             "digital-ifc-date-base-factorial",
-            //"digital-julian-date",
+            "digital-julian-date",
             "julian-day-john-walker-row",
             "julian-day-fliegel-and-van-flandern-row",
             "metrological-seasons-north-row",
@@ -479,9 +485,8 @@ a:visited {
             "international-fixed-calendar",
             //"julian-calendar",
         ]
-        
+
         if (!DEBUG_MODE) {
-            document.getElementById("digital-julian-date").style.display = "none"
             document.getElementById("julian-calendar").style.display = "none"
         }
 
@@ -748,7 +753,8 @@ a:visited {
         const verbalClock = document.getElementById("verbal-clock")
         const verbalClock24 = document.getElementById("verbal-clock-24")
         const verbalTime = document.getElementById("verbal-time")
-        const verbalEnglishWeekday = document.getElementById("verbal-english-weekday")
+        const verbalEnglishGregorian0Weekday = document.getElementById("verbal-english-gregorian-0-weekday")
+        const verbalEnglishJulian0Weekday = document.getElementById("verbal-english-julian-0-weekday")
         const weekNumberFirstFriday = document.getElementById("week-number-first-friday")
         const weekNumberFirstSaturday = document.getElementById("week-number-first-saturday")
         const weekNumberFirstSunday = document.getElementById("week-number-first-sunday")
@@ -1135,9 +1141,9 @@ a:visited {
             const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
 
             applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
-            
+
             const julianCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.JULIAN0, date)
-            
+
             applyCalendarSpecs(julianCalendarElements, julianCalendarBoxSpecs)
 
             const hours = date.getUTCHours(); // 0 - 23
@@ -1298,37 +1304,11 @@ a:visited {
             renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 12 : i)})
             renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 24 : i), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
 
-            const weekdayNumber = date.getUTCDay()
+            verbalEnglishGregorian0Weekday.textContent = weekdayWord(date.getUTCDay())
 
-            let weekdayWord
-            switch (weekdayNumber) {
-                default:
-                    console.error("Unexpected weekdayNumber:" + weekdayNumber)
-                    // fallthrough
-                case 0:
-                    weekdayWord = "Sunday"
-                break
-                case 1:
-                    weekdayWord = "Monday"
-                break
-                case 2:
-                    weekdayWord = "Tuesday"
-                break
-                case 3:
-                    weekdayWord = "Wednesday"
-                break
-                case 4:
-                    weekdayWord = "Thursday"
-                break
-                case 5:
-                    weekdayWord = "Friday"
-                break
-                case 6:
-                    weekdayWord = "Saturday"
-                break
-            }
+            const julian0YMD = Time.julian0YMD(date)
 
-            verbalEnglishWeekday.textContent = weekdayWord
+            verbalEnglishJulian0Weekday.textContent = weekdayWord(Time.julian0DayOfWeek(julian0YMD))
 
             const year = date.getUTCFullYear()
             const isLeap = Time.isGregorianLeapYear(year)
@@ -1479,8 +1459,7 @@ a:visited {
 
             digitalDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
             digitalIFCDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
-            
-            const julian0YMD = Time.julian0YMD(date)
+
             digitalJulianDate.textContent = `${julian0YMD.j0Year}-${padToTwoDigits(julian0YMD.j0Month)}-${padToTwoDigits(julian0YMD.j0DayOfMonth)}`
 
             const g0YMD = Time.G0.ymd(year, oneIndexedMonth, dayOfMonth)
@@ -1537,6 +1516,35 @@ a:visited {
 
             // TODO align to node events and use that to count and display the number of node events
             dragonicMonth.textContent = toAtMost10Chars(time / DRAGONIC_MONTH_IN_MILLIS)
+        }
+
+        const weekdayWord = (weekdayNumber) => {
+            switch (weekdayNumber) {
+                default:
+                    console.error("Unexpected weekdayNumber:" + weekdayNumber)
+                    // fallthrough
+                case 0:
+                    return "Sunday"
+                break
+                case 1:
+                    return "Monday"
+                break
+                case 2:
+                    return "Tuesday"
+                break
+                case 3:
+                    return "Wednesday"
+                break
+                case 4:
+                    return "Thursday"
+                break
+                case 5:
+                    return "Friday"
+                break
+                case 6:
+                    return "Saturday"
+                break
+            }
         }
 
         const hoursToWord = (n, divisor) => {
