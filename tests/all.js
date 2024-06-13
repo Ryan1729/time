@@ -193,11 +193,11 @@ it(() => {
     }
 })
 
-const getDateForUTCYMD = (year, oneIndexedMonth, day) => {
+const getDateForG0YMD = ({g0Year, g0Month, g0DayOfMonth}) => {
     const output = new Date(0);
-    output.setUTCFullYear(year)
-    output.setUTCMonth(oneIndexedMonth - 1)
-    output.setUTCDate(day)
+    output.setUTCFullYear(g0Year)
+    output.setUTCMonth(g0Month - 1)
+    output.setUTCDate(g0DayOfMonth)
     return output
 }
 
@@ -229,7 +229,7 @@ it(() => {
                 "rollJulian0YMDByDays mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
             )
         })();
-        
+
         (() => {
             const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = Time.rollJulian0YMDByDays(Time.J0.ymd(outY, outM, outD), -daysOffset)
             assert(
@@ -363,20 +363,21 @@ const GREGORIAN_JULIAN_PAIRS = [
     [[1900, 04, 12], [1900, 03, 30]],
     [[1900, 04, 13], [1900, 03, 31]],
     [[1900, 04, 14], [1900, 04, 01]],
+    [[2001, 09, 09], [2001, 08, 27]],
     [[2100, 02, 28], [2100, 02, 15]],
     [[2100, 03, 01], [2100, 02, 16]],
     [[2100, 03, 13], [2100, 02, 28]],
     [[2100, 03, 14], [2100, 02, 29]],
 ]
 
-// We have gregorian0YMDToJulian0 and julian0YMDToGregorian0 and we further 
-// have gregorian0YMDToJulian0DaysSinceJulianEpoch and 
-// julian0YMDToJulianDaysSinceJulianEpoch. These functions are related 
+// We have gregorian0YMDToJulian0 and julian0YMDToGregorian0 and we further
+// have gregorian0YMDToJulian0DaysSinceJulianEpoch and
+// julian0YMDToJulianDaysSinceJulianEpoch. These functions are related
 // in the following way:
-// Call gregorian0YMDToJulian0 A, julian0YMDToGregorian0 B, 
+// Call gregorian0YMDToJulian0 A, julian0YMDToGregorian0 B,
 // gregorian0YMDToJulianDaysSinceJulianEpoch C, and
 // julian0YMDToJulianDaysSinceJulianEpoch D
-// 
+//
 // gymd--A-->jymd
 // jymd--B-->gymd
 // gymd--C-->jd
@@ -391,7 +392,7 @@ const GREGORIAN_JULIAN_PAIRS = [
 // ------>* JD
 //
 // We want it to be the case that when a value starts anywhere and takes
-// both of any pair of paths, ithe value is transformed to the same 
+// both of any pair of paths, ithe value is transformed to the same
 // final value in both paths.
 
 const isNormalEnoughNumber = (n) => {
@@ -411,7 +412,7 @@ it(() => {
             isNormalEnoughNumber(gJD),
             "gJD is not in the expected range: " + gJD
         )
-        
+
         const jJD = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
         assert(
             isNormalEnoughNumber(jJD),
@@ -420,7 +421,7 @@ it(() => {
     }
 })
 
-// This tests checks the path * -A-> * -B-> * above is the same as the 
+// This tests checks the path * -A-> * -B-> * above is the same as the
 // null path
 it(() => {
     const start = performance.now()
@@ -450,9 +451,9 @@ it(() => {
         const j0YMD = Time.J0.ymd(jY, jM, jD);
 
         const JD1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.julian0YMDToGregorian0(j0YMD))
-        
+
         const JD2 = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
-        
+
         assert(
             JD1.j0Year === JD2.j0Year && JD1.j0Month === JD2.j0Month && JD1.j0DayOfMonth === JD2.j0DayOfMonth,
             "julian0YMDToJulianDaysSinceJulianEpoch mismatch for " + [jY, jM, jD] + ", expected " + JD1 + " got " + JD2
@@ -468,12 +469,35 @@ it(() => {
         const g0YMD = Time.G0.ymd(gY, gM, gD);
 
         const JD1 = Time.julian0YMDToJulianDaysSinceJulianEpoch(Time.gregorian0YMDToJulian0(g0YMD))
-        
+
         const JD2 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD)
-        
+
         assert(
             JD1.j0Year === JD2.j0Year && JD1.j0Month === JD2.j0Month && JD1.j0DayOfMonth === JD2.j0DayOfMonth,
             "gregorian0YMDToJulian0DaysSinceJulianEpoch mismatch for " + [gY, gM, gD] + ", expected " + JD1 + " got " + JD2
+        )
+    }
+})
+
+it(() => {
+    for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
+        const [[gY, gM, gD], [jY, jM, jD]] = GREGORIAN_JULIAN_PAIRS[i]
+
+        const g0YMD = Time.G0.ymd(gY, gM, gD);
+
+        const date = getDateForG0YMD(g0YMD)
+
+        const expectedMiddle = date.getTime()
+
+        const actual = Time.julianLinkedTimeFromDayOfMonth(date, Time.CURRENT, jM)
+
+        const expectedMin = expectedMiddle - (Time.DAY_IN_MILLIS / 2)
+
+        const expectedMax = expectedMiddle + (Time.DAY_IN_MILLIS / 2)
+
+        assert(
+            actual > expectedMin && actual < expectedMax,
+            "julianLinkedTimeFromDayOfMonth out of range for " + [jY, jM, jD] + ", expected between " + expectedMin + " and " + expectedMax + ", got " + actual
         )
     }
 })

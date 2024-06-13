@@ -241,7 +241,7 @@ var Time = (function () {
                         const dayOfWeekOfFirstOfNext = julian0DayOfWeek(rollJulian0YMDByDays(ymd, lastDateOfCurrentMonth - ymd.j0DayOfMonth + 1))
 
                         return {
-                            dayOfMonth: ymd.dayOfMonth,
+                            dayOfMonth: ymd.j0DayOfMonth,
                             lastDateOfPreviousMonth,
                             dayOfWeekOfLastOfPrevious,
                             lastDateOfCurrentMonth,
@@ -299,7 +299,7 @@ var Time = (function () {
     }
 
     const julian0DayOfWeek = (j0YMD) => {
-        const n = julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
+        const n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
 
         // Map it to a positive number with the same modulous
         // by adding a number we know is large enough, and is
@@ -1054,6 +1054,10 @@ var Time = (function () {
         CURRENT_MONTH,
         CURRENT_DAY,
         //
+        PREVIOUS,
+        CURRENT,
+        NEXT,
+        //
         DEFAULT_APPEARANCE,
         HIDE_WEEK_ROW,
         LAST_DAY_OUTSIDE_WEEK,
@@ -1088,5 +1092,6 @@ var Time = (function () {
         julian0DaysDifferenceFromGregorian0YMD,
         JOHN_WALKER,
         FLIEGEL_AND_VAN_FLANDERN,
+        julianLinkedTimeFromDayOfMonth,
     }
 }())
