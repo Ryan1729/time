@@ -894,15 +894,15 @@ var Time = (function () {
             case CURRENT:
             break
             case NEXT:
-                newYMD = rollJulian0YMDByDays(oldYMD, julianOneIndexedMonthLength({year: oldYMD.j0Year, month: oldYMD.j0Month}) - oldYMD.dayOfMonth + 1)
+                newYMD = rollJulian0YMDByDays(oldYMD, julianOneIndexedMonthLength({year: oldYMD.j0Year, month: oldYMD.j0Month}) - oldYMD.j0DayOfMonth + 1)
             break
         }
 
-        const g0YMD = julian0YMDToGregorian0(newYMD)
+        const g0YMD = julian0YMDToGregorian0({...newYMD, j0DayOfMonth: dayOfMonth})
 
         const startOfDay = new Date(0);
         startOfDay.setUTCFullYear(g0YMD.g0Year)
-        startOfDay.setUTCMonth(g0YMD.g0Month)
+        startOfDay.setUTCMonth(g0YMD.g0Month - 1)
         startOfDay.setUTCDate(g0YMD.g0DayOfMonth)
 
         return startOfDay.getTime()

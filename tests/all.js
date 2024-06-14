@@ -481,6 +481,34 @@ it(() => {
 
 it(() => {
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
+        const [[gY, gM, gD], [jY, jM, jD]] = GREGORIAN_JULIAN_PAIRS[i];
+
+        const g0YMD = Time.G0.ymd(gY, gM, gD);
+
+        const gJD = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD)
+
+        const gJDPlus1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.rollJulian0YMDByDays(g0YMD, 1))
+
+        assert(
+            gJDPlus1 === gJD + 1,
+            "gregorian0YMDToJulianDaysSinceJulianEpoch mismatch when rolling by 1 for " + [gY, gM, gD] + ", expected " + (gJD + 1) + " got " + gJDPlus1
+        )
+
+        const j0YMD = Time.J0.ymd(jY, jM, jD);
+
+        const jJD = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
+
+        const jJDPlus1 = Time.julian0YMDToJulianDaysSinceJulianEpoch(Time.rollJulian0YMDByDays(j0YMD, 1))
+
+        assert(
+            jJDPlus1 === jJD + 1,
+            "julian0YMDToJulianDaysSinceJulianEpoch mismatch when rolling by 1 for " + [jY, jM, jD] + ", expected " + (jJD + 1) + " got " + jJDPlus1
+        )
+    }
+})
+
+it(() => {
+    for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
         const [[gY, gM, gD], [jY, jM, jD]] = GREGORIAN_JULIAN_PAIRS[i]
 
         const g0YMD = Time.G0.ymd(gY, gM, gD);
