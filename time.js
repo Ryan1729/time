@@ -1022,12 +1022,17 @@ var Time = (function () {
         }
     };
 
-    const julian0YMDToJulianDaysSinceJulianEpoch = ({j0Year, j0Month, j0DayOfMonth}) => {
-        // Arrived at through trial and error. Seems to be 23 days
-        // after gregorian 0-1-1. Unclear why this seems to just work.
-        const K = 1721036.5
+    const julian0YMDToJulianDaysSinceJulianEpoch = ({j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth}) => {
+        /* Algorithm as given in Meeus, Astronomical Algorithms, Chapter 7, page 61 */
 
-        return K + j0Year * 365.25 + j0Month * 30 + j0DayOfMonth
+        if (month <= 2) {
+            year -= 1;
+            month += 12;
+        }
+
+        return ((Math.floor((365.25 * (year + 4716))) +
+                Math.floor((30.6001 * (month + 1))) +
+                dayOfMonth) - 1524.5);
     };
 
     return {
@@ -1082,6 +1087,7 @@ var Time = (function () {
         MINUTE_IN_MILLIS,
         SECOND_IN_MILLIS,
         //
+        rollGregorian0YMDByDays,
         rollJulian0YMDByDays,
         julian0YMD,
         gregorian0YMDToJulian0,

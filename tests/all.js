@@ -487,7 +487,7 @@ it(() => {
 
         const gJD = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD)
 
-        const gJDPlus1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.rollJulian0YMDByDays(g0YMD, 1))
+        const gJDPlus1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.rollGregorian0YMDByDays(g0YMD, 1))
 
         assert(
             gJDPlus1 === gJD + 1,
@@ -499,7 +499,9 @@ it(() => {
         const jJD = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
 
         const jJDPlus1 = Time.julian0YMDToJulianDaysSinceJulianEpoch(Time.rollJulian0YMDByDays(j0YMD, 1))
-
+if (jJDPlus1 !== jJD + 1) {
+    console.log(jJD, jJDPlus1, Time.rollJulian0YMDByDays(j0YMD, 1))
+}
         assert(
             jJDPlus1 === jJD + 1,
             "julian0YMDToJulianDaysSinceJulianEpoch mismatch when rolling by 1 for " + [jY, jM, jD] + ", expected " + (jJD + 1) + " got " + jJDPlus1
@@ -525,7 +527,8 @@ it(() => {
 
         assert(
             actual > expectedMin && actual < expectedMax,
-            "julianLinkedTimeFromDayOfMonth out of range for " + [jY, jM, jD] + ", expected between " + expectedMin + " and " + expectedMax + ", got " + actual
+            "julianLinkedTimeFromDayOfMonth out of range for " + [jY, jM, jD] + ", expected between " + expectedMin + " and " + expectedMax + ", got " + actual +
+            ". Difference is " + (actual < expectedMin ? expectedMin - actual : actual - expectedMax) / Time.DAY_IN_MILLIS + " day(s) "
         )
     }
 })
