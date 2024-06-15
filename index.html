@@ -483,12 +483,8 @@ a:visited {
             "dragonic-month-row",
             "gregorian-calendar",
             "international-fixed-calendar",
-            //"julian-calendar",
+            "julian-calendar",
         ]
-
-        if (!DEBUG_MODE) {
-            document.getElementById("julian-calendar").style.display = "none"
-        }
 
         const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
         subsetNumber.value = ALL_TIMEPIECES_SUBSET

@@ -281,8 +281,8 @@ const GREGORIAN_JULIAN_PAIRS = [
     // even though 010 is interpreted as octal.)
     // This uses the (non-standard) convention that both Gregorian and
     // Julian calendars have a year 0
-    // Gregorian 0   Julian 0
-    //[[-4712,11, 24], [-4712,01, 01]],
+    // Gregorian 0   Julian 0        Julian 1
+    [[-4712,11, 24], [-4711,01, 01], [-4712,01, 01]],
     [[-500, 02, 28], [-500, 03, 05]],
     [[-500, 03, 01], [-500, 03, 06]],
     [[-300, 02, 27], [-300, 03, 03]],
