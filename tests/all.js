@@ -499,9 +499,7 @@ it(() => {
         const jJD = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
 
         const jJDPlus1 = Time.julian0YMDToJulianDaysSinceJulianEpoch(Time.rollJulian0YMDByDays(j0YMD, 1))
-if (jJDPlus1 !== jJD + 1) {
-    console.log(jJD, jJDPlus1, Time.rollJulian0YMDByDays(j0YMD, 1))
-}
+
         assert(
             jJDPlus1 === jJD + 1,
             "julian0YMDToJulianDaysSinceJulianEpoch mismatch when rolling by 1 for " + [jY, jM, jD] + ", expected " + (jJD + 1) + " got " + jJDPlus1
@@ -519,7 +517,7 @@ it(() => {
 
         const expectedMiddle = date.getTime()
 
-        const actual = Time.julianLinkedTimeFromDayOfMonth(date, Time.CURRENT, jM)
+        const actual = Time.julianLinkedTimeFromDayOfMonth(date, Time.CURRENT, jD)
 
         const expectedMin = expectedMiddle - (Time.DAY_IN_MILLIS / 2)
 
