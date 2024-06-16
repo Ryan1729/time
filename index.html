@@ -60,6 +60,9 @@ a:visited {
     border-top: var(--thin-border);
     border-bottom: var(--thin-border);
 }
+.calendar {
+    margin-top: 2ex;
+}
 .month-label {
     text-align: center;
     font-size: 21px;
@@ -353,7 +356,7 @@ a:visited {
                 <output class="digital-small" id="dragonic-month"></output>
                 <div class="labelled-row-label"> Dragonic Months relative to the Epoch </div>
             </div>
-            <div id="gregorian-calendar" class="thin-border">
+            <div id="gregorian-calendar" class="thin-border calendar">
                 <div id="gregorian-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label" > Gregorian </div>
                 <div id="gregorian-calendar-week-labels" class="seven-columns thin-border-row">
@@ -372,7 +375,7 @@ a:visited {
                 <div id="gregorian-calendar-extra-boxes" class="seven-columns" style="display: none">
                 </div>
             </div>
-            <div id="international-fixed-calendar", class="thin-border">
+            <div id="international-fixed-calendar", class="thin-border calendar">
                 <div id="international-fixed-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label"> International Fixed </div>
                 <div id="international-fixed-calendar-week-labels" class="seven-columns thin-border-row">
@@ -391,7 +394,7 @@ a:visited {
                 <div id="international-fixed-calendar-extra-boxes" class="seven-columns" style="display: none">
                 </div>
             </div>
-            <div id="julian-calendar", class="thin-border">
+            <div id="julian-calendar", class="thin-border calendar">
                 <div id="julian-calendar-month" class="month-label"> January </div>
                 <div class="calendar-type-label"> Julian </div>
                 <div id="julian-calendar-week-labels" class="seven-columns thin-border-row">
