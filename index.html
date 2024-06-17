@@ -301,20 +301,25 @@ a:visited {
                 <output class="verbal" id="gregorian-dominical-letters"></output>
                 <div class="labelled-row-label" > (Gregorian Dominical Letters for Year) </div>
             </div>
-            <div class="clock-row">
-                <output class="digital" id="digital-date"></output>
+            <div id="digital-gregorian-0-date-row" class="labelled-row">
+                <output class="digital" id="digital-gregorian-0-date"></output>
+                <div class="labelled-row-label" > (Gregorian 0 date) </div>
             </div>
-            <div class="clock-row">
-                <output class="digital" id="digital-date-base-day-of-month-plus-one"></output>
+            <div id="digital-gregorian-0-date-base-day-of-month-plus-one-row" class="labelled-row">
+                <output class="digital" id="digital-gregorian-0-date-base-day-of-month-plus-one"></output>
+                <div class="labelled-row-label" > (Gregorian 0 date base day of month + 1) </div>
             </div>
-            <div class="clock-row">
+            <div id="digital-ifc-date-base-day-of-month-plus-one-row" class="labelled-row">
                 <output class="digital" id="digital-ifc-date-base-day-of-month-plus-one"></output>
+                <div class="labelled-row-label" > (IFC date base day of month + 1) </div>
             </div>
-            <div class="clock-row">
-                <output class="digital" id="digital-date-base-factorial"></output>
+            <div id="digital-gregorian-0-date-base-factorial-row" class="labelled-row">
+                <output class="digital" id="digital-gregorian-0-date-base-factorial"></output>
+                <div class="labelled-row-label" > (Gregorian 0 date base factorial) </div>
             </div>
-            <div class="clock-row">
+            <div id="digital-ifc-date-base-factorial-row" class="labelled-row">
                 <output class="digital" id="digital-ifc-date-base-factorial"></output>
+                <div class="labelled-row-label" > (IFC date base factorial) </div>
             </div>
             <div id="digital-julian-0-date-row" class="labelled-row">
                 <output class="digital" id="digital-julian-0-date"></output>
@@ -470,11 +475,11 @@ a:visited {
             "week-card-iso-8601-row",
             "week-card-ifc-row",
             "gregorian-dominical-letters-row",
-            "digital-date",
-            "digital-date-base-day-of-month-plus-one",
-            "digital-ifc-date-base-day-of-month-plus-one",
-            "digital-date-base-factorial",
-            "digital-ifc-date-base-factorial",
+            "digital-gregorian-0-date-row",
+            "digital-gregorian-0-date-base-day-of-month-plus-one-row",
+            "digital-ifc-date-base-day-of-month-plus-one-row",
+            "digital-gregorian-0-date-base-factorial-row",
+            "digital-ifc-date-base-factorial-row",
             "digital-julian-0-date-row",
             "julian-day-john-walker-row",
             "julian-day-fliegel-and-van-flandern-row",
@@ -766,10 +771,10 @@ a:visited {
         const weekCardISO8601 = document.getElementById("week-card-iso-8601")
         const weekCardIFC = document.getElementById("week-card-ifc")
         const gregorianDominicalLetters = document.getElementById("gregorian-dominical-letters")
-        const digitalDate = document.getElementById("digital-date")
-        const digitalDateBaseDayOfMonthPlusOne = document.getElementById("digital-date-base-day-of-month-plus-one")
+        const digitalGregorian0Date = document.getElementById("digital-gregorian-0-date")
+        const digitalGregorian0DateBaseDayOfMonthPlusOne = document.getElementById("digital-gregorian-0-date-base-day-of-month-plus-one")
         const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
-        const digitalDateBaseFactorial = document.getElementById("digital-date-base-factorial")
+        const digitalGregorian0DateBaseFactorial = document.getElementById("digital-gregorian-0-date-base-factorial")
         const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
         const digitalJulian0Date = document.getElementById("digital-julian-0-date")
         const julianDayJohnWalker = document.getElementById("julian-day-john-walker")
@@ -1448,16 +1453,16 @@ a:visited {
 
             const oneIndexedMonth = zeroIndexedMonth + 1
 
-            digitalDate.textContent = `${year}-${padToTwoDigits(oneIndexedMonth)}-${padToTwoDigits(dayOfMonth)}`
+            digitalGregorian0Date.textContent = `${year}-${padToTwoDigits(oneIndexedMonth)}-${padToTwoDigits(dayOfMonth)}`
             const base = dayOfMonth + 1
-            digitalDateBaseDayOfMonthPlusOne.textContent = `${year.toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
+            digitalGregorian0DateBaseDayOfMonthPlusOne.textContent = `${year.toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
 
             const ifcOneIndexedMonth = ifcMAndD.zeroIndexedMonthNumber + 1
 
             const ifcBase = ifcMAndD.dayOfMonth + 1
             digitalIFCDateBaseDayOfMonthPlusOne.textContent = `${year.toString(ifcBase)}-${padStringToTwoDigits((ifcOneIndexedMonth).toString(ifcBase))}-${padStringToTwoDigits(ifcMAndD.dayOfMonth.toString(ifcBase))}`
 
-            digitalDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
+            digitalGregorian0DateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
             digitalIFCDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
 
             digitalJulian0Date.textContent = `${julian0YMD.j0Year}-${padToTwoDigits(julian0YMD.j0Month)}-${padToTwoDigits(julian0YMD.j0DayOfMonth)}`
