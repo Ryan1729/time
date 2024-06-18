@@ -1,7 +1,8 @@
+"use strict";
 const fs = require('fs');
 
-eval(fs.readFileSync('./time.js')+'')
-eval(fs.readFileSync('./factorialBase.js')+'')
+global.Time = eval(fs.readFileSync('./time.js')+'; Time;')
+global.FactorialBase = eval(fs.readFileSync('./factorialBase.js')+'; FactorialBase;')
 
 // assertion framework
 const assert = (bool, message) => {
@@ -201,7 +202,7 @@ const getDateForG0YMD = ({g0Year, g0Month, g0DayOfMonth}) => {
     return output
 }
 
-DEBUG_MODE = true
+global.DEBUG_MODE = true
 
 it(() => {
     const inputOutputPairs = [
