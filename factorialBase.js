@@ -1,6 +1,10 @@
 var FactorialBase = (function () {
     "use strict";
 
+    /**
+     * @param {number} n
+     * @return {number}
+     */
     const factorial = (n) => {
         let output = 1
 
@@ -12,6 +16,10 @@ var FactorialBase = (function () {
         return output
     }
 
+    /**
+     * @param {number} n
+     * @return {number[]}
+     */
     const of = (n) => {
         if (n <= 0) {
             return [0]
@@ -48,10 +56,18 @@ var FactorialBase = (function () {
         return output
     }
 
+    /**
+     * @param {number[]} factorialBaseN
+     * @return {string}
+     */
     const toString = (factorialBaseN) => {
         return factorialBaseN.join("")
     }
 
+    /**
+     * @param {number} n
+     * @return {string}
+     */
     const stringOf = (n) => toString(of(n))
 
     return {

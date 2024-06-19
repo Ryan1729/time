@@ -1,4 +1,5 @@
 "use strict";
+
 const fs = require('fs');
 
 global.Time = eval(fs.readFileSync('./time.js')+'; Time;')
