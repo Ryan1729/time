@@ -4,7 +4,8 @@
     "checkJs": true,
     "allowJs": true,
     "noEmit": true,
-    "target": "es2020"
+    "target": "es2020",
+    "moduleResolution":"node",
   },
   "include": ["**/*.js"]
 }

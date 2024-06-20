@@ -1,11 +1,20 @@
 "use strict";
 
+const scriptStart = performance.now()
+
 const fs = require('fs');
 
 global.Time = eval(fs.readFileSync('./time.js')+'; Time;')
 global.FactorialBase = eval(fs.readFileSync('./factorialBase.js')+'; FactorialBase;')
 
+//
 // assertion framework
+//
+
+/**
+ *  @param {boolean} bool
+ *  @param {string} message
+ */
 const assert = (bool, message) => {
     if (bool) {
         return
@@ -13,7 +22,10 @@ const assert = (bool, message) => {
 
     throw new Error(message || "Assertion failed")
 }
-
+/**
+ *  @param {*[]} a
+ *  @param {*[]} b
+ */
 const arrayEqual = (a, b) => {
     if (!Array.isArray(a)) {
         throw new Error("arrayEqual was passed non-array: " + a)
@@ -38,12 +50,28 @@ const arrayEqual = (a, b) => {
     return true
 }
 
+//
 // test framework
+//
+
+/**
+ * @typedef {() => unknown} Test
+ */
+
+/** @type {Test[]} */
 let allTests = []
-const it = (test) => allTests.push(test)
+/** @type {(test: Test) => void} */
+const it = (test) => { allTests.push(test) }
+/** @type {(test: *) => void} */
 const skipit = (test) => {}
 
-// test helper
+//
+// test helpers
+//
+
+/** `start` is expected to be less than or equal to `end`
+  * @type {(start: number, end: number) => number[]}
+  */
 const range = (start, end) => {
     let output = []
     let i = 0
@@ -54,10 +82,37 @@ const range = (start, end) => {
     return output
 }
 
+/** @typedef {number} Integer */
+/** @typedef {number} Month */
+/** @typedef {number} DayOfMonth */
+
+/** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
+
+/** @type {(g0YMD: G0YMD) => Date} */
+const getDateForG0YMD = ({g0Year, g0Month, g0DayOfMonth}) => {
+    const output = new Date(0);
+    output.setUTCFullYear(g0Year)
+    output.setUTCMonth(g0Month - 1)
+    output.setUTCDate(g0DayOfMonth)
+    return output
+}
+
+/** @type {(n: unknown) => boolean} */
+const isNormalEnoughNumber = (n) => {
+    return !Number.isNaN(n) && n !== (1/0) && n !== -(1/0)
+}
+
+//
+//  config/hackery
+//
+
+// TODO make this typecheck when/if we care
+//global.DEBUG_MODE = true
+
 // tests
 it(() => {
     const date = new Date(1700000000000)
-    for (let kind = Time.GREGORIAN; kind < Time.CALENDAR_KIND_COUNT; kind += 1) {
+    for (let kind = Time.GREGORIAN0; kind < Time.CALENDAR_KIND_COUNT; kind += 1) {
         const {boxSpecs: specs} = Time.calculateCalendarSpecs(kind, date)
         // We mostly care that we got here without throwing an error
         // but if we can think of better asserts that are easy to write
@@ -195,16 +250,6 @@ it(() => {
     }
 })
 
-const getDateForG0YMD = ({g0Year, g0Month, g0DayOfMonth}) => {
-    const output = new Date(0);
-    output.setUTCFullYear(g0Year)
-    output.setUTCMonth(g0Month - 1)
-    output.setUTCDate(g0DayOfMonth)
-    return output
-}
-
-global.DEBUG_MODE = true
-
 it(() => {
     const inputOutputPairs = [
         // Input         Output
@@ -241,6 +286,7 @@ it(() => {
 })
 
 it(() => {
+    /** @type {[[number, number, number], number][]} GREGORIAN_EXAMPLES */
     const GREGORIAN_EXAMPLES = [
         [[300, 2, 28], 0],
         [[300, 3,  1], 1],
@@ -249,6 +295,7 @@ it(() => {
 
     for (let i = 0; i < GREGORIAN_EXAMPLES.length; i += 1) {
         const [[gY, gM, gD], expected] = GREGORIAN_EXAMPLES[i];
+
         const actual = Time.julian0DaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
 
         assert(
@@ -259,6 +306,7 @@ it(() => {
 })
 
 it(() => {
+    /** @type {[[number, number, number], number][]} JULIAN_EXAMPLES */
     const JULIAN_EXAMPLES = [
         [[300, 2, 28], 0],
         [[300, 2, 29], 0],
@@ -393,10 +441,6 @@ const GREGORIAN_JULIAN_PAIRS = [
 // both of any pair of paths, ithe value is transformed to the same
 // final value in both paths.
 
-const isNormalEnoughNumber = (n) => {
-    return !Number.isNaN(n) && n !== (1/0) && n !== -(1/0)
-}
-
 // This tests checks that C and D above have the right codomains
 it(() => {
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
@@ -422,7 +466,6 @@ it(() => {
 // This tests checks the path * -A-> * -B-> * above is the same as the
 // null path
 it(() => {
-    const start = performance.now()
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
         const [[inY, inM, inD], [outY, outM, outD]] = GREGORIAN_JULIAN_PAIRS[i];
 
@@ -438,7 +481,6 @@ it(() => {
             "julian0YMDToGregorian0 mismatch for " + [outY, outM, outD] + ", expected " + [inY, inM, inD] + " got " + [looped.g0Year, looped.g0Month, looped.g0DayOfMonth]
         )
     }
-    console.log(performance.now() - start, "ms")
 })
 // This tests checks the path * -B-> * -C-> * above is the same as
 // * -D-> *
@@ -449,11 +491,10 @@ it(() => {
         const j0YMD = Time.J0.ymd(jY, jM, jD);
 
         const JD1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.julian0YMDToGregorian0(j0YMD))
-
         const JD2 = Time.julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
 
         assert(
-            JD1.j0Year === JD2.j0Year && JD1.j0Month === JD2.j0Month && JD1.j0DayOfMonth === JD2.j0DayOfMonth,
+            JD1 === JD2,
             "julian0YMDToJulianDaysSinceJulianEpoch mismatch for " + [jY, jM, jD] + ", expected " + JD1 + " got " + JD2
         )
     }
@@ -471,7 +512,7 @@ it(() => {
         const JD2 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD)
 
         assert(
-            JD1.j0Year === JD2.j0Year && JD1.j0Month === JD2.j0Month && JD1.j0DayOfMonth === JD2.j0DayOfMonth,
+            JD1 === JD2,
             "gregorian0YMDToJulian0DaysSinceJulianEpoch mismatch for " + [gY, gM, gD] + ", expected " + JD1 + " got " + JD2
         )
     }
@@ -569,3 +610,5 @@ it(() => {
 for (const test of allTests) {
     test()
 }
+
+console.log(performance.now() - scriptStart, "ms")
