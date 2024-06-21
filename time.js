@@ -1,8 +1,13 @@
 var Time = (function () {
     "use strict";
 
+    /** @typedef {0|1|2} CalendarKind */
+
+    /** @type {CalendarKind} */
     const GREGORIAN0 = 0
+    /** @type {CalendarKind} */
     const INTERNATIONAL_FIXED = 1
+    /** @type {CalendarKind} */
     const JULIAN0 = 2
     const CALENDAR_KIND_COUNT = 3
 
@@ -41,31 +46,49 @@ var Time = (function () {
     const IFC_ZERO_INDEXED_YEAR_DAY_MONTH = 13
 
 
+    /** @typedef {number} Integer */
+    /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12} Month */
+    /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31} DayOfMonth */
+    
+    /** @typedef {Exclude<Integer, 0>} NonZeroInteger */
+
+    /** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
+
     const G0 = {
+        /** @type {(g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth) => G0YMD} */
         ymd: (g0Year, g0Month, g0DayOfMonth) => (
             {g0Year, g0Month, g0DayOfMonth}
         )
     }
 
+    /** @typedef {{g1Year: NonZeroInteger, g1Month: Month, g1DayOfMonth: DayOfMonth}} G1YMD */
+
     const G1 = {
+        /** @type {(g1Year: NonZeroInteger, g1Month: Month, g1DayOfMonth: DayOfMonth) => G1YMD} */
         ymd: (g1Year, g1Month, g1DayOfMonth) => (
-            {g1Year: g1Year === 0 ? -1 : g1Year, g1Month, g1DayOfMonth}
+            {g1Year, g1Month, g1DayOfMonth}
         )
     }
 
+    /** @typedef {{j0Year: Integer, j0Month: Month, j0DayOfMonth: DayOfMonth}} J0YMD */
+
     const J0 = {
+        /** @type {(j0Year: Integer, j0Month: Month, j0DayOfMonth: DayOfMonth) => J0YMD} */
         ymd: (j0Year, j0Month, j0DayOfMonth) => (
             {j0Year, j0Month, j0DayOfMonth}
         )
     }
+    
+    /** @typedef {{j1Year: NonZeroInteger, j1Month: Month, j1DayOfMonth: DayOfMonth}} J1YMD */
 
     const J1 = {
+        /** @type {(j1Year: NonZeroInteger, j1Month: Month, j1DayOfMonth: DayOfMonth) => J1YMD} */
         ymd: (j1Year, j1Month, j1DayOfMonth) => (
-            {j1Year: j1Year === 0 ? -1 : j1Year, j1Month, j1DayOfMonth}
+            {j1Year, j1Month, j1DayOfMonth}
         )
     }
 
-
+    /** @type {(kind: CalendarKind, date: Date) => CalendarSpecs} */
     const calculateCalendarSpecs = (kind, date) => {
         let boundsProvider;
         switch (kind) {
@@ -299,7 +322,7 @@ var Time = (function () {
     }
 
     const julian0DayOfWeek = (j0YMD) => {
-        const n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
+        let n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
 
         // Map it to a positive number with the same modulous
         // by adding a number we know is large enough, and is
@@ -912,6 +935,16 @@ var Time = (function () {
     const CURRENT_MONTH = 1
     const CURRENT_DAY = 2
 
+    // TODO more specific type
+    /** @typedef {any} BoundsProvider */
+    // TODO more specific type
+    /** @typedef {any} BoxSpecs */
+    // TODO more specific type
+    /** @typedef {any} Appearance */
+    
+    /** @typedef {{ monthText: string, boxSpecs: BoxSpecs, appearance: Appearance }} CalendarSpecs */
+
+    /** @type {(boundsProvider: BoundsProvider) => CalendarSpecs} */
     const calculateCalendarSpecsInner = (boundsProvider) => {
         const {
             dayOfMonth,

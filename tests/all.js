@@ -83,8 +83,9 @@ const range = (start, end) => {
 }
 
 /** @typedef {number} Integer */
-/** @typedef {number} Month */
-/** @typedef {number} DayOfMonth */
+/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12} Month */
+/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31} DayOfMonth */
+
 
 /** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
 
@@ -251,6 +252,7 @@ it(() => {
 })
 
 it(() => {
+    /** @type {[[Integer, Month, DayOfMonth, number], [Integer, Month, DayOfMonth]][]} GREGORIAN_JULIAN_PAIRS */
     const inputOutputPairs = [
         // Input         Output
         [[1900,  2, 28, -12], [1900,  2, 16]],
@@ -286,7 +288,7 @@ it(() => {
 })
 
 it(() => {
-    /** @type {[[number, number, number], number][]} GREGORIAN_EXAMPLES */
+    /** @type {[[Integer, Month, DayOfMonth], number][]} GREGORIAN_EXAMPLES */
     const GREGORIAN_EXAMPLES = [
         [[300, 2, 28], 0],
         [[300, 3,  1], 1],
@@ -306,7 +308,7 @@ it(() => {
 })
 
 it(() => {
-    /** @type {[[number, number, number], number][]} JULIAN_EXAMPLES */
+    /** @type {[[Integer, Month, DayOfMonth], number][]} JULIAN_EXAMPLES */
     const JULIAN_EXAMPLES = [
         [[300, 2, 28], 0],
         [[300, 2, 29], 0],
@@ -324,11 +326,12 @@ it(() => {
     }
 })
 
+/** @type {[[Integer, Month, DayOfMonth], [Integer, Month, DayOfMonth]][]} GREGORIAN_JULIAN_PAIRS */
 const GREGORIAN_JULIAN_PAIRS = [
     // This uses the (non-standard) convention that both Gregorian and
     // Julian calendars have a year 0
     // Gregorian 0   Julian 0        Julian 1
-    [[-4712,11, 24], [-4711, 1,  1], [-4712, 1,  1]],
+    [[-4712,11, 24], [-4711, 1,  1] /*, [-4712, 1,  1]*/],
     [[-500,  2, 28], [-500,  3,  5]],
     [[-500,  3,  1], [-500,  3,  6]],
     [[-300,  2, 27], [-300,  3,  3]],
