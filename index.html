@@ -1316,7 +1316,7 @@ a:visited {
             verbalEnglishJulian0Weekday.textContent = weekdayWord(Time.julian0DayOfWeek(julian0YMD))
 
             const year = date.getUTCFullYear()
-            const isLeap = Time.isGregorianLeapYear(year)
+            const isLeap = Time.isGregorian0LeapYear(year)
 
             const startOfYear = Time.getStartOfYear(date)
             const startOfYearWeekdayNumber = startOfYear.getUTCDay()
@@ -2017,6 +2017,7 @@ a:visited {
         renderStep()
 
         // TODO Have all four of gregorian with and without year 0, and julian with and without year 0, and clearly labelled
+        // TODO? Have IFC but without a year 0?
         // TODO show a calendar if no leap days were ever added, starting at time 0 for convenice
         //    Check if there isn't a name for this calendar, possibly with a different starting point
         // TODO show a calendar if no days were always added, starting at time 0 for convenice

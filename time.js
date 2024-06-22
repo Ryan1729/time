@@ -13,9 +13,16 @@ var Time = (function () {
 
     const GREGORIAN0_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 
+    /** @typedef {-1|0|1} Max1Delta */
+
+    /** @type {Max1Delta} */
     const PREVIOUS = -1
+    /** @type {Max1Delta} */
     const CURRENT = 0
+    /** @type {Max1Delta} */
     const NEXT = 1
+
+    /** @typedef {0|1|2|3|4|5|6} DayOfWeek */
 
     const DAYS_IN_WEEK = 7
 
@@ -88,8 +95,14 @@ var Time = (function () {
         )
     }
 
+    /** @typedef {number} Time */
+    /** @typedef {{}} CalendarBounds */ // TODO fill out
+    /** @typedef {Max1Delta} MonthDelta */
+    /** @typedef {{ date: Date, pageBounds: () => CalendarBounds, linkedTimeFromDayOfMonth: (monthDelta: MonthDelta, dayOfMonth: DayOfMonth) => Time }} BoundsProvider */
+
     /** @type {(kind: CalendarKind, date: Date) => CalendarSpecs} */
     const calculateCalendarSpecs = (kind, date) => {
+        /** @type {BoundsProvider} */
         let boundsProvider;
         switch (kind) {
             default:
@@ -196,7 +209,7 @@ var Time = (function () {
 
                         const year = date.getUTCFullYear()
 
-                        const isLeap = isGregorianLeapYear(year)
+                        const isLeap = isGregorian0LeapYear(year)
 
                         const lastDateOfPreviousMonth =
                             (isLeap && zeroIndexedMonthNumber === (IFC_ZERO_INDEXED_LEAP_MONTH + 1))
@@ -285,7 +298,8 @@ var Time = (function () {
         return calculateCalendarSpecsInner(boundsProvider)
     }
 
-    const isGregorianLeapYear = (year) => {
+    /** @type {(year: Integer) => boolean} */
+    const isGregorian0LeapYear = (year) => {
         // The rule is, it is a leap year if it is a multiple of 4,
         // and not a multiple 100, unless it is a multiple of 400,
         // in which case it is a leap year.
@@ -316,11 +330,15 @@ var Time = (function () {
         return true
     };
 
-    const isJulianLeapYear = (year) => {
+    /** @type {(year: Integer) => boolean} */
+    const isJulian0LeapYear = (year) => {
         // If it is a multiple of 4 it is always a Julian leap year
         return (year & 3) === 0
     }
 
+    /** @typedef {DayOfWeek} JulianDayOfWeek */
+
+    /** @type {(j0YMD: J0YMD) => JulianDayOfWeek} */
     const julian0DayOfWeek = (j0YMD) => {
         let n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
 
@@ -328,10 +346,10 @@ var Time = (function () {
         // by adding a number we know is large enough, and is
         // 0 after modding
         if (n < 0) {
-            n += (-n) * 7
+            n += (-n) * DAYS_IN_WEEK
         }
         // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
-        return (n + 1) % 7
+        return /** @type {JulianDayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
     }
 
     const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
@@ -748,7 +766,7 @@ var Time = (function () {
     const julianOneIndexedMonthLength = ({year, month}) => {
         const MONTH_LENGTHS = [
             31,
-            isJulianLeapYear(year) ? 29 : 28,
+            isJulian0LeapYear(year) ? 29 : 28,
             31,
             30,
             31,
@@ -787,8 +805,8 @@ var Time = (function () {
             if (
                 j0Month === 2
                 && j0DayOfMonth === 29
-                && isJulianLeapYear(j0Year)
-                && !isGregorianLeapYear(j0Year)
+                && isJulian0LeapYear(j0Year)
+                && !isGregorian0LeapYear(j0Year)
             ) {
                 // Whichever makes the rest of the things work better
                 //return G0.ymd(j0Year, 2, 28)
@@ -829,7 +847,7 @@ var Time = (function () {
         const year = date.getUTCFullYear()
         const dayOfYear = get0IndexedDayOfYear(date)
 
-        const isLeap = isGregorianLeapYear(year)
+        const isLeap = isGregorian0LeapYear(year)
 
         let dayOfYearArray
         if (isLeap) {
@@ -866,7 +884,7 @@ var Time = (function () {
         zeroIndexedMonthNumber,
         year,
     }) => {
-        const isLeap = isGregorianLeapYear(year)
+        const isLeap = isGregorian0LeapYear(year)
 
         return ((isLeap)
             ? IFC_FIRST_DAY_OF_YEAR_IN_MONTH_FOR_LEAP_YEAR[zeroIndexedMonthNumber]
@@ -935,8 +953,6 @@ var Time = (function () {
     const CURRENT_MONTH = 1
     const CURRENT_DAY = 2
 
-    // TODO more specific type
-    /** @typedef {any} BoundsProvider */
     // TODO more specific type
     /** @typedef {any} BoxSpecs */
     // TODO more specific type
@@ -1032,7 +1048,7 @@ var Time = (function () {
                    Math.floor((year - 1) / 400) +
                    Math.floor((((367 * month) - 362) / 12) +
                    ((month <= 2) ? 0 :
-                                       (isGregorianLeapYear(year) ? -1 : -2)
+                                       (isGregorian0LeapYear(year) ? -1 : -2)
                    ) +
                    dayOfMonth);
             case FLIEGEL_AND_VAN_FLANDERN:
@@ -1081,8 +1097,8 @@ var Time = (function () {
         getStartOfYear,
         getGregorianOctoberFirst,
         get0IndexedDayOfYear,
-        isGregorianLeapYear,
-        isJulianLeapYear,
+        isGregorian0LeapYear,
+        isJulian0LeapYear,
         julian0DayOfWeek,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         IFC_ZERO_INDEXED_LEAP_MONTH,
