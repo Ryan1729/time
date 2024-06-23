@@ -57,6 +57,10 @@ var Time = (function () {
     /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12} Month */
     /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31} DayOfMonth */
     
+    /** @typedef {Integer} Days */
+    /** @typedef {Integer} G0Year */
+    /** @typedef {Integer} J0Year */
+    
     /** @typedef {Exclude<Integer, 0>} NonZeroInteger */
 
     /** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
@@ -352,6 +356,7 @@ var Time = (function () {
         return /** @type {JulianDayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
     }
 
+    /** @type {(j0YMD: J0YMD, offsetInDays: Days) => J0YMD} */
     const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
         let currentMonthLength = julianOneIndexedMonthLength({year: j0Year, month: j0Month})
 
@@ -386,13 +391,14 @@ var Time = (function () {
         return J0.ymd(
             outYear,
             outMonth,
-            outDayOfMonth,
+            /** @type {DayOfMonth} */ (outDayOfMonth),
         )
     }
 
     // TODO This is apparently slower than doing calculations as in
     // rollJulian0YMDByDays, so eventaully make it more like that
     // function if this gets used enough for that to matter
+    /** @type {(g0YMD: G0YMD, offsetInDays: Days) => G0YMD} */
     const rollGregorian0YMDByDays = ({g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth}, offsetInDays) => {
         const output = new Date(0);
         output.setUTCFullYear(year)
@@ -401,11 +407,12 @@ var Time = (function () {
 
         return G0.ymd(
             output.getUTCFullYear(),
-            output.getUTCMonth() + 1,
+            /** @type {Month} */ (output.getUTCMonth() + 1),
             output.getUTCDate(),
         )
     }
 
+    /*
     // Year Month Day Less-Than
     const ymdLt = (a, b) => {
         const yearDiff = a.year - b.year
@@ -421,39 +428,9 @@ var Time = (function () {
         const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
         return dayOfMonthDiff < 0
     }
-
-    // Year Month Day Greater-than or Equal to
-    const ymdGe = (a, b) => {
-        const yearDiff = a.year - b.year
-        if (yearDiff !== 0) {
-            return yearDiff > 0
-        }
-
-        const monthDiff = a.month - b.month
-        if (monthDiff !== 0) {
-            return monthDiff > 0
-        }
-
-        const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
-        return dayOfMonthDiff >= 0
-    }
-
-    // Year Month Day Greater-Than
-    const ymdGt = (a, b) => {
-        const yearDiff = a.year - b.year
-        if (yearDiff !== 0) {
-            return yearDiff > 0
-        }
-
-        const monthDiff = a.month - b.month
-        if (monthDiff !== 0) {
-            return monthDiff > 0
-        }
-
-        const dayOfMonthDiff = a.dayOfMonth - b.dayOfMonth
-        return dayOfMonthDiff > 0
-    }
-
+    */
+    
+    /** @type {(j0YMD: J0YMD) => Days} */
     const gregorian0DaysDifferenceFromJulian0YMD = (j0YMD) => {
         const daysSinceJulianEpoch = julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
         const {j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth} = j0YMD
@@ -482,6 +459,7 @@ var Time = (function () {
             31,
         ]
 
+        /** @type {(offsetInDays: Days) => void} */
         const rollGregorian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1] || (((prospectiveGregorianYear & 3) === 0) ? 29 : 28);
 
@@ -511,6 +489,7 @@ var Time = (function () {
             }
         }
 
+        /** @type {(offsetInDays: Days) => void} */
         const rollJulian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
                 || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
@@ -608,8 +587,9 @@ var Time = (function () {
         return difference
     }
 
-    const julian0DaysDifferenceFromGregorian0YMD = (ymd) => {
-        const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = ymd
+    /** @type {(g0Ymd: G0Ymd) => Days} */
+    const julian0DaysDifferenceFromGregorian0YMD = (g0Ymd) => {
+        const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = g0Ymd
 
         const daysSinceJulianEpoch = gregorian0YMDToJulianDaysSinceJulianEpoch(ymd)
 
@@ -637,6 +617,7 @@ var Time = (function () {
             31,
         ]
 
+        /** @type {(offsetInDays: Days) => void} */
         const rollJulian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1] || (((prospectiveJulianYear & 3) === 0) ? 29 : 28);
 
@@ -666,6 +647,7 @@ var Time = (function () {
             }
         }
 
+        /** @type {(offsetInDays: Days) => void} */
         const rollGregorian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1]
                 || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
@@ -763,6 +745,7 @@ var Time = (function () {
         return difference
     }
 
+    /** @type {({year: J0Year, month: Month}) => DayOfMonth} */
     const julianOneIndexedMonthLength = ({year, month}) => {
         const MONTH_LENGTHS = [
             31,
@@ -781,15 +764,16 @@ var Time = (function () {
         return MONTH_LENGTHS[month - 1]
     }
 
-
+    /** @type {(date: Date) => J0YMD} */
     const julian0YMD = (date) => {
         const gYear = date.getUTCFullYear()
         const gMonth = date.getUTCMonth()
         const gDayOfMonth = date.getUTCDate()
 
-        return gregorian0YMDToJulian0(G0.ymd(gYear, gMonth + 1,gDayOfMonth))
+        return gregorian0YMDToJulian0(G0.ymd(gYear, gMonth + 1, gDayOfMonth))
     }
 
+    /** @type {(g0YMD: G0YMD) => J0YMD} */
     const gregorian0YMDToJulian0 = (g0YMD) => {
         let daysDifference = julian0DaysDifferenceFromGregorian0YMD(g0YMD)
 
