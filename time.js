@@ -408,7 +408,7 @@ var Time = (function () {
         return G0.ymd(
             output.getUTCFullYear(),
             /** @type {Month} */ (output.getUTCMonth() + 1),
-            output.getUTCDate(),
+            /** @type {DayOfMonth} */ (output.getUTCDate()),
         )
     }
 
@@ -492,7 +492,7 @@ var Time = (function () {
         /** @type {(offsetInDays: Days) => void} */
         const rollJulian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
-                || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+                || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
 
             prospectiveJulianDayOfMonth += offsetInDays
 
@@ -506,7 +506,7 @@ var Time = (function () {
                     prospectiveJulianMonth -= 12;
                 }
                 currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
-                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
             }
 
             // TODO skip over years at once so we don't need to loop so
@@ -518,7 +518,7 @@ var Time = (function () {
                     prospectiveJulianMonth = 12;
                 }
                 prospectiveJulianDayOfMonth += MONTH_LENGTHS[prospectiveJulianMonth - 1]
-                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
             }
         }
 
@@ -591,7 +591,7 @@ var Time = (function () {
     const julian0DaysDifferenceFromGregorian0YMD = (g0Ymd) => {
         const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = g0Ymd
 
-        const daysSinceJulianEpoch = gregorian0YMDToJulianDaysSinceJulianEpoch(ymd)
+        const daysSinceJulianEpoch = gregorian0YMDToJulianDaysSinceJulianEpoch(g0Ymd)
 
         const K = 1830690.5
         // The ymd at K
