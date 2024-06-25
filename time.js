@@ -56,11 +56,13 @@ var Time = (function () {
     /** @typedef {number} Integer */
     /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12} Month */
     /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31} DayOfMonth */
-    
+
+    /** @typedef {28|29|30|31} LengthOfMonth */
+
     /** @typedef {Integer} Days */
     /** @typedef {Integer} G0Year */
     /** @typedef {Integer} J0Year */
-    
+
     /** @typedef {Exclude<Integer, 0>} NonZeroInteger */
 
     /** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
@@ -89,7 +91,7 @@ var Time = (function () {
             {j0Year, j0Month, j0DayOfMonth}
         )
     }
-    
+
     /** @typedef {{j1Year: NonZeroInteger, j1Month: Month, j1DayOfMonth: DayOfMonth}} J1YMD */
 
     const J1 = {
@@ -368,23 +370,29 @@ var Time = (function () {
         // many times
         while (outDayOfMonth > currentMonthLength) {
             outDayOfMonth -= currentMonthLength;
+
             outMonth += 1;
+            // We know outMonth is 2 to 13 now assuming outMonth was 1 to 12
             if (outMonth > 12) {
                 outYear += 1;
-                outMonth -= 12;
+                outMonth = 1;
             }
-            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: outMonth})
+            // We know outMonth is 1 to 12 now, given previous assumptions
+
+            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
         }
 
         // TODO skip over years at once so we don't need to loop so
         // many times
         while (outDayOfMonth < 1) {
+            // We know outMonth is 0 to 11 now assuming outMonth was 1 to 12
             outMonth -= 1;
             if (outMonth < 1) {
                 outYear -= 1;
                 outMonth = 12;
             }
-            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: outMonth})
+            // We know outMonth is 1 to 12 now, given previous assumptions
+            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
             outDayOfMonth += currentMonthLength;
         }
 
@@ -429,7 +437,7 @@ var Time = (function () {
         return dayOfMonthDiff < 0
     }
     */
-    
+
     /** @type {(j0YMD: J0YMD) => Days} */
     const gregorian0DaysDifferenceFromJulian0YMD = (j0YMD) => {
         const daysSinceJulianEpoch = julian0YMDToJulianDaysSinceJulianEpoch(j0YMD)
@@ -492,7 +500,7 @@ var Time = (function () {
         /** @type {(offsetInDays: Days) => void} */
         const rollJulian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
-                || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+                || (((prospectiveJulianYear & 3) || ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
 
             prospectiveJulianDayOfMonth += offsetInDays
 
@@ -506,7 +514,7 @@ var Time = (function () {
                     prospectiveJulianMonth -= 12;
                 }
                 currentMonthLength = MONTH_LENGTHS[prospectiveJulianMonth - 1]
-                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+                    || (((prospectiveJulianYear & 3) || ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
             }
 
             // TODO skip over years at once so we don't need to loop so
@@ -518,7 +526,7 @@ var Time = (function () {
                     prospectiveJulianMonth = 12;
                 }
                 prospectiveJulianDayOfMonth += MONTH_LENGTHS[prospectiveJulianMonth - 1]
-                    || (((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
+                    || (((prospectiveJulianYear & 3) || ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0))) ? 28 : 29);
             }
         }
 
@@ -531,14 +539,16 @@ var Time = (function () {
 
                 if (
                     // is prospectiveJulian date less than target
-                    (yearDiff < 0) | yearDiff === 0 & ((monthDiff < 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveJulianDayOfMonth) < 0)))
+                    (yearDiff < 0) || yearDiff === 0 && ((monthDiff < 0) || ((monthDiff === 0) && ((dayOfMonth - prospectiveJulianDayOfMonth) < 0)))
                 ) {
                     break
                 }
 
-                difference += ((prospectiveGregorianYear & 3) === 0)
-                    & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
-                    & (prospectiveJulianMonth === 3 && prospectiveJulianDayOfMonth === 1)
+                difference += (
+                    ((prospectiveGregorianYear & 3) === 0)
+                    && ((prospectiveJulianYear & 3) || ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0)))
+                    && (prospectiveJulianMonth === 3 && prospectiveJulianDayOfMonth === 1)
+                ) ? 1 : 0
 
                 // Significatly faster than counting every single day.
                 const modulous = prospectiveGregorianYear % 100
@@ -559,7 +569,7 @@ var Time = (function () {
 
                 if (
                     // is prospectiveGregorian date greater than or equal to target
-                    (yearDiff > 0) | yearDiff === 0 & ((monthDiff > 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveGregorianDayOfMonth) >= 0)))
+                    (yearDiff > 0) || yearDiff === 0 && ((monthDiff > 0) || ((monthDiff === 0) && ((dayOfMonth - prospectiveGregorianDayOfMonth) >= 0)))
                 ) {
                     break
                 }
@@ -578,16 +588,18 @@ var Time = (function () {
                 rollGregorian0YMDByDaysMutating(offset);
                 rollJulian0YMDByDaysMutating(offset);
 
-                difference -= ((prospectiveGregorianYear & 3) === 0)
-                    & ((prospectiveJulianYear & 3) | ((prospectiveJulianYear & 15) !== 0 & (prospectiveJulianYear % 25 === 0)))
-                    & (prospectiveGregorianMonth === 2 && prospectiveGregorianDayOfMonth === 29)
+                difference -= (
+                    ((prospectiveGregorianYear & 3) === 0)
+                    && ((prospectiveJulianYear & 3) || ((prospectiveJulianYear & 15) !== 0 && (prospectiveJulianYear % 25 === 0)))
+                    && (prospectiveGregorianMonth === 2 && prospectiveGregorianDayOfMonth === 29)
+                ) ? 1 : 0
             }
         }
 
         return difference
     }
 
-    /** @type {(g0Ymd: G0Ymd) => Days} */
+    /** @type {(g0Ymd: G0YMD) => Days} */
     const julian0DaysDifferenceFromGregorian0YMD = (g0Ymd) => {
         const {g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth} = g0Ymd
 
@@ -650,7 +662,7 @@ var Time = (function () {
         /** @type {(offsetInDays: Days) => void} */
         const rollGregorian0YMDByDaysMutating = (offsetInDays) => {
             let currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1]
-                || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
+                || (((prospectiveGregorianYear & 3) || ((prospectiveGregorianYear & 15) !== 0 && (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
 
             prospectiveGregorianDayOfMonth += offsetInDays
 
@@ -664,7 +676,7 @@ var Time = (function () {
                     prospectiveGregorianMonth -= 12;
                 }
                 currentMonthLength = MONTH_LENGTHS[prospectiveGregorianMonth - 1]
-                    || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
+                    || (((prospectiveGregorianYear & 3) || ((prospectiveGregorianYear & 15) !== 0 && (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
             }
 
             // TODO skip over years at once so we don't need to loop so
@@ -676,7 +688,7 @@ var Time = (function () {
                     prospectiveGregorianMonth = 12;
                 }
                 prospectiveGregorianDayOfMonth += MONTH_LENGTHS[prospectiveGregorianMonth - 1]
-                    || (((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
+                    || (((prospectiveGregorianYear & 3) || ((prospectiveGregorianYear & 15) !== 0 && (prospectiveGregorianYear % 25 === 0))) ? 28 : 29);
             }
         }
 
@@ -689,14 +701,16 @@ var Time = (function () {
 
                 if (
                     // is prospectiveGregorian date less than target
-                    (yearDiff < 0) | yearDiff === 0 & ((monthDiff < 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveGregorianDayOfMonth) < 0)))
+                    (yearDiff < 0) || yearDiff === 0 && ((monthDiff < 0) || ((monthDiff === 0) && ((dayOfMonth - prospectiveGregorianDayOfMonth) < 0)))
                 ) {
                     break
                 }
 
-                difference += ((prospectiveJulianYear & 3) === 0)
-                    & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
-                    & (prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
+                difference += (
+                    ((prospectiveJulianYear & 3) === 0)
+                    && ((prospectiveGregorianYear & 3) || ((prospectiveGregorianYear & 15) !== 0 && (prospectiveGregorianYear % 25 === 0)))
+                    && (prospectiveGregorianMonth === 3 && prospectiveGregorianDayOfMonth === 1)
+                ) ? 1 : 0
 
                 // Significatly faster than counting every single day.
                 const modulous = prospectiveJulianYear % 100
@@ -717,7 +731,7 @@ var Time = (function () {
 
                 if (
                     // is prospectiveJulian date greater than or equal to target
-                    (yearDiff > 0) | yearDiff === 0 & ((monthDiff > 0) | ((monthDiff === 0) & ((dayOfMonth - prospectiveJulianDayOfMonth) >= 0)))
+                    (yearDiff > 0) || yearDiff === 0 && ((monthDiff > 0) || ((monthDiff === 0) && ((dayOfMonth - prospectiveJulianDayOfMonth) >= 0)))
                 ) {
                     break
                 }
@@ -736,17 +750,20 @@ var Time = (function () {
                 rollJulian0YMDByDaysMutating(offset);
                 rollGregorian0YMDByDaysMutating(offset);
 
-                difference -= ((prospectiveJulianYear & 3) === 0)
-                    & ((prospectiveGregorianYear & 3) | ((prospectiveGregorianYear & 15) !== 0 & (prospectiveGregorianYear % 25 === 0)))
-                    & (prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29)
+                difference -= (
+                    ((prospectiveJulianYear & 3) === 0)
+                    && ((prospectiveGregorianYear & 3) || ((prospectiveGregorianYear & 15) !== 0 && (prospectiveGregorianYear % 25 === 0)))
+                    && (prospectiveJulianMonth === 2 && prospectiveJulianDayOfMonth === 29)
+                ) ? 1 : 0
             }
         }
 
         return difference
     }
 
-    /** @type {({year: J0Year, month: Month}) => DayOfMonth} */
+    /** @type {(arg: {year: J0Year, month: Month}) => DayOfMonth} */
     const julianOneIndexedMonthLength = ({year, month}) => {
+        /** @type {LengthOfMonth[]} */
         const MONTH_LENGTHS = [
             31,
             isJulian0LeapYear(year) ? 29 : 28,
@@ -770,7 +787,7 @@ var Time = (function () {
         const gMonth = date.getUTCMonth()
         const gDayOfMonth = date.getUTCDate()
 
-        return gregorian0YMDToJulian0(G0.ymd(gYear, gMonth + 1, gDayOfMonth))
+        return gregorian0YMDToJulian0(G0.ymd(gYear, /** @type Month */ (gMonth + 1), /** @type DayOfMonth */ (gDayOfMonth)))
     }
 
     /** @type {(g0YMD: G0YMD) => J0YMD} */
@@ -941,7 +958,7 @@ var Time = (function () {
     /** @typedef {any} BoxSpecs */
     // TODO more specific type
     /** @typedef {any} Appearance */
-    
+
     /** @typedef {{ monthText: string, boxSpecs: BoxSpecs, appearance: Appearance }} CalendarSpecs */
 
     /** @type {(boundsProvider: BoundsProvider) => CalendarSpecs} */
