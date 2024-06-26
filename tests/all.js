@@ -190,13 +190,15 @@ it(() => {
         [0,  28,  56,  84, 112, 140, 169, 197, 225, 253, 281, 309, 337, 365],
     ]
 
+    /** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|13} ZeroIndexedIFCMonth */
+
     // 1972 is a leap year
     for (let year = 1971; year <= 1972; year += 1) {
         const expected = allExpected[year - 1971]
 
-        for (let zeroIndexedMonthNumber = 0; zeroIndexedMonthNumber <= 13; zeroIndexedMonthNumber += 1) {
+        for (let zeroIndexedMonthNumber = 0; zeroIndexedMonthNumber <= Time.IFC_ZERO_INDEXED_YEAR_DAY_MONTH; zeroIndexedMonthNumber += 1) {
             const zeroIndexedFirstDayOfYearInMonth = Time.ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
-                zeroIndexedMonthNumber,
+                zeroIndexedMonthNumber: /** @type ZeroIndexedIFCMonth */ (zeroIndexedMonthNumber),
                 year,
             })
 

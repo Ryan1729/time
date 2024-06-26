@@ -57,13 +57,24 @@ var Time = (function () {
     /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12} Month */
     /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31} DayOfMonth */
 
+    /** @typedef {0|1|2|3|4|5|6|7|8|9|10|11} ZeroIndexedMonth */
+    /** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|IFC_ZERO_INDEXED_YEAR_DAY_MONTH} ZeroIndexedIFCMonth */
+
+
     /** @typedef {28|29|30|31} LengthOfMonth */
 
     /** @typedef {Integer} Days */
     /** @typedef {Integer} G0Year */
     /** @typedef {Integer} J0Year */
+    /** @typedef {Integer} IFCYear */
+    /** @typedef {Integer} ZeroIndexedDayOfYear */
 
     /** @typedef {Exclude<Integer, 0>} NonZeroInteger */
+
+    // Hopefully this will be enough in practice
+    /** @typedef {Exclude<Exclude<Exclude<Integer, 0>, -0>, -1>} PositiveInteger */
+
+    /** @typedef {PositiveInteger} DayOfYear */
 
     /** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
 
@@ -798,10 +809,12 @@ var Time = (function () {
         return rollJulian0YMDByDays(J0.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
     }
 
+    /** @type {(j0YMD: J0YMD) => G0YMD} */
     const julian0YMDToGregorian0 = (j0YMD) => {
         let daysDifference = gregorian0DaysDifferenceFromJulian0YMD(j0YMD)
 
         // Being dumb is often the first step to being smart
+        /** @type {(j0YMD: J0YMD) => G0YMD} */
         const j0ToG0Dumb = ({j0Year, j0Month, j0DayOfMonth}) => {
             if (
                 j0Month === 2
@@ -809,8 +822,6 @@ var Time = (function () {
                 && isJulian0LeapYear(j0Year)
                 && !isGregorian0LeapYear(j0Year)
             ) {
-                // Whichever makes the rest of the things work better
-                //return G0.ymd(j0Year, 2, 28)
                 return G0.ymd(j0Year, 3, 1)
             }
             return G0.ymd(j0Year, j0Month, j0DayOfMonth)
@@ -819,12 +830,14 @@ var Time = (function () {
         return rollGregorian0YMDByDays(j0ToG0Dumb(j0YMD), daysDifference)
     }
 
+    /** @type {(date: Date) => Date} */
     const getStartOfYear = (date) => {
         const startOfYear = new Date(0);
         startOfYear.setUTCFullYear(date.getUTCFullYear())
         return startOfYear
     }
 
+    /** @type {(date: Date) => Date} */
     const getGregorianOctoberFirst = (date) => {
         const output = new Date(0);
         output.setUTCFullYear(date.getUTCFullYear())
@@ -833,6 +846,7 @@ var Time = (function () {
         return output
     }
 
+    /** @type {(date: Date) => ZeroIndexedDayOfYear} */
     const get0IndexedDayOfYear = (date) => {
         const startOfYear = getStartOfYear(date)
 
@@ -844,6 +858,9 @@ var Time = (function () {
         )
     }
 
+    /** @typedef {{ zeroIndexedMonthNumber: ZeroIndexedIFCMonth, dayOfMonth: DayOfMonth }} IFCZeroIndexedMonthAndDay */
+
+    /** @type {(date: Date) => IFCZeroIndexedMonthAndDay} */
     const ifcZeroIndexedMonthAndDay = (date) => {
         const year = date.getUTCFullYear()
         const dayOfYear = get0IndexedDayOfYear(date)
@@ -870,10 +887,10 @@ var Time = (function () {
             }
         }
 
-        const dayOfMonth = dayOfYear - dayOfYearArray[monthIndex] + 1
+        const dayOfMonth = /** @type DayOfMonth */ (dayOfYear - dayOfYearArray[monthIndex] + 1)
 
         return {
-            zeroIndexedMonthNumber: monthIndex,
+            zeroIndexedMonthNumber: /** @type ZeroIndexedIFCMonth */ (monthIndex),
             dayOfMonth,
         }
     }
@@ -881,6 +898,10 @@ var Time = (function () {
     const IFC_FIRST_DAY_OF_YEAR_IN_MONTH_NON_LEAP_YEAR = [0,  28,  56,  84, 112, 140, 168, 196, 224, 252, 280, 308, 336, 364]
     const IFC_FIRST_DAY_OF_YEAR_IN_MONTH_FOR_LEAP_YEAR = [0,  28,  56,  84, 112, 140, 169, 197, 225, 253, 281, 309, 337, 365]
 
+    /** @typedef {{ zeroIndexedMonthNumber: ZeroIndexedIFCMonth, year: IFCYear }} IFCZeroIndexedMonthAndYear */
+
+
+    /** @type {(_: IFCZeroIndexedMonthAndYear) => DayOfYear} */
     const ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth = ({
         zeroIndexedMonthNumber,
         year,
