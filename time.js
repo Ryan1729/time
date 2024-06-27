@@ -29,6 +29,8 @@ var Time = (function () {
     const IFC_NORMAL_DAYS_PER_MONTH = 28
     const IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR = (6 * IFC_NORMAL_DAYS_PER_MONTH)
 
+
+    /** @typedef {0|1|2} CalendarAppearance */
     const DEFAULT_APPEARANCE = 0
     const HIDE_WEEK_ROW = 1
     const LAST_DAY_OUTSIDE_WEEK = 2
@@ -68,6 +70,7 @@ var Time = (function () {
     /** @typedef {Integer} J0Year */
     /** @typedef {Integer} IFCYear */
     /** @typedef {Integer} ZeroIndexedDayOfYear */
+    /** @typedef {Integer} JulianDaysSinceJulianEpoch */
 
     /** @typedef {Exclude<Integer, 0>} NonZeroInteger */
 
@@ -75,6 +78,7 @@ var Time = (function () {
     /** @typedef {Exclude<Exclude<Exclude<Integer, 0>, -0>, -1>} PositiveInteger */
 
     /** @typedef {PositiveInteger} DayOfYear */
+    
 
     /** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
 
@@ -113,9 +117,13 @@ var Time = (function () {
     }
 
     /** @typedef {number} Time */
-    /** @typedef {{}} CalendarBounds */ // TODO fill out
+    /** @typedef {{dayOfMonth: DayOfMonth, lastDateOfPreviousMonth: DayOfMonth, dayOfWeekOfLastOfPrevious: DayOfWeek, lastDateOfCurrentMonth: DayOfMonth, dayOfWeekOfFirstOfCurrent: DayOfWeek, dayOfWeekOfFirstOfNext: DayOfWeek, maxBoxesPerPage: Integer, monthText: string, appearance: CalendarAppearance}} CalendarBounds */
     /** @typedef {Max1Delta} MonthDelta */
-    /** @typedef {{ date: Date, pageBounds: () => CalendarBounds, linkedTimeFromDayOfMonth: (monthDelta: MonthDelta, dayOfMonth: DayOfMonth) => Time }} BoundsProvider */
+    /** @typedef {{ 
+     * date: Date, 
+     * pageBounds: () => CalendarBounds, 
+     * linkedTimeFromDayOfMonth: (monthDelta: MonthDelta, dayOfMonth: DayOfMonth) => Time 
+     * }} BoundsProvider */
 
     /** @type {(kind: CalendarKind, date: Date) => CalendarSpecs} */
     const calculateCalendarSpecs = (kind, date) => {
@@ -148,12 +156,12 @@ var Time = (function () {
                         const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
 
                         return {
-                            dayOfMonth,
-                            lastDateOfPreviousMonth,
-                            dayOfWeekOfLastOfPrevious,
-                            lastDateOfCurrentMonth,
-                            dayOfWeekOfFirstOfCurrent,
-                            dayOfWeekOfFirstOfNext,
+                            dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
+                            lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
+                            dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
+                            lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
+                            dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
+                            dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
                             maxBoxesPerPage: 42,
                             monthText,
                             appearance: DEFAULT_APPEARANCE,
@@ -255,12 +263,12 @@ var Time = (function () {
                         const dayOfWeekOfFirstOfNext = DAYS_IN_WEEK + 1
 
                         return {
-                            dayOfMonth,
-                            lastDateOfPreviousMonth,
-                            dayOfWeekOfLastOfPrevious,
-                            lastDateOfCurrentMonth,
-                            dayOfWeekOfFirstOfCurrent,
-                            dayOfWeekOfFirstOfNext,
+                            dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
+                            lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
+                            dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
+                            lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
+                            dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
+                            dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
                             maxBoxesPerPage: lastDateOfCurrentMonth,
                             monthText,
                             appearance,
@@ -367,6 +375,17 @@ var Time = (function () {
         }
         // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
         return /** @type {JulianDayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
+    }
+    
+    /** @type {(n: Integer, modBy: Integer) => Integer} */
+    const betterMod = (n, modBy) => {
+        // Map it to a positive number with the same modulous
+        // by adding a number we know is large enough, and is
+        // 0 after modding
+        if (n < 0) {
+            n += (-n) * modBy
+        }
+        return n % modBy
     }
 
     /** @type {(j0YMD: J0YMD, offsetInDays: Days) => J0YMD} */
@@ -895,6 +914,8 @@ var Time = (function () {
         }
     }
 
+    const IFC_MONTH_COUNT = 14;
+
     const IFC_FIRST_DAY_OF_YEAR_IN_MONTH_NON_LEAP_YEAR = [0,  28,  56,  84, 112, 140, 168, 196, 224, 252, 280, 308, 336, 364]
     const IFC_FIRST_DAY_OF_YEAR_IN_MONTH_FOR_LEAP_YEAR = [0,  28,  56,  84, 112, 140, 169, 197, 225, 253, 281, 309, 337, 365]
 
@@ -914,6 +935,7 @@ var Time = (function () {
         ) || 0 // for the undefined case
     }
 
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const ifcLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
         const year = date.getUTCFullYear()
 
@@ -922,7 +944,7 @@ var Time = (function () {
         } = ifcZeroIndexedMonthAndDay(date)
 
         const firstDayOfYearInMonth = ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
-            zeroIndexedMonthNumber: zeroIndexedMonthNumber + monthDelta,
+            zeroIndexedMonthNumber: /** @type {ZeroIndexedIFCMonth} */ (betterMod(zeroIndexedMonthNumber + monthDelta, IFC_MONTH_COUNT)),
             year,
         })
 
@@ -934,6 +956,7 @@ var Time = (function () {
         return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
     }
 
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const gregorianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
         const startOfDay = new Date(0);
         startOfDay.setUTCFullYear(date.getUTCFullYear())
@@ -943,13 +966,14 @@ var Time = (function () {
         return startOfDay.getTime()
     }
 
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const julianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
         const oldYMD = julian0YMD(date)
 
         let newYMD = oldYMD
         switch (monthDelta) {
             case PREVIOUS:
-                newYMD = rollJulian0YMDByDays(oldYMD, -oldYMD.dayOfMonth)
+                newYMD = rollJulian0YMDByDays(oldYMD, -oldYMD.j0DayOfMonth)
             break
             default:
                 console.error("Unexpected monthDelta: " + monthDelta)
@@ -1002,7 +1026,9 @@ var Time = (function () {
         const firstVisibleDateOfPreviousMonth = lastDateOfPreviousMonth - dayOfWeekOfLastOfPrevious
 
         for (let i = 0; i < dayOfWeekOfFirstOfCurrent; i += 1) {
-            const firstVisibleDayOfMonth = firstVisibleDateOfPreviousMonth + i
+            // This is only valid because weeks are smaller than months
+            // So if that changes, revisit.
+            const firstVisibleDayOfMonth = /** @type {DayOfMonth} */ (firstVisibleDateOfPreviousMonth + i)
             calendarBoxSpecs[boxIndex] = {
                 text: firstVisibleDayOfMonth,
                 kind: OTHER_MONTH,
@@ -1022,7 +1048,11 @@ var Time = (function () {
             calendarBoxSpecs[boxIndex] = {
                 text: i,
                 kind,
-                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(CURRENT, i)
+                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(
+                    CURRENT,
+                    // Valid because i is known to be between 1 and lastDateOfCurrentMonth inclusive
+                    /** @type {DayOfMonth} */(i)
+                )
             }
 
             boxIndex += 1
@@ -1037,7 +1067,11 @@ var Time = (function () {
             calendarBoxSpecs[boxIndex] = {
                 text: nextMonthDate,
                 kind: OTHER_MONTH,
-                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(NEXT, nextMonthDate)
+                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(
+                    NEXT,
+                    // Valid because nextMonthDate is known to be between 1 and DAYS_IN_WEEK
+                    /** @type {DayOfMonth} */(nextMonthDate)
+                )
             }
 
             nextMonthDate += 1
@@ -1051,6 +1085,7 @@ var Time = (function () {
         }
     }
 
+    /** @typedef {0|1|2} Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
     const JOHN_WALKER = 0
     const FLIEGEL_AND_VAN_FLANDERN = 1
     const FLIEGEL_AND_VAN_FLANDERN_FLOORED = 2
@@ -1058,6 +1093,7 @@ var Time = (function () {
     const GREGORIAN0_EPOCH = 1721425.5;
 
     // One based month. Example for time 0: gregorian0YMDToJulianDaysSinceJulianEpoch(G0.ymd(1970, 1, 1))
+    /** @type {(g0YMD: G0YMD, algorithm?: Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm) => JulianDaysSinceJulianEpoch} */
     const gregorian0YMDToJulianDaysSinceJulianEpoch = ({g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth}, algorithm) => {
         switch (algorithm) {
             default:
@@ -1093,6 +1129,7 @@ var Time = (function () {
         }
     };
 
+    /** @type {(j0YMD: J0YMD) => JulianDaysSinceJulianEpoch} */
     const julian0YMDToJulianDaysSinceJulianEpoch = ({j0Year: year, j0Month: month, j0DayOfMonth: dayOfMonth}) => {
         /* Algorithm as given in Meeus, Astronomical Algorithms, Chapter 7, page 61 */
 
