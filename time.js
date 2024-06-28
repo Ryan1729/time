@@ -287,8 +287,6 @@ var Time = (function () {
 
                         const ymd = julian0YMD(date)
 
-                        // TODO confirm that these always get the right answer
-
                         const firstOfCurrentMonth = new Date(ymd.j0Year, ymd.j0Month - 1, 1)
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
                         const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
@@ -995,16 +993,17 @@ var Time = (function () {
         return startOfDay.getTime()
     }
 
+    /** @typedef {0|1|2} BoxSpecKind */
+
     const OTHER_MONTH = 0
     const CURRENT_MONTH = 1
     const CURRENT_DAY = 2
 
-    // TODO more specific type
-    /** @typedef {any} BoxSpecs */
-    // TODO more specific type
-    /** @typedef {any} Appearance */
+    /** @typedef {{text: string|number, kind: BoxSpecKind, linkedTime: Integer}} BoxSpec */
 
-    /** @typedef {{ monthText: string, boxSpecs: BoxSpecs, appearance: Appearance }} CalendarSpecs */
+    /** @typedef {BoxSpec[]} BoxSpecs */
+
+    /** @typedef {{ monthText: string, boxSpecs: BoxSpecs, appearance: CalendarAppearance }} CalendarSpecs */
 
     /** @type {(boundsProvider: BoundsProvider) => CalendarSpecs} */
     const calculateCalendarSpecsInner = (boundsProvider) => {
