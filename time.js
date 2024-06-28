@@ -78,7 +78,7 @@ var Time = (function () {
     /** @typedef {Exclude<Exclude<Exclude<Integer, 0>, -0>, -1>} PositiveInteger */
 
     /** @typedef {PositiveInteger} DayOfYear */
-    
+
 
     /** @typedef {{g0Year: Integer, g0Month: Month, g0DayOfMonth: DayOfMonth}} G0YMD */
 
@@ -119,10 +119,10 @@ var Time = (function () {
     /** @typedef {number} Time */
     /** @typedef {{dayOfMonth: DayOfMonth, lastDateOfPreviousMonth: DayOfMonth, dayOfWeekOfLastOfPrevious: DayOfWeek, lastDateOfCurrentMonth: DayOfMonth, dayOfWeekOfFirstOfCurrent: DayOfWeek, dayOfWeekOfFirstOfNext: DayOfWeek, maxBoxesPerPage: Integer, monthText: string, appearance: CalendarAppearance}} CalendarBounds */
     /** @typedef {Max1Delta} MonthDelta */
-    /** @typedef {{ 
-     * date: Date, 
-     * pageBounds: () => CalendarBounds, 
-     * linkedTimeFromDayOfMonth: (monthDelta: MonthDelta, dayOfMonth: DayOfMonth) => Time 
+    /** @typedef {{
+     * date: Date,
+     * pageBounds: () => CalendarBounds,
+     * linkedTimeFromDayOfMonth: (monthDelta: MonthDelta, dayOfMonth: DayOfMonth) => Time
      * }} BoundsProvider */
 
     /** @type {(kind: CalendarKind, date: Date) => CalendarSpecs} */
@@ -374,7 +374,7 @@ var Time = (function () {
         // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
         return /** @type {JulianDayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
     }
-    
+
     /** @type {(n: Integer, modBy: Integer) => Integer} */
     const betterMod = (n, modBy) => {
         // Map it to a positive number with the same modulous
@@ -933,6 +933,33 @@ var Time = (function () {
         ) || 0 // for the undefined case
     }
 
+    /** @type {(ifcMAndD: IFCZeroIndexedMonthAndDay) => DayOfWeek|-1} */
+    const ifcDayOfWeek = ({zeroIndexedMonthNumber, dayOfMonth}) => {
+        switch (zeroIndexedMonthNumber) {
+            default:
+                console.error("Unknown Month for: " + zeroIndexedMonthNumber)
+                // fallthrough
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case IFC_ZERO_INDEXED_LEAP_MONTH:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+                return dayOfMonth === 29 ? -1 : dayOfMonth % 7
+            break
+            case IFC_ZERO_INDEXED_YEAR_DAY_MONTH:
+                return -1
+            break
+        }
+    }
+
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const ifcLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
         const year = date.getUTCFullYear()
@@ -1158,6 +1185,7 @@ var Time = (function () {
         isGregorian0LeapYear,
         isJulian0LeapYear,
         julian0DayOfWeek,
+        ifcDayOfWeek,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         IFC_ZERO_INDEXED_LEAP_MONTH,
         IFC_ZERO_INDEXED_YEAR_DAY_MONTH,
