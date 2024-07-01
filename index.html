@@ -169,7 +169,7 @@ a:visited {
                 </span>
             </div>
         </details>
-        <div style="display: grid;">
+        <div id="timepieces" style="display: grid;">
             <output id="raw"></output>
             <output id="utc-string"></output>
             <div class="clock-row">
@@ -365,63 +365,6 @@ a:visited {
                 <output class="digital-small" id="dragonic-month"></output>
                 <div class="labelled-row-label"> Dragonic Months relative to the Epoch </div>
             </div>
-            <div id="gregorian-calendar" class="thin-border calendar">
-                <div id="gregorian-calendar-month" class="month-label"> January </div>
-                <div class="calendar-type-label" > Gregorian </div>
-                <div id="gregorian-calendar-week-labels" class="seven-columns thin-border-row">
-                    <div> Sun </div>
-                    <div> Mon </div>
-                    <div> Tue </div>
-                    <div> Wed </div>
-                    <div> Thu </div>
-                    <div> Fri </div>
-                    <div> Sat </div>
-                </div>
-                <div id="gregorian-calendar-boxes" class="seven-columns">
-                </div>
-                <div id="gregorian-calendar-extra-label" class="thin-border-row center-text" style="display: none">
-                </div>
-                <div id="gregorian-calendar-extra-boxes" class="seven-columns" style="display: none">
-                </div>
-            </div>
-            <div id="julian-calendar", class="thin-border calendar">
-                <div id="julian-calendar-month" class="month-label"> January </div>
-                <div class="calendar-type-label"> Julian </div>
-                <div id="julian-calendar-week-labels" class="seven-columns thin-border-row">
-                    <div> Sun </div>
-                    <div> Mon </div>
-                    <div> Tue </div>
-                    <div> Wed </div>
-                    <div> Thu </div>
-                    <div> Fri </div>
-                    <div> Sat </div>
-                </div>
-                <div id="julian-calendar-boxes" class="seven-columns">
-                </div>
-                <div id="julian-calendar-extra-label" class="thin-border-row center-text" style="display: none">
-                </div>
-                <div id="julian-calendar-extra-boxes" class="seven-columns" style="display: none">
-                </div>
-            </div>
-            <div id="international-fixed-calendar", class="thin-border calendar">
-                <div id="international-fixed-calendar-month" class="month-label"> January </div>
-                <div class="calendar-type-label"> International Fixed </div>
-                <div id="international-fixed-calendar-week-labels" class="seven-columns thin-border-row">
-                    <div> Sun </div>
-                    <div> Mon </div>
-                    <div> Tue </div>
-                    <div> Wed </div>
-                    <div> Thu </div>
-                    <div> Fri </div>
-                    <div> Sat </div>
-                </div>
-                <div id="international-fixed-calendar-boxes" class="seven-columns">
-                </div>
-                <div id="international-fixed-calendar-extra-label" class="thin-border-row center-text" style="display: none">
-                </div>
-                <div id="international-fixed-calendar-extra-boxes" class="seven-columns" style="display: none">
-                </div>
-            </div>
         </div>
     </div>
     <script src="factorialBase.js"></script>
@@ -441,6 +384,8 @@ a:visited {
         const inputNumber = document.getElementById("selected-time-number");
 
         const subsetNumber = document.getElementById("subset-number");
+
+        const timepieces = document.getElementById("timepieces");
 
         const TIMEPIECE_IDS = [
             "digital-clock-12",
@@ -697,27 +642,62 @@ a:visited {
             inputRange.max = inputNumber.max = parseInt(inputRange.max) + TIME_ROUND_TO
         };
 
-        const gregorianCalendarElements = {
-            monthLabel: document.getElementById("gregorian-calendar-month"),
-            weekLabels: document.getElementById("gregorian-calendar-week-labels"),
-            boxes: document.getElementById("gregorian-calendar-boxes"),
-            extraBoxesLabel: document.getElementById("gregorian-calendar-extra-label"),
-            extraBoxes: document.getElementById("gregorian-calendar-extra-boxes"),
-        };
-        const internationalFixedCalendarElements = {
-            monthLabel: document.getElementById("international-fixed-calendar-month"),
-            weekLabels: document.getElementById("international-fixed-calendar-week-labels"),
-            boxes: document.getElementById("international-fixed-calendar-boxes"),
-            extraBoxesLabel: document.getElementById("international-fixed-calendar-extra-label"),
-            extraBoxes: document.getElementById("international-fixed-calendar-extra-boxes"),
-        };
-        const julianCalendarElements = {
-            monthLabel: document.getElementById("julian-calendar-month"),
-            weekLabels: document.getElementById("julian-calendar-week-labels"),
-            boxes: document.getElementById("julian-calendar-boxes"),
-            extraBoxesLabel: document.getElementById("julian-calendar-extra-label"),
-            extraBoxes: document.getElementById("julian-calendar-extra-boxes"),
-        };
+        const appendCalendarElements = (prefix, typeText) => {
+            const outer = document.createElement("div")
+            outer.id = prefix
+            outer.className = "thin-border calendar"
+
+            const monthLabel = document.createElement("div")
+            monthLabel.id = prefix + "-month"
+            monthLabel.className = "month-label"
+            outer.appendChild(monthLabel)
+
+            const calendarLabel = document.createElement("div")
+            calendarLabel.className = "calendar-type-label"
+            calendarLabel.innerText = typeText
+            outer.appendChild(calendarLabel)
+
+            const weekLabels = document.createElement("div")
+            weekLabels.id = prefix + "-week-labels"
+            weekLabels.className = "seven-columns thin-border-row"
+
+            for (weekday of ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]) {
+                const el = document.createElement("div")
+                el.innerText = weekday
+                weekLabels.appendChild(el)
+            }
+            outer.appendChild(weekLabels)
+
+            const boxes = document.createElement("div")
+            boxes.id = prefix + "-boxes"
+            boxes.className = "seven-columns"
+            outer.appendChild(boxes)
+
+            const extraBoxesLabel = document.createElement("div")
+            extraBoxesLabel.id = prefix + "-extra-label"
+            extraBoxesLabel.className = "thin-border-row center-text"
+            extraBoxesLabel.style = "display: none"
+            outer.appendChild(extraBoxesLabel)
+
+            const extraBoxes = document.createElement("div")
+            extraBoxes.id = prefix + "-extra-boxes"
+            extraBoxes.className = "seven-columns"
+            extraBoxes.style = "display: none"
+            outer.appendChild(extraBoxes)
+
+            return {
+                monthLabel,
+                weekLabels,
+                boxes,
+                extraBoxesLabel,
+                extraBoxes,
+                outer: timepieces.appendChild(outer),
+            };
+        }
+
+        const gregorianCalendarElements = appendCalendarElements("gregorian-calendar", "Gregorian")
+        const julianCalendarElements = appendCalendarElements("julian-calendar", "Julian")
+        const internationalFixedCalendarElements = appendCalendarElements("international-fixed-calendar", "International Fixed")
 
         let clockLengthsMemo = {}
 
@@ -1334,19 +1314,20 @@ a:visited {
             const isLeap = Time.isGregorian0LeapYear(year)
 
             const startOfYear = Time.getStartOfYear(date)
-            const startOfYearWeekdayNumber = startOfYear.getUTCDay()
+            const weekdayNumberOfFirstDay = startOfYear.getUTCDay();
 
             const DOMINICAL_LETTER_BY_WEEKDAY_NUMBER = ['A', 'G', 'F', 'E', 'D', 'C', 'B']
 
-            let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[startOfYearWeekdayNumber]
+            let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[weekdayNumberOfFirstDay]
             if (isLeap) {
                 const octoberFirst = Time.getGregorianOctoberFirst(date)
                 const octoberFirstWeekdayNumber = octoberFirst.getUTCDay()
                 dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
             }
-            gregorianDominicalLetters.textContent = dominicalLetters
+            gregorianDominicalLetters.textContent = dominicalLetters;
 
-            const weekdayNumberOfFirstDay = startOfYear.getUTCDay();
+            ; // defensive semicolon because it happened more than once
+            // here and took longer that I'd have liked to debug it.
 
             // TODO pull these week number calculations into a single,
             // pure, Time function, so we can then paramterize it on
