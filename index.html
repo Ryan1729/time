@@ -345,26 +345,6 @@ a:visited {
                 <output class="verbal" id="metrological-seasons-south"></output>
                 <div class="labelled-row-label" > (metrological; southern hemisphere) </div>
             </div>
-            <div id="synodic-month-row" class="labelled-row">
-                <output class="digital-small" id="synodic-month"></output>
-                <div class="labelled-row-label"> Synodic Months relative to the Epoch </div>
-            </div>
-            <div id="tropical-month-row" class="labelled-row">
-                <output class="digital-small" id="tropical-month"></output>
-                <div class="labelled-row-label"> Tropical Months relative to the Epoch </div>
-            </div>
-            <div id="sideral-month-row" class="labelled-row">
-                <output class="digital-small" id="sideral-month"></output>
-                <div class="labelled-row-label"> Sideral Months relative to the Epoch </div>
-            </div>
-            <div id="anomalistic-month-row" class="labelled-row">
-                <output class="digital-small" id="anomalistic-month"></output>
-                <div class="labelled-row-label"> Anomalistic Months relative to the Epoch </div>
-            </div>
-            <div id="dragonic-month-row" class="labelled-row">
-                <output class="digital-small" id="dragonic-month"></output>
-                <div class="labelled-row-label"> Dragonic Months relative to the Epoch </div>
-            </div>
         </div>
     </div>
     <script src="factorialBase.js"></script>
@@ -642,6 +622,26 @@ a:visited {
             inputRange.max = inputNumber.max = parseInt(inputRange.max) + TIME_ROUND_TO
         };
 
+        const appendLabelledRow = ({prefix, outputClass, labelText}) => {
+            const outer = document.createElement("div");
+            outer.id = prefix + "-row";
+            outer.className = "labelled-row";
+
+            const output = document.createElement("output");
+            output.id = prefix;
+            output.className = outputClass;
+            outer.appendChild(output);
+            
+            const label = document.createElement("div");
+            label.className = "labelled-row-label";
+            label.innerText = labelText;
+            outer.appendChild(label);
+
+            timepieces.appendChild(outer);
+
+            return output;
+        }
+        
         const appendCalendarElements = (prefix, typeText) => {
             const outer = document.createElement("div")
             outer.id = prefix
@@ -694,6 +694,36 @@ a:visited {
                 outer: timepieces.appendChild(outer),
             };
         }
+
+        const synodicMonth = appendLabelledRow({
+            prefix: "synodic-month",
+            outputClass: "digital-small",
+            labelText: "Synodic Months relative to the Epoch",
+        });
+
+        const tropicalMonth = appendLabelledRow({
+            prefix: "tropical-month",
+            outputClass: "digital-small",
+            labelText: "Tropical Months relative to the Epoch",
+        });
+
+        const sideralMonth = appendLabelledRow({
+            prefix: "sideral-month",
+            outputClass: "digital-small",
+            labelText: "Sideral Months relative to the Epoch",
+        });
+
+        const anomalisticMonth = appendLabelledRow({
+            prefix: "anomalistic-month",
+            outputClass: "digital-small",
+            labelText: "Anomalistic Months relative to the Epoch",
+        });
+
+        const dragonicMonth = appendLabelledRow({
+            prefix: "dragonic-month",
+            outputClass: "digital-small",
+            labelText: "Dragonic Months relative to the Epoch",
+        });
 
         const gregorianCalendarElements = appendCalendarElements("gregorian-calendar", "Gregorian")
         const julianCalendarElements = appendCalendarElements("julian-calendar", "Julian")
@@ -778,12 +808,6 @@ a:visited {
 
         const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
         const metrologicalSeasonsSouth = document.getElementById("metrological-seasons-south")
-
-        const synodicMonth = document.getElementById("synodic-month")
-        const tropicalMonth = document.getElementById("tropical-month")
-        const sideralMonth = document.getElementById("sideral-month")
-        const anomalisticMonth = document.getElementById("anomalistic-month")
-        const dragonicMonth = document.getElementById("dragonic-month")
 
         // Month durations as written in
         // https://archive.org/details/astronomicalalmanac1961/page/n117/mode/1up
