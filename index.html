@@ -329,22 +329,6 @@ a:visited {
                 <output class="digital" id="digital-ifc-date-base-factorial"></output>
                 <div class="labelled-row-label" > (IFC date base factorial) </div>
             </div>
-            <div id="julian-day-john-walker-row" class="labelled-row">
-                <output class="verbal" id="julian-day-john-walker"></output>
-                <div class="labelled-row-label" > (Days since Julian Epoch, <a href="https://web.archive.org/web/20240208062946/https://www.fourmilab.ch/documents/calendar/">John Walker's algorithm</a>) </div>
-            </div>
-            <div id="julian-day-fliegel-and-van-flandern-row" class="labelled-row">
-                <output class="verbal" id="julian-day-fliegel-and-van-flandern"></output>
-                <div class="labelled-row-label" > (Days since Julian Epoch, <a href="https://web.archive.org/web/20231016010207/https://dl.acm.org/doi/pdf/10.1145/364096.364097">Fliegel &amp; Van Flandern's algorithm</a>) </div>
-            </div>
-            <div id="metrological-seasons-north-row" class="labelled-row">
-                <output class="verbal" id="metrological-seasons-north"></output>
-                <div class="labelled-row-label" > (metrological; northern hemisphere) </div>
-            </div>
-            <div id="metrological-seasons-south-row" class="labelled-row">
-                <output class="verbal" id="metrological-seasons-south"></output>
-                <div class="labelled-row-label" > (metrological; southern hemisphere) </div>
-            </div>
         </div>
     </div>
     <script src="factorialBase.js"></script>
@@ -622,7 +606,7 @@ a:visited {
             inputRange.max = inputNumber.max = parseInt(inputRange.max) + TIME_ROUND_TO
         };
 
-        const appendLabelledRow = ({prefix, outputClass, labelText}) => {
+        const appendLabelledRow = ({prefix, outputClass, labelText, labelHTML}) => {
             const outer = document.createElement("div");
             outer.id = prefix + "-row";
             outer.className = "labelled-row";
@@ -634,7 +618,13 @@ a:visited {
             
             const label = document.createElement("div");
             label.className = "labelled-row-label";
-            label.innerText = labelText;
+            if (labelText !== undefined) {
+                label.innerText = labelText;
+            }
+            if (labelHTML !== undefined) {
+                label.innerHTML = labelHTML;
+            }
+            
             outer.appendChild(label);
 
             timepieces.appendChild(outer);
@@ -694,6 +684,28 @@ a:visited {
                 outer: timepieces.appendChild(outer),
             };
         }
+            
+        const julianDayJohnWalker = appendLabelledRow({
+            prefix: "julian-day-john-walker",
+            outputClass: "verbal",
+            labelHTML: `(Days since Julian Epoch, <a href="https://web.archive.org/web/20240208062946/https://www.fourmilab.ch/documents/calendar/">John Walker's algorithm</a>)`,
+        });
+        const julianDayFliegelAndVanFlandern = appendLabelledRow({
+            prefix: "julian-day-fliegel-and-van-flandern",
+            outputClass: "verbal",
+            labelHTML: `(Days since Julian Epoch, <a href="https://web.archive.org/web/20231016010207/https://dl.acm.org/doi/pdf/10.1145/364096.364097">Fliegel &amp; Van Flandern's algorithm</a>) </div>`,
+        });
+
+        const metrologicalSeasonsNorth = appendLabelledRow({
+            prefix: "metrological-seasons-north",
+            outputClass: "verbal",
+            labelText: "(metrological; northern hemisphere)",
+        });
+        const metrologicalSeasonsSouth = appendLabelledRow({
+            prefix: "metrological-seasons-south",
+            outputClass: "verbal",
+            labelText: "(metrological; southern hemisphere)",
+        });
 
         const synodicMonth = appendLabelledRow({
             prefix: "synodic-month",
@@ -798,16 +810,10 @@ a:visited {
         const digitalGregorian0DateBaseFactorial = document.getElementById("digital-gregorian-0-date-base-factorial")
         const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
         const digitalJulian0Date = document.getElementById("digital-julian-0-date")
-        const julianDayJohnWalker = document.getElementById("julian-day-john-walker")
-        const julianDayFliegelAndVanFlandern = document.getElementById("julian-day-fliegel-and-van-flandern")
         const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
         const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
         const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
         const chineseTelegraphDigitsMDH = document.getElementById("chinese-telegraph-digits-month-day-hour")
-
-
-        const metrologicalSeasonsNorth = document.getElementById("metrological-seasons-north")
-        const metrologicalSeasonsSouth = document.getElementById("metrological-seasons-south")
 
         // Month durations as written in
         // https://archive.org/details/astronomicalalmanac1961/page/n117/mode/1up
