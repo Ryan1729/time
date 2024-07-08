@@ -305,30 +305,6 @@ a:visited {
                 <output class="verbal" id="gregorian-dominical-letters"></output>
                 <div class="labelled-row-label" > (Gregorian Dominical Letters for Year) </div>
             </div>
-            <div id="digital-gregorian-0-date-row" class="labelled-row">
-                <output class="digital" id="digital-gregorian-0-date"></output>
-                <div class="labelled-row-label" > (Gregorian 0 date) </div>
-            </div>
-            <div id="digital-julian-0-date-row" class="labelled-row">
-                <output class="digital" id="digital-julian-0-date"></output>
-                <div class="labelled-row-label" > (Julian 0 date) </div>
-            </div>
-            <div id="digital-gregorian-0-date-base-day-of-month-plus-one-row" class="labelled-row">
-                <output class="digital" id="digital-gregorian-0-date-base-day-of-month-plus-one"></output>
-                <div class="labelled-row-label" > (Gregorian 0 date base day of month + 1) </div>
-            </div>
-            <div id="digital-ifc-date-base-day-of-month-plus-one-row" class="labelled-row">
-                <output class="digital" id="digital-ifc-date-base-day-of-month-plus-one"></output>
-                <div class="labelled-row-label" > (IFC date base day of month + 1) </div>
-            </div>
-            <div id="digital-gregorian-0-date-base-factorial-row" class="labelled-row">
-                <output class="digital" id="digital-gregorian-0-date-base-factorial"></output>
-                <div class="labelled-row-label" > (Gregorian 0 date base factorial) </div>
-            </div>
-            <div id="digital-ifc-date-base-factorial-row" class="labelled-row">
-                <output class="digital" id="digital-ifc-date-base-factorial"></output>
-                <div class="labelled-row-label" > (IFC date base factorial) </div>
-            </div>
         </div>
     </div>
     <script src="factorialBase.js"></script>
@@ -615,7 +591,7 @@ a:visited {
             output.id = prefix;
             output.className = outputClass;
             outer.appendChild(output);
-            
+
             const label = document.createElement("div");
             label.className = "labelled-row-label";
             if (labelText !== undefined) {
@@ -624,14 +600,14 @@ a:visited {
             if (labelHTML !== undefined) {
                 label.innerHTML = labelHTML;
             }
-            
+
             outer.appendChild(label);
 
             timepieces.appendChild(outer);
 
             return output;
         }
-        
+
         const appendCalendarElements = (prefix, typeText) => {
             const outer = document.createElement("div")
             outer.id = prefix
@@ -684,7 +660,80 @@ a:visited {
                 outer: timepieces.appendChild(outer),
             };
         }
-            
+
+        const dateElements = {}
+
+        const PLAIN_DATE = 0;
+        const BASE_DAY_OF_MONTH_PLUS_ONE = 1;
+        const BASE_FACTORIAL = 2;
+        const DATE_MODE_COUNT = 3;
+
+        const dateKeyFrom = (calendar, mode) => {
+            return (calendar * DATE_MODE_COUNT) + mode
+        }
+
+        const calendarName = (calendar) => {
+            switch (calendar) {
+                default:
+                    console.error("unhandled calendar kind: " + calendar)
+                    // fallthrough
+                case Time.GREGORIAN0:
+                    return "Gregorian 0"
+                case Time.INTERNATIONAL_FIXED:
+                    return "International Fixed"
+                case Time.JULIAN0:
+                    return "Julian 0"
+            }
+        }
+
+        for (let mode = 0; mode < DATE_MODE_COUNT; mode += 1) {
+            let modeClass;
+            let modeName;
+            switch (mode) {
+                default:
+                    console.error("unhandled date mode: " + mode)
+                    // fallthrough
+                case PLAIN_DATE:
+                    modeClass = "date";
+                    modeName = "";
+                break
+                case BASE_DAY_OF_MONTH_PLUS_ONE:
+                    modeClass = "date-base-day-of-month-plus-one";
+                    modeName = "base day-of-month + 1";
+                break
+                case BASE_FACTORIAL:
+                    modeClass = "date-base-factorial";
+                    modeName = "base factorial";
+                break
+            }
+
+            for (let calendar = 0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
+                const key = dateKeyFrom(calendar, mode);
+
+                let calendarClass;
+                switch (calendar) {
+                    default:
+                        console.error("unhandled calendar kind: " + calendar)
+                        // fallthrough
+                    case Time.GREGORIAN0:
+                        calendarClass = "gregorian-0";
+                    break
+                    case Time.INTERNATIONAL_FIXED:
+                        calendarClass = "ifc";
+                    break
+                    case Time.JULIAN0:
+                        calendarClass = "julian-0";
+                    break
+                }
+
+                dateElements[key] = appendLabelledRow({
+                    prefix: `digital-${calendarClass}-${modeClass}`,
+                    outputClass: "digital",
+                    labelText: `(${calendarName(calendar)} date ${modeName})`,
+                });
+            }
+        }
+
         const julianDayJohnWalker = appendLabelledRow({
             prefix: "julian-day-john-walker",
             outputClass: "verbal",
@@ -804,12 +853,6 @@ a:visited {
         const weekCardISO8601 = document.getElementById("week-card-iso-8601")
         const weekCardIFC = document.getElementById("week-card-ifc")
         const gregorianDominicalLetters = document.getElementById("gregorian-dominical-letters")
-        const digitalGregorian0Date = document.getElementById("digital-gregorian-0-date")
-        const digitalGregorian0DateBaseDayOfMonthPlusOne = document.getElementById("digital-gregorian-0-date-base-day-of-month-plus-one")
-        const digitalIFCDateBaseDayOfMonthPlusOne = document.getElementById("digital-ifc-date-base-day-of-month-plus-one")
-        const digitalGregorian0DateBaseFactorial = document.getElementById("digital-gregorian-0-date-base-factorial")
-        const digitalIFCDateBaseFactorial = document.getElementById("digital-ifc-date-base-factorial")
-        const digitalJulian0Date = document.getElementById("digital-julian-0-date")
         const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
         const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
         const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
@@ -1477,19 +1520,73 @@ a:visited {
 
             const oneIndexedMonth = zeroIndexedMonth + 1
 
-            digitalGregorian0Date.textContent = `${year}-${padToTwoDigits(oneIndexedMonth)}-${padToTwoDigits(dayOfMonth)}`
-            const base = dayOfMonth + 1
-            digitalGregorian0DateBaseDayOfMonthPlusOne.textContent = `${year.toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
-
             const ifcOneIndexedMonth = ifcMAndD.zeroIndexedMonthNumber + 1
 
-            const ifcBase = ifcMAndD.dayOfMonth + 1
-            digitalIFCDateBaseDayOfMonthPlusOne.textContent = `${year.toString(ifcBase)}-${padStringToTwoDigits((ifcOneIndexedMonth).toString(ifcBase))}-${padStringToTwoDigits(ifcMAndD.dayOfMonth.toString(ifcBase))}`
+            for (let mode = 0; mode < DATE_MODE_COUNT; mode += 1) {
+                for (let calendar = 0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
+                    const key = dateKeyFrom(calendar, mode);
 
-            digitalGregorian0DateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
-            digitalIFCDateBaseFactorial.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
+                    const element = dateElements[key];
 
-            digitalJulian0Date.textContent = `${julian0YMD.j0Year}-${padToTwoDigits(julian0YMD.j0Month)}-${padToTwoDigits(julian0YMD.j0DayOfMonth)}`
+                    switch (mode) {
+                        default:
+                            console.error("unhandled date mode: " + mode)
+                            // fallthrough
+                        case PLAIN_DATE:
+                            switch (calendar) {
+                                default:
+                                    console.error("unhandled calendar kind: " + calendar)
+                                    // fallthrough
+                                case Time.GREGORIAN0:
+                                    element.textContent = `${year}-${padToTwoDigits(oneIndexedMonth)}-${padToTwoDigits(dayOfMonth)}`
+                                break
+                                case Time.INTERNATIONAL_FIXED:
+                                    element.textContent = `${year}-${padToTwoDigits(ifcOneIndexedMonth)}-${padToTwoDigits(ifcMAndD.dayOfMonth)}`
+                                break
+                                case Time.JULIAN0:
+                                    element.textContent = `${julian0YMD.j0Year}-${padToTwoDigits(julian0YMD.j0Month)}-${padToTwoDigits(julian0YMD.j0DayOfMonth)}`
+                                break
+                            }
+                        break
+                        case BASE_DAY_OF_MONTH_PLUS_ONE:
+                            const base = dayOfMonth + 1
+
+                            const ifcBase = ifcMAndD.dayOfMonth + 1
+
+                            switch (calendar) {
+                                default:
+                                    console.error("unhandled calendar kind: " + calendar)
+                                    // fallthrough
+                                case Time.GREGORIAN0:
+                                    element.textContent = `${year.toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
+                                break
+                                case Time.INTERNATIONAL_FIXED:
+                                    element.textContent = `${year.toString(ifcBase)}-${padStringToTwoDigits((ifcOneIndexedMonth).toString(ifcBase))}-${padStringToTwoDigits(ifcMAndD.dayOfMonth.toString(ifcBase))}`
+                                break
+                                case Time.JULIAN0:
+                                    element.textContent = `${julian0YMD.j0Year.toString(base)}-${padStringToTwoDigits(julian0YMD.j0Month.toString(base))}-${padStringToTwoDigits(julian0YMD.j0DayOfMonth.toString(base))}`
+                                break
+                            }
+                        break
+                        case BASE_FACTORIAL:
+                            switch (calendar) {
+                                default:
+                                    console.error("unhandled calendar kind: " + calendar)
+                                    // fallthrough
+                                case Time.GREGORIAN0:
+                                    element.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
+                                break
+                                case Time.INTERNATIONAL_FIXED:
+                                    element.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
+                                break
+                                case Time.JULIAN0:
+                                    element.textContent = `${FactorialBase.stringOf(julian0YMD.j0Year)}-${padToNDigitsBaseFactorial(3, julian0YMD.j0Month)}-${padToNDigitsBaseFactorial(5, julian0YMD.j0dayOfMonth)}`
+                                break
+                            }
+                        break
+                    }
+                }
+            }
 
             const g0YMD = Time.G0.ymd(year, oneIndexedMonth, dayOfMonth)
 
