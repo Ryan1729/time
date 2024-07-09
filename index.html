@@ -671,11 +671,18 @@ a:visited {
             }
         }
 
-        const gregorianDominicalLetters = appendLabelledRow({
-            prefix: "gregorian-dominical-letters",
-            outputClass: "verbal",
-            labelText: "(Gregorian Dominical Letters for Year)",
-        });
+        const dominicalLettersElements = {
+            [Time.GREGORIAN0]: appendLabelledRow({
+                prefix: "gregorian-dominical-letters",
+                outputClass: "verbal",
+                labelText: "(Gregorian Dominical Letters for Year)",
+            }),
+            [Time.JULIAN0]: appendLabelledRow({
+                prefix: "julian-dominical-letters",
+                outputClass: "verbal",
+                labelText: "(Julian Dominical Letters for Year)",
+            }),
+        };
 
         const dateElements = {}
 
@@ -1197,7 +1204,6 @@ a:visited {
             }
         }
 
-
         const renderAt = (date) => {
             const time = date.getTime()
             setFromTime(time)
@@ -1388,18 +1394,22 @@ a:visited {
             const isLeap = Time.isGregorian0LeapYear(year)
 
             const startOfYear = Time.getStartOfYear(date)
-            const weekdayNumberOfFirstDay = startOfYear.getUTCDay();
+
+            const gregorianWeekdayNumberOfFirstDay = startOfYear.getUTCDay();
 
             const DOMINICAL_LETTER_BY_WEEKDAY_NUMBER = ['A', 'G', 'F', 'E', 'D', 'C', 'B']
 
-            let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[weekdayNumberOfFirstDay]
+            let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorianWeekdayNumberOfFirstDay]
             if (isLeap) {
                 const octoberFirst = Time.getGregorianOctoberFirst(date)
                 const octoberFirstWeekdayNumber = octoberFirst.getUTCDay()
                 dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
             }
-            gregorianDominicalLetters.textContent = dominicalLetters;
+            dominicalLettersElements[Time.GREGORIAN0].textContent = dominicalLetters;
 
+            dominicalLettersElements[Time.JULIAN0].textContent = Time.julian0DominicalLetters(julian0YMD);
+
+            
             ; // defensive semicolon because it happened more than once
             // here and took longer that I'd have liked to debug it.
 
@@ -1410,7 +1420,7 @@ a:visited {
 
             // IIFE for a fresh scope
             (() => {
-                const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * weekdayNumberOfFirstDay);
+                const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * gregorianWeekdayNumberOfFirstDay);
 
                 let weekNumberCounter = 0;
                 let weekNumberTime = firstDayOfFirstWeekTime;
@@ -1431,7 +1441,7 @@ a:visited {
 
             // IIFE for a fresh scope
             (() => {
-                const saturdayStartWeekdayNumberOfFirstDay = (weekdayNumberOfFirstDay + 1) % 7;
+                const saturdayStartWeekdayNumberOfFirstDay = (gregorianWeekdayNumberOfFirstDay + 1) % 7;
 
                 const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * saturdayStartWeekdayNumberOfFirstDay);
 
@@ -1454,7 +1464,7 @@ a:visited {
 
             // IIFE for a fresh scope
             (() => {
-                const mondayStartWeekdayNumberOfFirstDay = sundayStartWeekNumberToMondayStart(weekdayNumberOfFirstDay);
+                const mondayStartWeekdayNumberOfFirstDay = sundayStartWeekNumberToMondayStart(gregorianWeekdayNumberOfFirstDay);
 
                 const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * mondayStartWeekdayNumberOfFirstDay);
 

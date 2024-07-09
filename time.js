@@ -386,6 +386,41 @@ var Time = (function () {
         return n % modBy
     }
 
+    const JULIAN0_DOMINICAL_LETTERS = [
+        "DC",
+        "B",
+        "A",
+        "G",
+        "FE",
+        "D",
+        "C",
+        "B",
+        "AG",
+        "F",
+        "E",
+        "D",
+        "CB",
+        "A",
+        "G",
+        "F",
+        "ED",
+        "C",
+        "B",
+        "A",
+        "GF",
+        "E",
+        "D",
+        "C",
+        "BA",
+        "G",
+        "F",
+        "E ",
+    ];
+
+    const julian0DominicalLetters = (julian0YMD) => {
+        return JULIAN0_DOMINICAL_LETTERS[betterMod(julian0YMD.j0Year, 28)];
+    };
+
     /** @type {(j0YMD: J0YMD, offsetInDays: Days) => J0YMD} */
     const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
         let currentMonthLength = julianOneIndexedMonthLength({year: j0Year, month: j0Month})
@@ -863,6 +898,17 @@ var Time = (function () {
         return output
     }
 
+    /** @type {(j0YMD: J0YMD) => J0YMD} */
+    const getJulian0OctoberFirst = (j0YMD) => {
+        return J0.ymd(
+            j0YMD.j0Year,
+            10,
+            1
+        )
+    }
+
+
+
     /** @type {(date: Date) => ZeroIndexedDayOfYear} */
     const get0IndexedDayOfYear = (date) => {
         const startOfYear = getStartOfYear(date)
@@ -1181,6 +1227,7 @@ var Time = (function () {
         J1,
         getStartOfYear,
         getGregorianOctoberFirst,
+        getJulian0OctoberFirst,
         get0IndexedDayOfYear,
         isGregorian0LeapYear,
         isJulian0LeapYear,
@@ -1234,5 +1281,6 @@ var Time = (function () {
         JOHN_WALKER,
         FLIEGEL_AND_VAN_FLANDERN,
         julianLinkedTimeFromDayOfMonth,
+        julian0DominicalLetters,
     }
 }())
