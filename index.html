@@ -301,10 +301,6 @@ a:visited {
                 <output class="verbal" id="week-card-ifc"></output>
                 <div class="labelled-row-label" > (International Fixed Calendar) </div>
             </div>
-            <div id="gregorian-dominical-letters-row" class="labelled-row">
-                <output class="verbal" id="gregorian-dominical-letters"></output>
-                <div class="labelled-row-label" > (Gregorian Dominical Letters for Year) </div>
-            </div>
         </div>
     </div>
     <script src="factorialBase.js"></script>
@@ -661,17 +657,6 @@ a:visited {
             };
         }
 
-        const dateElements = {}
-
-        const PLAIN_DATE = 0;
-        const BASE_DAY_OF_MONTH_PLUS_ONE = 1;
-        const BASE_FACTORIAL = 2;
-        const DATE_MODE_COUNT = 3;
-
-        const dateKeyFrom = (calendar, mode) => {
-            return (calendar * DATE_MODE_COUNT) + mode
-        }
-
         const calendarName = (calendar) => {
             switch (calendar) {
                 default:
@@ -684,6 +669,23 @@ a:visited {
                 case Time.JULIAN0:
                     return "Julian 0"
             }
+        }
+
+        const gregorianDominicalLetters = appendLabelledRow({
+            prefix: "gregorian-dominical-letters",
+            outputClass: "verbal",
+            labelText: "(Gregorian Dominical Letters for Year)",
+        });
+
+        const dateElements = {}
+
+        const PLAIN_DATE = 0;
+        const BASE_DAY_OF_MONTH_PLUS_ONE = 1;
+        const BASE_FACTORIAL = 2;
+        const DATE_MODE_COUNT = 3;
+
+        const dateKeyFrom = (calendar, mode) => {
+            return (calendar * DATE_MODE_COUNT) + mode
         }
 
         for (let mode = 0; mode < DATE_MODE_COUNT; mode += 1) {
@@ -852,7 +854,6 @@ a:visited {
         const weekCardFirstSunday = document.getElementById("week-card-first-sunday")
         const weekCardISO8601 = document.getElementById("week-card-iso-8601")
         const weekCardIFC = document.getElementById("week-card-ifc")
-        const gregorianDominicalLetters = document.getElementById("gregorian-dominical-letters")
         const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
         const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
         const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
