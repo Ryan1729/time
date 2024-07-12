@@ -270,11 +270,13 @@ plus.onclick = () => {
     inputRange.max = inputNumber.max = parseInt(inputRange.max) + TIME_ROUND_TO
 };
 
+/** @type {(args: {prefix: string, outputClass: string, labelText: string | undefined, labelHTML: string | undefined}) => HTMLOutputElement} */
 const appendLabelledRow = ({prefix, outputClass, labelText, labelHTML}) => {
     const outer = document.createElement("div");
     outer.id = prefix + "-row";
     outer.className = "labelled-row";
 
+    /** @type HTMLOutputElement */
     const output = document.createElement("output");
     output.id = prefix;
     output.className = outputClass;
@@ -375,6 +377,36 @@ const dominicalLettersElements = {
         labelText: "(Julian Dominical Letters for Year)",
     }),
 };
+
+const weekCardFirstFriday = appendLabelledRow({
+    prefix: "week-card-first-friday",
+    outputClass: "verbal",
+    labeltext: "(Starts on Saturday before first Friday)",
+});
+
+const weekCardFirstSaturday = appendLabelledRow({
+    prefix: "week-card-first-saturday",
+    outputClass: "verbal",
+    labeltext: "(Starts on Sunday before first Saturday)",
+});
+
+const weekCardFirstSunday = appendLabelledRow({
+    prefix: "week-card-first-sunday",
+    outputClass: "verbal",
+    labeltext: "(Starts on Monday before first Sunday)",
+});
+
+const weekCardISO8601 = appendLabelledRow({
+    prefix: "week-card-iso-8601",
+    outputClass: "verbal",
+    labeltext: "(ISO 8601)",
+});
+
+const weekCardIFC = appendLabelledRow({
+    prefix: "week-card-ifc",
+    outputClass: "verbal",
+    labeltext: "(International Fixed Calendar)",
+});
 
 const dateElements = {}
 
@@ -548,11 +580,6 @@ const weekNumberFirstSaturday = document.getElementById("week-number-first-satur
 const weekNumberFirstSunday = document.getElementById("week-number-first-sunday")
 const weekNumberISO8601 = document.getElementById("week-number-iso-8601")
 const weekNumberIFC = document.getElementById("week-number-ifc")
-const weekCardFirstFriday = document.getElementById("week-card-first-friday")
-const weekCardFirstSaturday = document.getElementById("week-card-first-saturday")
-const weekCardFirstSunday = document.getElementById("week-card-first-sunday")
-const weekCardISO8601 = document.getElementById("week-card-iso-8601")
-const weekCardIFC = document.getElementById("week-card-ifc")
 const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
 const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
 const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
@@ -590,8 +617,8 @@ const ANOMALISTIC_MONTH_IN_MILLIS =
 
 const DRAGONIC_MONTH_IN_MILLIS =
     27 * Time.DAY_IN_MILLIS
-    + 05 * Time.HOUR_IN_MILLIS
-    + 05 * Time.MINUTE_IN_MILLIS
+    +  5 * Time.HOUR_IN_MILLIS
+    +  5 * Time.MINUTE_IN_MILLIS
     + 35 * Time.SECOND_IN_MILLIS
     + 800
 
