@@ -417,6 +417,7 @@ var Time = (function () {
         "E ",
     ];
 
+    /** @type {(julian0YMD: J0YMD) => string} */
     const julian0DominicalLetters = (julian0YMD) => {
         return JULIAN0_DOMINICAL_LETTERS[betterMod(julian0YMD.j0Year, 28)];
     };
@@ -998,7 +999,8 @@ var Time = (function () {
             case 10:
             case 11:
             case 12:
-                return dayOfMonth === 29 ? -1 : dayOfMonth % 7
+                // We know dayOfMonth is positive, so % DAYS_IN_WEEK always produces a DayOfWeek
+                return dayOfMonth === 29 ? -1 : /** @type {DayOfWeek} */ (dayOfMonth % DAYS_IN_WEEK);
             break
             case IFC_ZERO_INDEXED_YEAR_DAY_MONTH:
                 return -1
