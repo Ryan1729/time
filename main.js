@@ -55,12 +55,16 @@ const TIMEPIECE_IDS = [
     "week-card-iso-8601-row",
     "week-card-ifc-row",
     "gregorian-dominical-letters-row",
+    "julian-dominical-letters-row",
     "digital-gregorian-0-date-row",
+    "digital-ifc-date-row",
+    "digital-julian-0-date-row",
     "digital-gregorian-0-date-base-day-of-month-plus-one-row",
     "digital-ifc-date-base-day-of-month-plus-one-row",
+    "digital-julian-0-date-base-day-of-month-plus-one-row",
     "digital-gregorian-0-date-base-factorial-row",
     "digital-ifc-date-base-factorial-row",
-    "digital-julian-0-date-row",
+    "digital-julian-0-date-base-factorial-row",
     "julian-day-john-walker-row",
     "julian-day-fliegel-and-van-flandern-row",
     "metrological-seasons-north-row",
@@ -1923,7 +1927,8 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 // TODO? add labels to more of the timepieces, maybe making them optional?
 //    The labels that is.
 
-// TODO? Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
+// TODO Make the creation of the HTML elements based on some JS constants, making the defintions less spread out?
+// TODO Make the TIMEPIECE_IDS array be filled automatically when appending timepiece HTML elements
 // TODO? Abstract over having both 12 and 24 hour versions of clocks?
 // TODO? Make it so we can just define some sets of things like { Gregorian 0, IFC, Julian 0 } and {default, base date, base factorial } and render the cross product of them
 //    Do we actually want all the possibilities there? Maybe hide some by default?
