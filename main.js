@@ -5,6 +5,14 @@ if (DEBUG_MODE) {
 }
 const MEASURE_FRAMES = DEBUG_MODE
 
+/**
+ * @typedef {import('./time.js').CalendarKind} CalendarKind
+ */
+
+/** @typedef {string} ElemIdPrefix */
+/** @typedef {ElemIdPrefix} ElemId */
+
+
 const displayedStep = document.getElementById("displayed-step");
 const raw = document.getElementById("raw");
 const utcString = document.getElementById("utc-string");
@@ -82,6 +90,7 @@ const TIMEPIECE_IDS = [
 const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
 subsetNumber.value = ALL_TIMEPIECES_SUBSET
 
+/** @type {(substr: string) => BigInt} */
 const subsetThatContains = (substr) => {
     let subset = 0n
     let bit = 1n
@@ -94,6 +103,7 @@ const subsetThatContains = (substr) => {
     return subset
 }
 
+/** @type {(args: {addID: ElemId, onlyID: ElemId, removeID: ElemId, subset: BigInt}) => void} */
 const setupCatergoryControls = ({addID, onlyID, removeID, subset}) => {
     const add = document.getElementById(addID);
     const onAdd = () => {
@@ -150,6 +160,7 @@ setupCatergoryControls({
 });
 
 
+/** @type {(mask: BigInt) => void} */
 const setSubsetMask = (mask) => {
     subsetNumber.value = mask
 
@@ -163,6 +174,7 @@ const setSubsetMask = (mask) => {
     }
 }
 
+/** @type {() => BigInt} */
 const getCurrentSubsetMask = () => {
     let subset
     try {
@@ -176,18 +188,21 @@ const getCurrentSubsetMask = () => {
     return subset
 }
 
+/** @type {() => void} */
 const onSubsetChange = () => {
     setSubsetMask(getCurrentSubsetMask())
 }
 subsetNumber.oninput = onSubsetChange
 
 const subsetShiftUp = document.getElementById("subset-shift-up");
+/** @type {() => void} */
 const onShiftUp = () => {
     setSubsetMask(getCurrentSubsetMask() << 1n)
 }
 subsetShiftUp.onclick = onShiftUp
 
 const subsetShiftDown = document.getElementById("subset-shift-down");
+/** @type {() => void} */
 const onShiftDown = () => {
     setSubsetMask(getCurrentSubsetMask() >> 1n)
 }
@@ -201,6 +216,7 @@ const defaultHighEdge = Math.ceil(startTime / TIME_ROUND_TO) * TIME_ROUND_TO
 
 inputRange.min = inputNumber.min = defaultLowEdge
 inputRange.max = inputNumber.max = defaultHighEdge
+/** @type {(step: number) => void} */
 const setStep = (step) => {
     inputRange.step = inputNumber.step = step
     if (step === 1) {
@@ -209,6 +225,7 @@ const setStep = (step) => {
         displayedStep.textContent = "movement ×" + step.toLocaleString() + " " + humanReadableSIDurationFromMillis(step)
     }
 }
+/** @type {(time: number) => void} */
 const setFromTime = (time) => {
     inputRange.value = inputNumber.value = time
 }
@@ -218,6 +235,7 @@ const RUNNING = "running"
 const PAUSED = "paused"
 
 let inputMode = RUNNING
+/** @type {(step: number) => void} */
 const onInput = () => {
     inputMode = PAUSED
     // TODO? Are we gonna want to debounce this?
@@ -240,7 +258,7 @@ const onInput = () => {
 }
 inputRange.oninput = inputNumber.oninput = onInput
 
-let moveListener;
+/** @type number */
 let startClientY;
 inputRange.addEventListener("pointerdown", (e) => {
     startClientY = e.clientY
@@ -257,8 +275,6 @@ inputRange.addEventListener("pointerdown", (e) => {
     });
 });
 inputRange.addEventListener("pointerup", (e) => {
-    inputRange.removeEventListener("pointermove", moveListener)
-
     // Avoid jittering the input when releasing
     const selectedValue = inputRange.value
     setTimeout(() => setFromTime(selectedValue), 8)
@@ -302,6 +318,7 @@ const appendLabelledRow = ({prefix, outputClass, labelText, labelHTML}) => {
     return output;
 }
 
+/** @type {(prefix: ElemIdPrefix, typeText: string) => CalendarElements} */
 const appendCalendarElements = (prefix, typeText) => {
     const outer = document.createElement("div")
     outer.id = prefix
@@ -355,6 +372,7 @@ const appendCalendarElements = (prefix, typeText) => {
     };
 }
 
+/** @type {(calendar: CalendarKind) => string} */
 const calendarName = (calendar) => {
     switch (calendar) {
         default:
