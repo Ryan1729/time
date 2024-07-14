@@ -318,6 +318,9 @@ const appendLabelledRow = ({prefix, outputClass, labelText, labelHTML}) => {
     return output;
 }
 
+// TODO replace unknown
+/** @typedef {unknown} CalendarElements */
+
 /** @type {(prefix: ElemIdPrefix, typeText: string) => CalendarElements} */
 const appendCalendarElements = (prefix, typeText) => {
     const outer = document.createElement("div")
@@ -430,13 +433,22 @@ const weekCardIFC = appendLabelledRow({
     labeltext: "(International Fixed Calendar)",
 });
 
-const dateElements = {}
+/** @typedef {0|1|2} DateMode */
 
 const PLAIN_DATE = 0;
 const BASE_DAY_OF_MONTH_PLUS_ONE = 1;
 const BASE_FACTORIAL = 2;
 const DATE_MODE_COUNT = 3;
 
+// CALENDAR_KIND_COUNT groups of DATE_MODE_COUNT values, starting at 0
+/** @typedef {0|1|2|3|4|5|6|7|8} DateKey */
+
+/** @typedef {{ [_key in 0|1|2|3|4|5|6|7|8]: HTMLOutputElement; }} DateElements */
+
+/** @type {DateElements} */
+const dateElements = {}
+
+/** @type {(calendar: CalendarKind, mode: DateMode) => DateKey} */
 const dateKeyFrom = (calendar, mode) => {
     return (calendar * DATE_MODE_COUNT) + mode
 }
@@ -541,9 +553,17 @@ const dragonicMonth = appendLabelledRow({
     labelText: "Dragonic Months relative to the Epoch",
 });
 
-const gregorianCalendarElements = appendCalendarElements("gregorian-calendar", "Gregorian")
-const julianCalendarElements = appendCalendarElements("julian-calendar", "Julian")
-const internationalFixedCalendarElements = appendCalendarElements("international-fixed-calendar", "International Fixed")
+/**
+ * @template Value
+ * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, } ]: Value; }} ByCalendarKind<Value>
+ * */
+
+/** @type {ByCalendarKind<CalendarElements>} */
+const calendarElements = {
+    [Time.GREGORIAN0]: appendCalendarElements("gregorian-calendar", "Gregorian"),
+    [Time.INTERNATIONAL_FIXED]: appendCalendarElements("international-fixed-calendar", "International Fixed"),
+    [Time.JULIAN0]: appendCalendarElements("julian-calendar", "Julian"),
+}
 
 let clockLengthsMemo = {}
 
@@ -951,17 +971,11 @@ const renderAt = (date) => {
     raw.textContent = time.toLocaleString()
     utcString.textContent = date.toUTCString()
 
-    const gregorianCalendarSpecs = Time.calculateCalendarSpecs(Time.GREGORIAN0, date)
+    for (let kind = Time.GREGORIAN0; kind < Time.CALENDAR_KIND_COUNT; kind += 1) {
+        const specs = Time.calculateCalendarSpecs(kind, date);
 
-    applyCalendarSpecs(gregorianCalendarElements, gregorianCalendarSpecs)
-
-    const internationalFixedCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.INTERNATIONAL_FIXED, date)
-
-    applyCalendarSpecs(internationalFixedCalendarElements, internationalFixedCalendarBoxSpecs)
-
-    const julianCalendarBoxSpecs = Time.calculateCalendarSpecs(Time.JULIAN0, date)
-
-    applyCalendarSpecs(julianCalendarElements, julianCalendarBoxSpecs)
+        applyCalendarSpecs(calendarElements[kind], specs)
+    }
 
     const hours = date.getUTCHours(); // 0 - 23
     const hours12 = hours % 12 // 0 - 11
@@ -1150,7 +1164,7 @@ const renderAt = (date) => {
 
     dominicalLettersElements[Time.JULIAN0].textContent = Time.julian0DominicalLetters(julian0YMD);
 
-    
+
     ; // defensive semicolon because it happened more than once
     // here and took longer that I'd have liked to debug it.
 
