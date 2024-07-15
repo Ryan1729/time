@@ -451,6 +451,11 @@ const dominicalLettersElements = {
         outputClass: "verbal",
         labelText: "(Gregorian Dominical Letters for Year)",
     }),
+    [Time.INTERNATIONAL_FIXED]: appendLabelledRow({
+        prefix: "international-fixed-dominical-letters",
+        outputClass: "verbal",
+        labelText: "(International Fixed Dominical Letters for Year)",
+    }),
     [Time.JULIAN0]: appendLabelledRow({
         prefix: "julian-dominical-letters",
         outputClass: "verbal",
@@ -1200,6 +1205,12 @@ const renderAt = (date) => {
         dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
     }
     dominicalLettersElements[Time.GREGORIAN0].textContent = dominicalLetters;
+
+    // This is an extention of the concept of dominical letters to the IFC invented for this program
+    // The reasoning goes something like if the kind of person that would invent the IFC heard about
+    // there being letters for representing which kinds of years there are, and that they count up
+    // from A, and then they just do the clearly sensible thing, somewhat smugly.
+    dominicalLettersElements[Time.INTERNATIONAL_FIXED].textContent = isLeap ? "B" : "A";
 
     dominicalLettersElements[Time.JULIAN0].textContent = Time.julian0DominicalLetters(julian0YMD);
 
@@ -1959,8 +1970,6 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 // TODO show a calendar if leap days were added to december instead, like would be sensible given we start at January
 //    Maybe do a roman calendar startign at March first?
 //    Seems like the actual roman calendar is more complciated than that
-// TODO show the equivalent of the Dominical letters for the given year based on the IFC
-//   So one of two types of letters, indicating whether it is a leap year or not
 // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
 //   78 cards total, 22 major arcana, 56 minor arcana of 4 suits of 14 cards each
 //       A positive diophatine solver reveals that 3*56 + 9*22 = 366, but no solutions for a*56 + b*22 = 365 exist
