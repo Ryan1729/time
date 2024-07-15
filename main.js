@@ -390,6 +390,24 @@ const calendarName = (calendar) => {
     }
 }
 
+const verbalEnglishWeekdayElements = {
+    [Time.GREGORIAN0]: appendLabelledRow({
+        prefix: "verbal-english-gregorian-0-weekday",
+        outputClass: "verbal",
+        labelText: "(Gregorian 0 weekday)",
+    }),
+    [Time.INTERNATIONAL_FIXED]: appendLabelledRow({
+        prefix: "verbal-english-ifc-weekday",
+        outputClass: "verbal",
+        labelText: "(International Fixed Calendar weekday)",
+    }),
+    [Time.JULIAN0]: appendLabelledRow({
+        prefix: "verbal-english-julian-0-weekday",
+        outputClass: "verbal",
+        labelText: "(Julian 0 weekday)",
+    })
+}
+
 const weekNumberFirstFriday = appendLabelledRow({
     prefix: "week-number-first-friday",
     outputClass: "verbal",
@@ -640,12 +658,6 @@ const digitalClock24BaseFactorial = document.getElementById("digital-clock-24-ba
 const verbalClock = document.getElementById("verbal-clock")
 const verbalClock24 = document.getElementById("verbal-clock-24")
 const verbalTime = document.getElementById("verbal-time")
-
-const verbalEnglishWeekdayElements = {
-    [Time.GREGORIAN0]: document.getElementById("verbal-english-gregorian-0-weekday"),
-    [Time.JULIAN0]: document.getElementById("verbal-english-julian-0-weekday"),
-    [Time.INTERNATIONAL_FIXED]: document.getElementById("verbal-english-ifc-weekday")
-}
 
 const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
 const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
