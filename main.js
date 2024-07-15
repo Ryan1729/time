@@ -9,6 +9,11 @@ const MEASURE_FRAMES = DEBUG_MODE
  * @typedef {import('./time.js').CalendarKind} CalendarKind
  */
 
+/**
+ * @template Value
+ * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, } ]: Value; }} ByCalendarKind<Value>
+ * */
+
 /** @typedef {string} ElemIdPrefix */
 /** @typedef {ElemIdPrefix} ElemId */
 
@@ -290,7 +295,7 @@ plus.onclick = () => {
     inputRange.max = inputNumber.max = parseInt(inputRange.max) + TIME_ROUND_TO
 };
 
-/** @type {(args: {prefix: string, outputClass: string, labelText: string | undefined, labelHTML: string | undefined}) => HTMLOutputElement} */
+/** @type {(args: {prefix: string, outputClass: string, labelText?: string, labelHTML?: string}) => HTMLOutputElement} */
 const appendLabelledRow = ({prefix, outputClass, labelText, labelHTML}) => {
     const outer = document.createElement("div");
     outer.id = prefix + "-row";
@@ -390,6 +395,7 @@ const calendarName = (calendar) => {
     }
 }
 
+/** @type {ByCalendarKind<HTMLOutputElement>} */
 const verbalEnglishWeekdayElements = {
     [Time.GREGORIAN0]: appendLabelledRow({
         prefix: "verbal-english-gregorian-0-weekday",
@@ -438,6 +444,7 @@ const weekNumberIFC = appendLabelledRow({
     labelText: "(International Fixed Calendar)",
 });
 
+/** @type {ByCalendarKind<HTMLOutputElement>} */
 const dominicalLettersElements = {
     [Time.GREGORIAN0]: appendLabelledRow({
         prefix: "gregorian-dominical-letters",
@@ -454,31 +461,31 @@ const dominicalLettersElements = {
 const weekCardFirstFriday = appendLabelledRow({
     prefix: "week-card-first-friday",
     outputClass: "verbal",
-    labeltext: "(Starts on Saturday before first Friday)",
+    labelText: "(Starts on Saturday before first Friday)",
 });
 
 const weekCardFirstSaturday = appendLabelledRow({
     prefix: "week-card-first-saturday",
     outputClass: "verbal",
-    labeltext: "(Starts on Sunday before first Saturday)",
+    labelText: "(Starts on Sunday before first Saturday)",
 });
 
 const weekCardFirstSunday = appendLabelledRow({
     prefix: "week-card-first-sunday",
     outputClass: "verbal",
-    labeltext: "(Starts on Monday before first Sunday)",
+    labelText: "(Starts on Monday before first Sunday)",
 });
 
 const weekCardISO8601 = appendLabelledRow({
     prefix: "week-card-iso-8601",
     outputClass: "verbal",
-    labeltext: "(ISO 8601)",
+    labelText: "(ISO 8601)",
 });
 
 const weekCardIFC = appendLabelledRow({
     prefix: "week-card-ifc",
     outputClass: "verbal",
-    labeltext: "(International Fixed Calendar)",
+    labelText: "(International Fixed Calendar)",
 });
 
 /** @typedef {0|1|2} DateMode */
@@ -600,11 +607,6 @@ const dragonicMonth = appendLabelledRow({
     outputClass: "digital-small",
     labelText: "Dragonic Months relative to the Epoch",
 });
-
-/**
- * @template Value
- * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, } ]: Value; }} ByCalendarKind<Value>
- * */
 
 /** @type {ByCalendarKind<CalendarElements>} */
 const calendarElements = {
