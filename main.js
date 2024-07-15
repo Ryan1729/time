@@ -390,6 +390,36 @@ const calendarName = (calendar) => {
     }
 }
 
+const weekNumberFirstFriday = appendLabelledRow({
+    prefix: "week-number-first-friday",
+    outputClass: "verbal",
+    labelText: "(Starts on Saturday before first Friday)",
+});
+
+const weekNumberFirstSaturday = appendLabelledRow({
+    prefix: "week-number-first-saturday",
+    outputClass: "verbal",
+    labelText: "(Starts on Sunday before first Saturday)",
+});
+
+const weekNumberFirstSunday = appendLabelledRow({
+    prefix: "week-number-first-sunday",
+    outputClass: "verbal",
+    labelText: "(Starts on Monday before first Sunday)",
+});
+
+const weekNumberISO8601 = appendLabelledRow({
+    prefix: "week-number-iso-8601",
+    outputClass: "verbal",
+    labelText: "(ISO 8601)",
+});
+
+const weekNumberIFC = appendLabelledRow({
+    prefix: "week-number-ifc",
+    outputClass: "verbal",
+    labelText: "(International Fixed Calendar)",
+});
+
 const dominicalLettersElements = {
     [Time.GREGORIAN0]: appendLabelledRow({
         prefix: "gregorian-dominical-letters",
@@ -617,11 +647,6 @@ const verbalEnglishWeekdayElements = {
     [Time.INTERNATIONAL_FIXED]: document.getElementById("verbal-english-ifc-weekday")
 }
 
-const weekNumberFirstFriday = document.getElementById("week-number-first-friday")
-const weekNumberFirstSaturday = document.getElementById("week-number-first-saturday")
-const weekNumberFirstSunday = document.getElementById("week-number-first-sunday")
-const weekNumberISO8601 = document.getElementById("week-number-iso-8601")
-const weekNumberIFC = document.getElementById("week-number-ifc")
 const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
 const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
 const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
