@@ -5,9 +5,14 @@ if (DEBUG_MODE) {
 }
 const MEASURE_FRAMES = DEBUG_MODE
 
+// The following gives me an error about time.js not being a module:
+// @typedef {import('./time.js').CalendarKind} CalendarKind
+// I don't want to change things to be a module, so just dupe the def. 
 /**
- * @typedef {import('./time.js').CalendarKind} CalendarKind
+ * @typedef {0|1|2} CalendarKind
  */
+
+/** @typedef {0|1|2} BoxSpecKind */
 
 /**
  * @template Value
@@ -17,6 +22,37 @@ const MEASURE_FRAMES = DEBUG_MODE
 /** @typedef {string} ElemIdPrefix */
 /** @typedef {ElemIdPrefix} ElemId */
 
+/** @typedef {number} Integer */
+
+/** @typedef {Integer} Days */
+/** @typedef {Integer} Hours */
+/** @typedef {Integer} G0Year */
+/** @typedef {Integer} J0Year */
+/** @typedef {Integer} IFCYear */
+/** @typedef {Integer} ZeroIndexedDayOfYear */
+/** @typedef {Integer} JulianDaysSinceJulianEpoch */
+
+/** @typedef {0|1|2|3|4|5|6} DayOfWeek */
+
+/** @typedef {number} EpochTime */
+/** @typedef {Integer} Millis */
+
+/** @typedef {Integer} Index */
+
+/** @typedef {number} Radians */
+
+/** @type {Radians} */
+const TAU = 2 * Math.PI
+
+/** @typedef {number} Scale */
+
+/** @typedef {number} X */
+/** @typedef {number} Y */
+
+/** @typedef {[X, Y]} XY */
+
+/** @typedef {number} W */
+/** @typedef {number} H */
 
 const displayedStep = document.getElementById("displayed-step");
 const raw = document.getElementById("raw");
@@ -95,7 +131,7 @@ const TIMEPIECE_IDS = [
 const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
 subsetNumber.value = ALL_TIMEPIECES_SUBSET
 
-/** @type {(substr: string) => BigInt} */
+/** @type {(substr: string) => bigint} */
 const subsetThatContains = (substr) => {
     let subset = 0n
     let bit = 1n
@@ -108,7 +144,7 @@ const subsetThatContains = (substr) => {
     return subset
 }
 
-/** @type {(args: {addID: ElemId, onlyID: ElemId, removeID: ElemId, subset: BigInt}) => void} */
+/** @type {(args: {addID: ElemId, onlyID: ElemId, removeID: ElemId, subset: bigint}) => void} */
 const setupCatergoryControls = ({addID, onlyID, removeID, subset}) => {
     const add = document.getElementById(addID);
     const onAdd = () => {
@@ -165,7 +201,7 @@ setupCatergoryControls({
 });
 
 
-/** @type {(mask: BigInt) => void} */
+/** @type {(mask: bigint) => void} */
 const setSubsetMask = (mask) => {
     subsetNumber.value = mask
 
@@ -179,7 +215,7 @@ const setSubsetMask = (mask) => {
     }
 }
 
-/** @type {() => BigInt} */
+/** @type {() => bigint} */
 const getCurrentSubsetMask = () => {
     let subset
     try {
@@ -230,7 +266,7 @@ const setStep = (step) => {
         displayedStep.textContent = "movement ×" + step.toLocaleString() + " " + humanReadableSIDurationFromMillis(step)
     }
 }
-/** @type {(time: number) => void} */
+/** @type {(time: EpochTime) => void} */
 const setFromTime = (time) => {
     inputRange.value = inputNumber.value = time
 }
@@ -495,8 +531,11 @@ const weekCardIFC = appendLabelledRow({
 
 /** @typedef {0|1|2} DateMode */
 
+/** @type {DateMode} */
 const PLAIN_DATE = 0;
+/** @type {DateMode} */
 const BASE_DAY_OF_MONTH_PLUS_ONE = 1;
+/** @type {DateMode} */
 const BASE_FACTORIAL = 2;
 const DATE_MODE_COUNT = 3;
 
@@ -513,7 +552,7 @@ const dateKeyFrom = (calendar, mode) => {
     return (calendar * DATE_MODE_COUNT) + mode
 }
 
-for (let mode = 0; mode < DATE_MODE_COUNT; mode += 1) {
+for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
     let modeClass;
     let modeName;
     switch (mode) {
@@ -534,7 +573,7 @@ for (let mode = 0; mode < DATE_MODE_COUNT; mode += 1) {
         break
     }
 
-    for (let calendar = 0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
+    for (let calendar = Time.GREGORIAN0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
         const key = dateKeyFrom(calendar, mode);
 
         let calendarClass;
@@ -620,8 +659,13 @@ const calendarElements = {
     [Time.JULIAN0]: appendCalendarElements("julian-calendar", "Julian"),
 }
 
+// TODO replace unknown
+/** @typedef {unknown} ClockLengths */
+
+/** @type {{[scale: number]: ClockLengths}} */
 let clockLengthsMemo = {}
 
+/** @type {(scale: number) => ClockLengths}} */
 const clockLengths = (scale) => {
     scale ||= 1
 
@@ -708,6 +752,7 @@ const DRAGONIC_MONTH_IN_MILLIS =
     + 35 * Time.SECOND_IN_MILLIS
     + 800
 
+/** @type {(n: number) => string}} */
 const toAtMost10Chars = (n) => {
     if (n > 999_999_999) {
         return ">999999999"
@@ -741,6 +786,10 @@ const toAtMost10Chars = (n) => {
     return eightSigFigs
 }
 
+
+/** @typedef {{ctx: CanvasRenderingContext2D, scale: number}} AnalogueClockCtx */
+
+/** @type {(id: ElemId, scale: number) => AnalogueClockCtx}} */
 const getAnalogueClockCtx = (id, scale) => {
     scale ||= 1
 
@@ -768,13 +817,14 @@ const analogueClockEmojiNumbersCtx = getAnalogueClockCtx("analogue-clock-emoji-n
 const analogueClockChineseTelegraphCtx = getAnalogueClockCtx("analogue-clock-chinese-telegraph", 2)
 const analogueClockChineseTelegraph24Ctx = getAnalogueClockCtx("analogue-clock-chinese-telegraph-24", 2)
 
-
+/** @type {(time: EpochTime) => void} */
 const setFromTimeAndRender = (time) => {
     inputMode = PAUSED
     setFromTime(time)
     renderAt(new Date(time))
 }
 
+/** @type {(radians: Radians, scale?: Scale, radiusScale?: Scale, xOffset?: W) => void} */
 const clockNumberCenterXYForRadians = (radians, scale, radiusScale, xOffset) => {
     scale ||= 1
     radiusScale ||= 1
@@ -786,6 +836,7 @@ const clockNumberCenterXYForRadians = (radians, scale, radiusScale, xOffset) => 
     ]
 };
 
+/** @type {(x: number) => string} */
 function lastBase12Digit(x){
     x = Math.floor(x)
     x %= 12
@@ -799,8 +850,10 @@ function lastBase12Digit(x){
     }
 }
 
+/** @type {(index: Index, divisor: Integer) => string} */
 const clockTextForIndex = (index, divisor) => "" + (index === 0 ? divisor : index);
 
+/** @type {(index: Index, divisor: Integer) => string} */
 const base12TextForIndex = (index, divisor) => {
     let n = index === 0 ? divisor : index
 
@@ -816,21 +869,21 @@ const base12TextForIndex = (index, divisor) => {
     return output
 }
 
+/** @type {(index: Index, divisor: Integer) => string} */
 const factorialTextForIndex = (index, divisor) => {
     const n = index === 0 ? divisor : index
 
     return FactorialBase.stringOf(n)
 }
 
+/** @type {(index: Index, divisor: Integer) => string} */
 const wordForIndex = (index, divisor) => {
     const n = index === 0 ? divisor : index
 
     return intToWords(n)
 }
 
-
-const TAU = 2 * Math.PI
-
+/** @type {(args: {index: Index, divisor: Integer, offset?: number, scale?: Scale, radiusScale?: Scale, xOffset?: W}) => XY} */
 const clockNumberCenterXYForIndex = ({index, divisor, offset, scale, radiusScale, xOffset}) => {
     // Note that the negatives here do happen to work out
     offset = offset === undefined ? -3 : offset
@@ -842,6 +895,7 @@ const clockNumberCenterXYForIndex = ({index, divisor, offset, scale, radiusScale
     )
 }
 
+/** @type {(millis: Millis) => string} */
 const humanReadableSIDurationFromMillis = (millis) => {
     if (millis < Time.SECOND_IN_MILLIS) {
         return "less than a second"
@@ -905,6 +959,7 @@ const humanReadableSIDurationFromMillis = (millis) => {
     .join(", ")
 }
 
+/** @type {(n: Integer) => Integer[]} */
 const range = (n) => {
     let output = new Array(n)
 
@@ -919,18 +974,22 @@ const range12 = range(12)
 const range24 = range(24)
 
 // TODO? Memoize these?
+/** @type {(index: Index, scale: Scale) => XY} */
 const twelveHourClockNumberXYForIndex = (index, scale) => {
     return clockNumberCenterXYForIndex({index, divisor: 12, scale})
 }
 
+/** @type {(index: Index, scale: Scale) => XY} */
 const twelveHourZeroOffsetClockNumberXYForIndex = (index, scale) => {
     return clockNumberCenterXYForIndex({index, divisor: 12, offset: 0, scale})
 }
 
+/** @type {(index: Index, scale: Scale) => XY} */
 const twentyFourHourClockNumberXYForIndex = (index, scale) => {
     return clockNumberCenterXYForIndex({index, divisor: 24, offset: -6, scale})
 }
 
+/** @type {(index: Index, scale: Scale) => XY} */
 const twentyFourHourClockVerbalXYForIndex = (index, scale) => {
     let radiusScale
     switch (index) {
@@ -975,27 +1034,37 @@ const twentyFourHourClockVerbalXYForIndex = (index, scale) => {
     return clockNumberCenterXYForIndex({index, divisor: 24, offset: -6, scale, radiusScale, xOffset})
 }
 
+/** @type {(scale: Scale) => XY[]} */
 const twelveHourClockNumberXYs = (scale) => range12.map(n => twelveHourClockNumberXYForIndex(n, scale))
+/** @type {(scale: Scale) => XY[]} */
 const twelveHourZeroOffsetClockNumberXYs = (scale) => range12.map(n => twelveHourZeroOffsetClockNumberXYForIndex(n, scale))
 
+/** @type {(scale: Scale) => XY[]} */
 const twentyFourHourClockNumberXYs = (scale) => range24.map(n => twentyFourHourClockNumberXYForIndex(n, scale))
+/** @type {(scale: Scale) => XY[]} */
 const twentyFourHourClockVerbalNumberXYs = (scale) => range24.map(n => twentyFourHourClockVerbalXYForIndex(n, scale))
 
+/** @type {(year: G0Year) => DayOfWeek} */
 const getDayOfWeekOfLastDayOfYear = (year) => (year + Math.floor(year/4) - Math.floor(year/100) + Math.floor(year/400)) % 7;
 
+/** @type {(year: G0Year) => number} */
 const getISO8601WeekCount = (year) => {
     const hasExtra = getDayOfWeekOfLastDayOfYear(year) === 4 || getDayOfWeekOfLastDayOfYear(year - 1) === 3
     return 52 + (hasExtra ? 1 : 0)
 }
 
+/** @type {(weekNumber: DayOfWeek) => DayOfWeek} */
 const sundayStartWeekNumberToMondayStart = (weekNumber) => {
     // + 6 is - 1 mod 7, and this keeps us on the positive side of 0
     return (weekNumber + 6) % 7;
 }
 
+/** @type {(date: Date) => DayOfWeek} */
 const getISO8601WeekNumber = (date) => {
     const year = date.getUTCFullYear()
-    const sundayWeekdayNumber = date.getUTCDay()
+    // Technically not correct because of NaN, but that only happnens 
+    // for `Date`s with a time value of NaN which we intend to avoid.
+    const sundayWeekdayNumber = /** @type DayOfWeek */ (date.getUTCDay());
     const weekdayNumber = sundayStartWeekNumberToMondayStart(sundayWeekdayNumber)
 
     const provisionalWeekNumber = Math.floor((10 + Time.get0IndexedDayOfYear(date) - weekdayNumber) / 7)
@@ -1009,6 +1078,7 @@ const getISO8601WeekNumber = (date) => {
     }
 }
 
+/** @type {(date: Date) => void} */
 const renderAt = (date) => {
     const time = date.getTime()
     setFromTime(time)
@@ -1071,6 +1141,7 @@ const renderAt = (date) => {
     // For -0
     fiveMinutesRounded = Math.abs(fiveMinutesRounded)
 
+    /** @type {(currentHours: Hours, nextHours: Hours, divisor: Integer) => string} */
     const getTimePhrase = (currentHours, nextHours, divisor) => {
         let timePhrase
         switch (fiveMinutesRounded) {
@@ -1497,6 +1568,7 @@ const hoursToWord = (n, divisor) => {
     return intToWords(n)
 }
 
+/** @type {{time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: XY[], topOfClockShift?: number, textForIndex?: string, rotationForIndex: (index: Index) => Radians} => void} */
 const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex, rotationForIndex}) => {
     divisor ||= 12
     numberXYs ||= twelveHourClockNumberXYs
@@ -1871,6 +1943,7 @@ playPause.onclick = () => {
     }
 };
 
+/** @type {(elements: CalendarElements, specs: CalendarSpecs) => void} */
 const applyCalendarSpecs = (
     {
         monthLabel,
@@ -1913,6 +1986,9 @@ const applyCalendarSpecs = (
     }
 }
 
+
+
+/** @type {({text: string, kind: BoxSpecKind, linkedTime: number}) => void} */
 const boxHtml = (
     {text, kind, linkedTime}
 ) => {
