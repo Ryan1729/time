@@ -7,7 +7,7 @@ const MEASURE_FRAMES = DEBUG_MODE
 
 // The following gives me an error about time.js not being a module:
 // @typedef {import('./time.js').CalendarKind} CalendarKind
-// I don't want to change things to be a module, so just dupe the def. 
+// I don't want to change things to be a module, so just dupe the def.
 /**
  * @typedef {0|1|2} CalendarKind
  */
@@ -24,6 +24,12 @@ const MEASURE_FRAMES = DEBUG_MODE
 
 /** @typedef {number} Integer */
 
+/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12} Month */
+/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31} DayOfMonth */
+
+/** @typedef {0|1|2|3|4|5|6|7|8|9|10|11} ZeroIndexedMonth */
+/** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|Time.IFC_ZERO_INDEXED_YEAR_DAY_MONTH} ZeroIndexedIFCMonth */
+
 /** @typedef {Integer} Days */
 /** @typedef {Integer} Hours */
 /** @typedef {Integer} G0Year */
@@ -33,6 +39,22 @@ const MEASURE_FRAMES = DEBUG_MODE
 /** @typedef {Integer} JulianDaysSinceJulianEpoch */
 
 /** @typedef {0|1|2|3|4|5|6} DayOfWeek */
+
+/** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23} ZeroIndexedHour */
+/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24} ZeroIndexedHour */
+
+/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31|31|32|33|34|35|36|37|38|39|40|41|41|42|43|44|45|46|47|48|49|50|51|52} PlayingCardNumber */
+
+// Return type technically not correct because of NaN, but that only happnens
+// for `Date`s with a time value of NaN which we intend to avoid.
+/** @type {(date: Date) => DayOfWeek} */
+const weekFromDate = (date) => /** @type {DayOfWeek} */ (date.getUTCDay());
+
+/** @type {(date: Date) => ZeroIndexedMonth} */
+const zeroIndexedMonthFromDate = (date) => /** @type {ZeroIndexedMonth} */ (date.getUTCMonth());
+
+/** @type {(date: Date) => DayOfMonth} */
+const dayOfMonthFromDate = (date) => /** @type {DayOfMonth} */ (date.getUTCDate());
 
 /** @typedef {number} EpochTime */
 /** @typedef {Integer} Millis */
@@ -1062,9 +1084,7 @@ const sundayStartWeekNumberToMondayStart = (weekNumber) => {
 /** @type {(date: Date) => DayOfWeek} */
 const getISO8601WeekNumber = (date) => {
     const year = date.getUTCFullYear()
-    // Technically not correct because of NaN, but that only happnens 
-    // for `Date`s with a time value of NaN which we intend to avoid.
-    const sundayWeekdayNumber = /** @type DayOfWeek */ (date.getUTCDay());
+    const sundayWeekdayNumber = weekFromDate(date);
     const weekdayNumber = sundayStartWeekNumberToMondayStart(sundayWeekdayNumber)
 
     const provisionalWeekNumber = Math.floor((10 + Time.get0IndexedDayOfYear(date) - weekdayNumber) / 7)
@@ -1110,8 +1130,8 @@ const renderAt = (date) => {
 
     analogueClockEmoji.textContent = analogueClockEmojiForHoursAndMinutes(hours12, minutes)
 
-    const zeroIndexedMonth = date.getUTCMonth()
-    const dayOfMonth = date.getUTCDate()
+    const zeroIndexedMonth = zeroIndexedMonthFromDate(date);
+    const dayOfMonth = dayOfMonthFromDate(date);
 
     chineseTelegraphMDH.innerHTML = chineseTelegraphSymbolForZeroIndexedMonth(zeroIndexedMonth)
         + chineseTelegraphSymbolForDayOfMonth(dayOfMonth)
@@ -1210,14 +1230,15 @@ const renderAt = (date) => {
         textForIndex: factorialTextForIndex,
         numberXYs: twentyFourHourClockNumberXYs,
         divisor: 24,
-        rotationForIndex: (i) =>
-            i === 23 || i === 0 || i === 1 || i === 11 || i === 12 || i === 13 ? TAU/4 : 0,
+        rotationForIndex: /** @type {RotationForIndex} */ ((i) =>
+            i === 23 || i === 0 || i === 1 || i === 11 || i === 12 || i === 13 ? TAU/4 : 0
+        ),
     })
     renderClock({
         time,
         ctx: analogueClockVerbalCtx,
         textForIndex: wordForIndex,
-        rotationForIndex: (i) => {
+        rotationForIndex: /** @type {RotationForIndex} */ (i) => {
             switch (i) {
                 case 3:
                     return TAU/4;
@@ -1235,7 +1256,7 @@ const renderAt = (date) => {
         ctx: analogueClockVerbal24Ctx,
         textForIndex: wordForIndex,
         numberXYs: twentyFourHourClockVerbalNumberXYs,
-        rotationForIndex: (i) => {
+        rotationForIndex: /** @type {RotationForIndex} */ (i) => {
             switch (i) {
                 case 11:
                     return TAU/8;
@@ -1246,11 +1267,13 @@ const renderAt = (date) => {
         divisor: 24
     })
     renderClock({time, ctx: analogueClock12ZeroOffsetCtx, numberXYs: twelveHourZeroOffsetClockNumberXYs, topOfClockShift: 0})
-    renderClock({time, ctx: analogueClockEmojiNumbersCtx, textForIndex: i => analogueClockEmojiForHoursAndMinutes(i == 0 ? 12 : i, 0)})
-    renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 12 : i)})
-    renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: i => chineseTelegraphSymbolForHour(i == 0 ? 24 : i), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
+    /** @type {TextForIndex} */
+    const emojiTextForIndex = i => analogueClockEmojiForHoursAndMinutes(i == 0 ? 12 : i, 0);
+    renderClock({time, ctx: analogueClockEmojiNumbersCtx, textForIndex: emojiTextForIndex })
+    renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i == 0 ? 12 : i))})
+    renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i == 0 ? 24 : i)), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
 
-    verbalEnglishWeekdayElements[Time.GREGORIAN0].textContent = weekdayWord(date.getUTCDay())
+    verbalEnglishWeekdayElements[Time.GREGORIAN0].textContent = weekdayWord(weekFromDate(date))
     const julian0YMD = Time.julian0YMD(date)
 
     verbalEnglishWeekdayElements[Time.JULIAN0].textContent = weekdayWord(Time.julian0DayOfWeek(julian0YMD))
@@ -1258,21 +1281,21 @@ const renderAt = (date) => {
     const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
 
     const ifcDayOfWeek = Time.ifcDayOfWeek(ifcMAndD)
-    verbalEnglishWeekdayElements[Time.INTERNATIONAL_FIXED].textContent = ifcDayOfWeek < 0 ? "No day of the week" : weekdayWord(ifcDayOfWeek)
+    verbalEnglishWeekdayElements[Time.INTERNATIONAL_FIXED].textContent = ifcDayOfWeek === -1 ? "No day of the week" : weekdayWord(/** */ifcDayOfWeek)
 
     const year = date.getUTCFullYear()
     const isLeap = Time.isGregorian0LeapYear(year)
 
     const startOfYear = Time.getStartOfYear(date)
 
-    const gregorianWeekdayNumberOfFirstDay = startOfYear.getUTCDay();
+    const gregorianWeekdayNumberOfFirstDay = weekFromDate(startOfYear);
 
     const DOMINICAL_LETTER_BY_WEEKDAY_NUMBER = ['A', 'G', 'F', 'E', 'D', 'C', 'B']
 
     let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorianWeekdayNumberOfFirstDay]
     if (isLeap) {
         const octoberFirst = Time.getGregorianOctoberFirst(date)
-        const octoberFirstWeekdayNumber = octoberFirst.getUTCDay()
+        const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
         dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
     }
     dominicalLettersElements[Time.GREGORIAN0].textContent = dominicalLetters;
@@ -1405,12 +1428,13 @@ const renderAt = (date) => {
                 : "Week " + weekCardNumberIFC + " of " + year;
     weekCardIFC.textContent = unicodePlayingCardForNumber(weekCardNumberIFC) + " of " + year
 
+    /** @type {Month} */
     const oneIndexedMonth = zeroIndexedMonth + 1
 
     const ifcOneIndexedMonth = ifcMAndD.zeroIndexedMonthNumber + 1
 
-    for (let mode = 0; mode < DATE_MODE_COUNT; mode += 1) {
-        for (let calendar = 0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
+    for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
+        for (let calendar = Time.GREGORIAN0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
             const key = dateKeyFrom(calendar, mode);
 
             const element = dateElements[key];
@@ -1531,6 +1555,7 @@ const renderAt = (date) => {
     dragonicMonth.textContent = toAtMost10Chars(time / DRAGONIC_MONTH_IN_MILLIS)
 }
 
+/** @type {(weekdayNumber: DayOfWeek) => string} */
 const weekdayWord = (weekdayNumber) => {
     switch (weekdayNumber) {
         default:
@@ -1560,6 +1585,7 @@ const weekdayWord = (weekdayNumber) => {
     }
 }
 
+/** @type {(n: Hours, divisor: Integer) => string} */
 const hoursToWord = (n, divisor) => {
     n = n % divisor
     if (n === 0) {
@@ -1568,7 +1594,10 @@ const hoursToWord = (n, divisor) => {
     return intToWords(n)
 }
 
-/** @type {{time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: XY[], topOfClockShift?: number, textForIndex?: string, rotationForIndex: (index: Index) => Radians} => void} */
+/** @typedef {(index: Index) => string} TextForIndex */
+/** @typedef {(index: Index) => Radians} RotationForIndex */
+
+/** @type {(args: {time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: XY[], topOfClockShift?: number, textForIndex?: (index: Index) => string, rotationForIndex?: (index: Index) => Radians) => void} */
 const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex, rotationForIndex}) => {
     divisor ||= 12
     numberXYs ||= twelveHourClockNumberXYs
@@ -1641,6 +1670,7 @@ const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForInd
     ctx.stroke()
 }
 
+/** @type {(n: Integer) => string} */
 const intToWords = (n) => {
     let output = ""
 
@@ -1673,7 +1703,10 @@ const intToWords = (n) => {
         }
     }
 
-    for (let [multipleOfTen, word] of [[90, "Ninety"], [80, "Eighty"], [70, "Seventy"], [60, "Sixty"], [50, "Fifty"], [40, "Forty"], [30, "Thirty"], [20, "Twenty"]]) {
+    /** @type {[number, string][]} */
+    const tensTuples = [[90, "Ninety"], [80, "Eighty"], [70, "Seventy"], [60, "Sixty"], [50, "Fifty"], [40, "Forty"], [30, "Thirty"], [20, "Twenty"]];
+
+    for (let [multipleOfTen, word] of tensTuples) {
         if (n === multipleOfTen) {
             output += word
             return output
@@ -1751,14 +1784,17 @@ const intToWords = (n) => {
     return output
 }
 
+/** @type {(n: Integer) => string} */
 const padToTwoDigits = (n) => {
     return (n < 10 ? "0" : "") + n
 }
 
+/** @type {(n: Integer) => string} */
 const padToTwoDigitsBase12 = (n) => {
     return (n < 12 ? "0" : lastBase12Digit(n/12)) + lastBase12Digit(n)
 }
 
+/** @type {(digits: Integer, toPad: Integer) => string} */
 const padToNDigitsBaseFactorial = (digits, toPad) => {
     let output = FactorialBase.stringOf(toPad)
 
@@ -1769,6 +1805,7 @@ const padToNDigitsBaseFactorial = (digits, toPad) => {
     return output
 }
 
+/** @type {(s: string) => string} */
 const padStringToTwoDigits = (s) => {
     return (s.length === 0 ? "00" : (s.length === 1 ? "0" : "")) + s
 }
@@ -1783,6 +1820,7 @@ const PLAYING_CARD_CHARS = [
 
 const JOKER_INDEX = 52
 
+/** @type {(n: number) => string} */
 const unicodePlayingCardForNumber = (n) => {
     return PLAYING_CARD_CHARS[n - 1] || PLAYING_CARD_CHARS[JOKER_INDEX]
 }
@@ -1814,6 +1852,7 @@ const ANALOGUE_CLOCK_CHARS = [
     "🕦",
 ]
 
+/** @type {(hours: Hours, minutes: Minutes) => string} */
 const analogueClockEmojiForHoursAndMinutes = (hours, minutes) => {
     let thirty
     if (minutes < 15) {
@@ -1844,10 +1883,12 @@ const CHINESE_TELEGRAPH_MONTH_CHARS = [
     "㋋"
 ]
 
+/** @type {(month: ZeroIndexedMonth) => string} */
 const chineseTelegraphSymbolForZeroIndexedMonth = (month) => {
     return CHINESE_TELEGRAPH_MONTH_CHARS[month]
 }
 
+/** @type {(month: ZeroIndexedMonth) => number} */
 const chineseTelegraphDigitsForZeroIndexedMonth = (month) => {
     return 9701 + month
 }
@@ -1886,10 +1927,12 @@ const CHINESE_TELEGRAPH_DAY_CHARS = [
     "㏾"
 ]
 
+/** @type {(dayOfMonth: DayOfMonth) => string} */
 const chineseTelegraphSymbolForDayOfMonth = (dayOfMonth) => {
     return CHINESE_TELEGRAPH_DAY_CHARS[dayOfMonth - 1]
 }
 
+/** @type {(dayOfMonth: DayOfMonth) => number} */
 const chineseTelegraphDigitsForDayOfMonth = (dayOfMonth) => {
     return 9900 + dayOfMonth
 }
@@ -1922,10 +1965,12 @@ const CHINESE_TELEGRAPH_HOUR_CHARS = [
     "㍰",
 ]
 
+/** @type {(hour: ZeroIndexedHour|OneIndexedHour) => string} */
 const chineseTelegraphSymbolForHour = (hour) => {
     return CHINESE_TELEGRAPH_HOUR_CHARS[hour]
 }
 
+/** @type {(hour: ZeroIndexedHour|OneIndexedHour) => string} */
 const chineseTelegraphDigitsForHour = (hour) => {
     return 9800 + hour
 }
@@ -1988,32 +2033,32 @@ const applyCalendarSpecs = (
 
 
 
-/** @type {({text: string, kind: BoxSpecKind, linkedTime: number}) => void} */
+/** @type {(args: {text: string, kind: BoxSpecKind, linkedTime: number}) => string} */
 const boxHtml = (
     {text, kind, linkedTime}
 ) => {
     let className;
-        switch (kind) {
-            default:
-                console.error("No classname for spec kind: " + kind)
-                // fallthrough
-            case Time.OTHER_MONTH:
-                className = "other-month"
-            break
-            case Time.CURRENT_MONTH:
-                className = "current-month"
-            break
-            case Time.CURRENT_DAY:
-                className = "current-day"
-            break
-        }
+    switch (kind) {
+        default:
+            console.error("No classname for spec kind: " + kind)
+            // fallthrough
+        case Time.OTHER_MONTH:
+            className = "other-month"
+        break
+        case Time.CURRENT_MONTH:
+            className = "current-month"
+        break
+        case Time.CURRENT_DAY:
+            className = "current-day"
+        break
+    }
 
     return `<div class="${className}" onclick="setFromTimeAndRender(${linkedTime})">
         ${text}
     </div>`
 }
 
-
+/** @type {() => void} */
 const renderStep = () => {
     const renderStart = MEASURE_FRAMES ? performance.now() : 0
     renderAt(new Date())

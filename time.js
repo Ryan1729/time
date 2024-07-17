@@ -1160,8 +1160,12 @@ var Time = (function () {
     }
 
     /** @typedef {0|1|2} Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
+    
+    /** @type Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
     const JOHN_WALKER = 0
+    /** @type Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
     const FLIEGEL_AND_VAN_FLANDERN = 1
+    /** @type Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
     const FLIEGEL_AND_VAN_FLANDERN_FLOORED = 2
 
     const GREGORIAN0_EPOCH = 1721425.5;
