@@ -1,7 +1,7 @@
 var Time = (function () {
     "use strict";
 
-    /** @typedef {0|1|2} CalendarKind */
+    /** @typedef {0|1|2|3} CalendarKind */
 
     /** @type {CalendarKind} */
     const GREGORIAN0 = 0
@@ -9,7 +9,10 @@ var Time = (function () {
     const INTERNATIONAL_FIXED = 1
     /** @type {CalendarKind} */
     const JULIAN0 = 2
-    const CALENDAR_KIND_COUNT = 3
+    //~ /** @type {CalendarKind} */
+    //~ const GREGORIAN1 = 3
+    
+    const CALENDAR_KIND_COUNT = 3//4
 
     const GREGORIAN0_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 

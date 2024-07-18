@@ -11,13 +11,14 @@ const MEASURE_FRAMES = DEBUG_MODE
 /**
  * @typedef {0|1|2} CalendarKind
  */
-
-/** @typedef {0|1|2} BoxSpecKind */
-
+// REMEBMER TO UPDATE ByCalendarKind IF ADDING TO CalendarKind
 /**
  * @template Value
- * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, } ]: Value; }} ByCalendarKind<Value>
+ * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown } ]: Value; }} ByCalendarKind<Value>
  * */
+
+
+/** @typedef {0|1|2} BoxSpecKind */
 
 /** @typedef {string} ElemIdPrefix */
 /** @typedef {ElemIdPrefix} ElemId */
@@ -28,7 +29,7 @@ const MEASURE_FRAMES = DEBUG_MODE
 /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31} DayOfMonth */
 
 /** @typedef {0|1|2|3|4|5|6|7|8|9|10|11} ZeroIndexedMonth */
-/** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|Time.IFC_ZERO_INDEXED_YEAR_DAY_MONTH} ZeroIndexedIFCMonth */
+/** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|13} ZeroIndexedIFCMonth */
 
 /** @typedef {Integer} Days */
 /** @typedef {Integer} Hours */
@@ -45,6 +46,7 @@ const MEASURE_FRAMES = DEBUG_MODE
 
 /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31|31|32|33|34|35|36|37|38|39|40|41|41|42|43|44|45|46|47|48|49|50|51|52} PlayingCardNumber */
 
+// TODO: Pull these functions into `Time` and use them everywhere we can
 // Return type technically not correct because of NaN, but that only happnens
 // for `Date`s with a time value of NaN which we intend to avoid.
 /** @type {(date: Date) => DayOfWeek} */
@@ -566,13 +568,13 @@ const DATE_MODE_COUNT = 3;
 
 /** @typedef {{ [_key in 0|1|2|3|4|5|6|7|8]: HTMLOutputElement; }} DateElements */
 
-/** @type {DateElements} */
-const dateElements = {}
-
 /** @type {(calendar: CalendarKind, mode: DateMode) => DateKey} */
 const dateKeyFrom = (calendar, mode) => {
     return (calendar * DATE_MODE_COUNT) + mode
 }
+
+/** @type {{ [_key in 0|1|2|3|4|5|6|7|8]?: HTMLOutputElement | undefined; }} */
+let dateElementsPartial = {}
 
 for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
     let modeClass;
@@ -614,13 +616,16 @@ for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
             break
         }
 
-        dateElements[key] = appendLabelledRow({
+        dateElementsPartial[key] = appendLabelledRow({
             prefix: `digital-${calendarClass}-${modeClass}`,
             outputClass: "digital",
             labelText: `(${calendarName(calendar)} date ${modeName})`,
         });
     }
 }
+
+/** @type {DateElements} */
+const dateElements = dateElementsPartial
 
 const julianDayJohnWalker = appendLabelledRow({
     prefix: "julian-day-john-walker",
@@ -1597,16 +1602,17 @@ const hoursToWord = (n, divisor) => {
 /** @typedef {(index: Index) => string} TextForIndex */
 /** @typedef {(index: Index) => Radians} RotationForIndex */
 
-/** @type {(args: {time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: XY[], topOfClockShift?: number, textForIndex?: (index: Index) => string, rotationForIndex?: (index: Index) => Radians) => void} */
-const renderClock = ({time, ctx, divisor, numberXYs, topOfClockShift, textForIndex, rotationForIndex}) => {
+/** @type {(args: {time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: (scale: Scale) => XY[], topOfClockShift?: number, textForIndex?: (index: Index) => string, rotationForIndex?: (index: Index) => Radians) => void} */
+const renderClock = ({time, ctx: ctxIn, divisor, numberXYs: numberXYsIn, topOfClockShift, textForIndex: textForIndexIn, rotationForIndex}) => {
     divisor ||= 12
-    numberXYs ||= twelveHourClockNumberXYs
+    /** @type {(scale: Scale) => XY[]} */
+    let numberXYs = numberXYsIn || twelveHourClockNumberXYs
     topOfClockShift = topOfClockShift === undefined ? -0.25 : topOfClockShift
-    textForIndex ||= clockTextForIndex
+    let textForIndex = textForIndexIn || clockTextForIndex
     rotationForIndex ||= () => 0;
 
-    const scale = ctx.scale
-    ctx = ctx.ctx
+    const scale = ctxIn.scale
+    ctx = ctxIn.ctx
 
     const lengths = clockLengths(scale)
 
