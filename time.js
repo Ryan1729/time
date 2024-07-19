@@ -9,10 +9,10 @@ var Time = (function () {
     const INTERNATIONAL_FIXED = 1
     /** @type {CalendarKind} */
     const JULIAN0 = 2
-    //~ /** @type {CalendarKind} */
-    //~ const GREGORIAN1 = 3
+    /** @type {CalendarKind} */
+    const GREGORIAN1 = 3
     
-    const CALENDAR_KIND_COUNT = 3//4
+    const CALENDAR_KIND_COUNT = 4
 
     const GREGORIAN0_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 
@@ -74,6 +74,9 @@ var Time = (function () {
     /** @typedef {Integer} IFCYear */
     /** @typedef {Integer} ZeroIndexedDayOfYear */
     /** @typedef {Integer} JulianDaysSinceJulianEpoch */
+
+    /** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23} ZeroIndexedHour */
+    /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24} OneIndexedHour */
 
     /** @typedef {Exclude<Integer, 0>} NonZeroInteger */
 
@@ -1071,6 +1074,9 @@ var Time = (function () {
         return startOfDay.getTime()
     }
 
+    /** @type {(n: number) => ZeroIndexedHour} */
+    const modToZeroIndexedHour = (n) => betterMod(n, 24);
+
     /** @typedef {0|1|2} BoxSpecKind */
 
     const OTHER_MONTH = 0
@@ -1229,6 +1235,7 @@ var Time = (function () {
         GREGORIAN0,
         INTERNATIONAL_FIXED,
         JULIAN0,
+        GREGORIAN1,
         CALENDAR_KIND_COUNT,
         G0,
         G1,
@@ -1261,6 +1268,7 @@ var Time = (function () {
         ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth,
         ifcLinkedTimeFromDayOfMonth,
         gregorianLinkedTimeFromDayOfMonth,
+        modToZeroIndexedHour,
         //
         // Some of these units exceed the integer precision of double precision floating point
         SI_YOTTAANNUM_IN_MILLIS,

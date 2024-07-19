@@ -9,12 +9,12 @@ const MEASURE_FRAMES = DEBUG_MODE
 // @typedef {import('./time.js').CalendarKind} CalendarKind
 // I don't want to change things to be a module, so just dupe the def.
 /**
- * @typedef {0|1|2} CalendarKind
+ * @typedef {0|1|2|3} CalendarKind
  */
 // REMEBMER TO UPDATE ByCalendarKind IF ADDING TO CalendarKind
 /**
  * @template Value
- * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown } ]: Value; }} ByCalendarKind<Value>
+ * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, [3]: unknown } ]: Value; }} ByCalendarKind<Value>
  * */
 
 
@@ -33,6 +33,7 @@ const MEASURE_FRAMES = DEBUG_MODE
 
 /** @typedef {Integer} Days */
 /** @typedef {Integer} Hours */
+/** @typedef {Integer} Minutes */
 /** @typedef {Integer} G0Year */
 /** @typedef {Integer} J0Year */
 /** @typedef {Integer} IFCYear */
@@ -42,7 +43,7 @@ const MEASURE_FRAMES = DEBUG_MODE
 /** @typedef {0|1|2|3|4|5|6} DayOfWeek */
 
 /** @typedef {0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23} ZeroIndexedHour */
-/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24} ZeroIndexedHour */
+/** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24} OneIndexedHour */
 
 /** @typedef {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|21|22|23|24|25|26|27|28|29|30|31|31|32|33|34|35|36|37|38|39|40|41|41|42|43|44|45|46|47|48|49|50|51|52} PlayingCardNumber */
 
@@ -127,8 +128,8 @@ const TIMEPIECE_IDS = [
     "week-card-first-sunday-row",
     "week-card-iso-8601-row",
     "week-card-ifc-row",
-    "gregorian-dominical-letters-row",
-    "julian-dominical-letters-row",
+    "gregorian-0-dominical-letters-row",
+    "julian-0-dominical-letters-row",
     "digital-gregorian-0-date-row",
     "digital-ifc-date-row",
     "digital-julian-0-date-row",
@@ -147,9 +148,9 @@ const TIMEPIECE_IDS = [
     "sideral-month-row",
     "anomalistic-month-row",
     "dragonic-month-row",
-    "gregorian-calendar",
+    "gregorian-0-calendar",
     "international-fixed-calendar",
-    "julian-calendar",
+    "julian-0-calendar",
 ]
 
 const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
@@ -229,8 +230,9 @@ setupCatergoryControls({
 const setSubsetMask = (mask) => {
     subsetNumber.value = mask
 
-    for (let i = 0n; i < TIMEPIECE_IDS.length; i += 1n) {
-        const element = document.getElementById(TIMEPIECE_IDS[i])
+    for (let index = 0; index < TIMEPIECE_IDS.length; index += 1) {
+        const element = document.getElementById(TIMEPIECE_IDS[index])
+
         if ((mask & (1n << i)) !== 0n) {
             element.style.display = "unset";
         } else {
@@ -421,13 +423,13 @@ const appendCalendarElements = (prefix, typeText) => {
     const extraBoxesLabel = document.createElement("div")
     extraBoxesLabel.id = prefix + "-extra-label"
     extraBoxesLabel.className = "thin-border-row center-text"
-    extraBoxesLabel.style = "display: none"
+    extraBoxesLabel.setAttribute("style", "display: none")
     outer.appendChild(extraBoxesLabel)
 
     const extraBoxes = document.createElement("div")
     extraBoxes.id = prefix + "-extra-boxes"
     extraBoxes.className = "seven-columns"
-    extraBoxes.style = "display: none"
+    extraBoxes.setAttribute("style", "display: none")
     outer.appendChild(extraBoxes)
 
     return {
@@ -471,7 +473,12 @@ const verbalEnglishWeekdayElements = {
         prefix: "verbal-english-julian-0-weekday",
         outputClass: "verbal",
         labelText: "(Julian 0 weekday)",
-    })
+    }),
+    [Time.GREGORIAN1]: appendLabelledRow({
+        prefix: "verbal-english-gregorian-1-weekday",
+        outputClass: "verbal",
+        labelText: "(Gregorian 1 weekday)",
+    }),
 }
 
 const weekNumberFirstFriday = appendLabelledRow({
@@ -507,9 +514,9 @@ const weekNumberIFC = appendLabelledRow({
 /** @type {ByCalendarKind<HTMLOutputElement>} */
 const dominicalLettersElements = {
     [Time.GREGORIAN0]: appendLabelledRow({
-        prefix: "gregorian-dominical-letters",
+        prefix: "gregorian-0-dominical-letters",
         outputClass: "verbal",
-        labelText: "(Gregorian Dominical Letters for Year)",
+        labelText: "(Gregorian 0 Dominical Letters for Year)",
     }),
     [Time.INTERNATIONAL_FIXED]: appendLabelledRow({
         prefix: "international-fixed-dominical-letters",
@@ -517,9 +524,14 @@ const dominicalLettersElements = {
         labelText: "(International Fixed Dominical Letters for Year)",
     }),
     [Time.JULIAN0]: appendLabelledRow({
-        prefix: "julian-dominical-letters",
+        prefix: "julian-0-dominical-letters",
         outputClass: "verbal",
-        labelText: "(Julian Dominical Letters for Year)",
+        labelText: "(Julian 0 Dominical Letters for Year)",
+    }),
+    [Time.GREGORIAN1]: appendLabelledRow({
+        prefix: "gregorian-1-dominical-letters",
+        outputClass: "verbal",
+        labelText: "(Gregorian 1 Dominical Letters for Year)",
     }),
 };
 
@@ -681,9 +693,10 @@ const dragonicMonth = appendLabelledRow({
 
 /** @type {ByCalendarKind<CalendarElements>} */
 const calendarElements = {
-    [Time.GREGORIAN0]: appendCalendarElements("gregorian-calendar", "Gregorian"),
+    [Time.GREGORIAN0]: appendCalendarElements("gregorian-0-calendar", "Gregorian 0"),
     [Time.INTERNATIONAL_FIXED]: appendCalendarElements("international-fixed-calendar", "International Fixed"),
-    [Time.JULIAN0]: appendCalendarElements("julian-calendar", "Julian"),
+    [Time.JULIAN0]: appendCalendarElements("julian-0-calendar", "Julian 0"),
+    [Time.GREGORIAN1]: appendCalendarElements("gregorian-1-calendar", "Gregorian 1"),
 }
 
 // TODO replace unknown
@@ -816,7 +829,7 @@ const toAtMost10Chars = (n) => {
 
 /** @typedef {{ctx: CanvasRenderingContext2D, scale: number}} AnalogueClockCtx */
 
-/** @type {(id: ElemId, scale: number) => AnalogueClockCtx}} */
+/** @type {(id: ElemId, scale?: number) => AnalogueClockCtx}} */
 const getAnalogueClockCtx = (id, scale) => {
     scale ||= 1
 
@@ -1113,11 +1126,15 @@ const renderAt = (date) => {
     for (let kind = Time.GREGORIAN0; kind < Time.CALENDAR_KIND_COUNT; kind += 1) {
         const specs = Time.calculateCalendarSpecs(kind, date);
 
-        applyCalendarSpecs(calendarElements[kind], specs)
+        const elements = calendarElements[kind];
+        // A guard against one being missing due to achange bein in 
+        // progress
+        if (!elements) { continue }
+        applyCalendarSpecs(elements, specs)
     }
 
-    const hours = date.getUTCHours(); // 0 - 23
-    const hours12 = hours % 12 // 0 - 11
+    const hours = /** @type ZeroIndexedHour */ (date.getUTCHours()); // 0 - 23
+    const hours12 = /** @type ZeroIndexedHour */ (hours % 12); // 0 - 11
     const minutes = date.getUTCMinutes(); // 0 - 59
     const seconds = date.getUTCSeconds(); // 0 - 59
 
@@ -1275,8 +1292,8 @@ const renderAt = (date) => {
     /** @type {TextForIndex} */
     const emojiTextForIndex = i => analogueClockEmojiForHoursAndMinutes(i == 0 ? 12 : i, 0);
     renderClock({time, ctx: analogueClockEmojiNumbersCtx, textForIndex: emojiTextForIndex })
-    renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i == 0 ? 12 : i))})
-    renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i == 0 ? 24 : i)), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
+    renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 12 : Time.modToZeroIndexedHour(i)))})
+    renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 24 : Time.modToZeroIndexedHour(i))), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
 
     verbalEnglishWeekdayElements[Time.GREGORIAN0].textContent = weekdayWord(weekFromDate(date))
     const julian0YMD = Time.julian0YMD(date)
@@ -1496,7 +1513,7 @@ const renderAt = (date) => {
                             element.textContent = `${FactorialBase.stringOf(year)}-${padToNDigitsBaseFactorial(3, ifcOneIndexedMonth)}-${padToNDigitsBaseFactorial(5, ifcMAndD.dayOfMonth)}`
                         break
                         case Time.JULIAN0:
-                            element.textContent = `${FactorialBase.stringOf(julian0YMD.j0Year)}-${padToNDigitsBaseFactorial(3, julian0YMD.j0Month)}-${padToNDigitsBaseFactorial(5, julian0YMD.j0dayOfMonth)}`
+                            element.textContent = `${FactorialBase.stringOf(julian0YMD.j0Year)}-${padToNDigitsBaseFactorial(3, julian0YMD.j0Month)}-${padToNDigitsBaseFactorial(5, julian0YMD.j0DayOfMonth)}`
                         break
                     }
                 break
