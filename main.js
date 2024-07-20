@@ -129,6 +129,7 @@ const TIMEPIECE_IDS = [
     "week-card-iso-8601-row",
     "week-card-ifc-row",
     "gregorian-0-dominical-letters-row",
+    "international-fixed-dominical-letters-row",
     "julian-0-dominical-letters-row",
     "digital-gregorian-0-date-row",
     "digital-ifc-date-row",
@@ -233,7 +234,7 @@ const setSubsetMask = (mask) => {
     for (let index = 0; index < TIMEPIECE_IDS.length; index += 1) {
         const element = document.getElementById(TIMEPIECE_IDS[index])
 
-        if ((mask & (1n << i)) !== 0n) {
+        if ((mask & (1n << BigInt(index))) !== 0n) {
             element.style.display = "unset";
         } else {
             element.style.display = "none";
@@ -454,6 +455,8 @@ const calendarName = (calendar) => {
             return "International Fixed"
         case Time.JULIAN0:
             return "Julian 0"
+        case Time.GREGORIAN1:
+            return "Gregorian 1"
     }
 }
 
