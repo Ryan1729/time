@@ -211,10 +211,10 @@ it(() => {
     // 1972 is a leap year
     const jan1G = new Date(1972, 0, 1)
 
-    const startOfJune = new Date(Time.gregorianLinkedTimeFromDayOfMonth(jan1G, 5, 1))
-    const startOfJuly = new Date(Time.gregorianLinkedTimeFromDayOfMonth(jan1G, 6, 1))
+    const startOfJune = new Date(Time.gregorian0LinkedTimeFromDayOfMonth(jan1G, 5, 1))
+    const startOfJuly = new Date(Time.gregorian0LinkedTimeFromDayOfMonth(jan1G, 6, 1))
 
-    const shouldBeStartOfJulyTime = Time.gregorianLinkedTimeFromDayOfMonth(startOfJune, 1, 1)
+    const shouldBeStartOfJulyTime = Time.gregorian0LinkedTimeFromDayOfMonth(startOfJune, 1, 1)
 
     const startOfJulyTime = startOfJuly.getTime()
 

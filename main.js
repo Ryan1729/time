@@ -134,12 +134,15 @@ const TIMEPIECE_IDS = [
     "digital-gregorian-0-date-row",
     "digital-ifc-date-row",
     "digital-julian-0-date-row",
+    "digital-gregorian-1-date-row",
     "digital-gregorian-0-date-base-day-of-month-plus-one-row",
     "digital-ifc-date-base-day-of-month-plus-one-row",
     "digital-julian-0-date-base-day-of-month-plus-one-row",
+    "digital-gregorian-1-date-base-day-of-month-plus-one-row",
     "digital-gregorian-0-date-base-factorial-row",
     "digital-ifc-date-base-factorial-row",
     "digital-julian-0-date-base-factorial-row",
+    "digital-gregorian-1-date-base-factorial-row",
     "julian-day-john-walker-row",
     "julian-day-fliegel-and-van-flandern-row",
     "metrological-seasons-north-row",
@@ -628,6 +631,9 @@ for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
             break
             case Time.JULIAN0:
                 calendarClass = "julian-0";
+            break
+            case Time.GREGORIAN1:
+                calendarClass = "gregorian-1";
             break
         }
 
@@ -1482,6 +1488,9 @@ const renderAt = (date) => {
                         case Time.JULIAN0:
                             element.textContent = `${julian0YMD.j0Year}-${padToTwoDigits(julian0YMD.j0Month)}-${padToTwoDigits(julian0YMD.j0DayOfMonth)}`
                         break
+                        case Time.GREGORIAN1:
+                            element.textContent = `${Time.gregorian1YearFromGregorian0Year(year)}-${padToTwoDigits(oneIndexedMonth)}-${padToTwoDigits(dayOfMonth)}`
+                        break
                     }
                 break
                 case BASE_DAY_OF_MONTH_PLUS_ONE:
@@ -1502,6 +1511,9 @@ const renderAt = (date) => {
                         case Time.JULIAN0:
                             element.textContent = `${julian0YMD.j0Year.toString(base)}-${padStringToTwoDigits(julian0YMD.j0Month.toString(base))}-${padStringToTwoDigits(julian0YMD.j0DayOfMonth.toString(base))}`
                         break
+                        case Time.GREGORIAN1:
+                            element.textContent = `${Time.gregorian1YearFromGregorian0Year(year).toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
+                        break
                     }
                 break
                 case BASE_FACTORIAL:
@@ -1517,6 +1529,9 @@ const renderAt = (date) => {
                         break
                         case Time.JULIAN0:
                             element.textContent = `${FactorialBase.stringOf(julian0YMD.j0Year)}-${padToNDigitsBaseFactorial(3, julian0YMD.j0Month)}-${padToNDigitsBaseFactorial(5, julian0YMD.j0DayOfMonth)}`
+                        break
+                        case Time.GREGORIAN1:
+                            element.textContent = `${FactorialBase.stringOf(Time.gregorian1YearFromGregorian0Year(year))}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
                         break
                     }
                 break

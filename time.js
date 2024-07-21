@@ -11,7 +11,7 @@ var Time = (function () {
     const JULIAN0 = 2
     /** @type {CalendarKind} */
     const GREGORIAN1 = 3
-    
+
     const CALENDAR_KIND_COUNT = 4
 
     const GREGORIAN0_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
@@ -95,6 +95,20 @@ var Time = (function () {
         )
     }
 
+    /** @type {(g0Year: Integer) => NonZeroInteger} */
+    const gregorian1YearFromGregorian0Year = (g0Year) => {
+        if (g0Year <= 0) {
+            g0Year -= 1;
+        }
+
+        return g0Year
+    }
+
+    /** @type {(date: Date) => NonZeroInteger} */
+    const gregorian1YearFromDate = (date) => {
+        return gregorian1YearFromGregorian0Year(date.getUTCFullYear())
+    }
+
     /** @typedef {{g1Year: NonZeroInteger, g1Month: Month, g1DayOfMonth: DayOfMonth}} G1YMD */
 
     const G1 = {
@@ -174,7 +188,7 @@ var Time = (function () {
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        return gregorianLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
+                        return gregorian0LinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
                     }
                 }
             break
@@ -319,6 +333,46 @@ var Time = (function () {
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
                         return julianLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
+                    }
+                }
+            break
+            case GREGORIAN1:
+                boundsProvider = {
+                    date,
+                    pageBounds() {
+                        const date = this.date
+
+                        const year = gregorian1YearFromDate(date)
+                        const month = date.getUTCMonth()
+                        const dayOfMonth = date.getUTCDate()
+
+                        const firstOfCurrentMonth = new Date(year, month, 1)
+
+                        // Using just `date` instead of firstOfCurrentMonth has timezone issues.
+                        const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
+
+                        const lastOfPreviousMonth = new Date(year, month, 0)
+
+                        const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
+                        const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
+                        const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
+                        const dayOfWeekOfFirstOfCurrent = firstOfCurrentMonth.getUTCDay()
+                        const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
+
+                        return {
+                            dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
+                            lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
+                            dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
+                            lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
+                            dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
+                            dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
+                            maxBoxesPerPage: 42,
+                            monthText,
+                            appearance: DEFAULT_APPEARANCE,
+                        };
+                    },
+                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
+                        return gregorian1LinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
                     }
                 }
             break
@@ -1036,9 +1090,19 @@ var Time = (function () {
     }
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const gregorianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+    const gregorian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
         const startOfDay = new Date(0);
         startOfDay.setUTCFullYear(date.getUTCFullYear())
+        startOfDay.setUTCMonth(date.getUTCMonth() + monthDelta)
+        startOfDay.setUTCDate(dayOfMonth)
+
+        return startOfDay.getTime()
+    }
+
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const gregorian1LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        const startOfDay = new Date(0);
+        startOfDay.setUTCFullYear(gregorian1YearFromDate(date))
         startOfDay.setUTCMonth(date.getUTCMonth() + monthDelta)
         startOfDay.setUTCDate(dayOfMonth)
 
@@ -1169,7 +1233,7 @@ var Time = (function () {
     }
 
     /** @typedef {0|1|2} Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
-    
+
     /** @type Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
     const JOHN_WALKER = 0
     /** @type Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm */
@@ -1249,6 +1313,7 @@ var Time = (function () {
         isJulian0LeapYear,
         julian0DayOfWeek,
         ifcDayOfWeek,
+        gregorian1YearFromGregorian0Year,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         IFC_ZERO_INDEXED_LEAP_MONTH,
         IFC_ZERO_INDEXED_YEAR_DAY_MONTH,
@@ -1267,7 +1332,8 @@ var Time = (function () {
         ifcZeroIndexedMonthAndDay,
         ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth,
         ifcLinkedTimeFromDayOfMonth,
-        gregorianLinkedTimeFromDayOfMonth,
+        gregorian0LinkedTimeFromDayOfMonth,
+        gregorian1LinkedTimeFromDayOfMonth,
         modToZeroIndexedHour,
         //
         // Some of these units exceed the integer precision of double precision floating point
