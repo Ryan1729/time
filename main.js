@@ -1136,7 +1136,7 @@ const renderAt = (date) => {
         const specs = Time.calculateCalendarSpecs(kind, date);
 
         const elements = calendarElements[kind];
-        // A guard against one being missing due to achange bein in 
+        // A guard against one being missing due to achange bein in
         // progress
         if (!elements) { continue }
         applyCalendarSpecs(elements, specs)
@@ -1304,41 +1304,64 @@ const renderAt = (date) => {
     renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 12 : Time.modToZeroIndexedHour(i)))})
     renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 24 : Time.modToZeroIndexedHour(i))), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
 
-    verbalEnglishWeekdayElements[Time.GREGORIAN0].textContent = weekdayWord(weekFromDate(date))
     const julian0YMD = Time.julian0YMD(date)
-
-    verbalEnglishWeekdayElements[Time.JULIAN0].textContent = weekdayWord(Time.julian0DayOfWeek(julian0YMD))
-
     const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
-
     const ifcDayOfWeek = Time.ifcDayOfWeek(ifcMAndD)
-    verbalEnglishWeekdayElements[Time.INTERNATIONAL_FIXED].textContent = ifcDayOfWeek === -1 ? "No day of the week" : weekdayWord(/** */ifcDayOfWeek)
 
     const year = date.getUTCFullYear()
     const isLeap = Time.isGregorian0LeapYear(year)
 
     const startOfYear = Time.getStartOfYear(date)
 
-    const gregorianWeekdayNumberOfFirstDay = weekFromDate(startOfYear);
+    const gregorian0WeekdayNumberOfFirstDay = weekFromDate(startOfYear);
 
     const DOMINICAL_LETTER_BY_WEEKDAY_NUMBER = ['A', 'G', 'F', 'E', 'D', 'C', 'B']
 
-    let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorianWeekdayNumberOfFirstDay]
-    if (isLeap) {
-        const octoberFirst = Time.getGregorianOctoberFirst(date)
-        const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
-        dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
+    for (let calendar = Time.GREGORIAN0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
+        const weekdayElement = verbalEnglishWeekdayElements[calendar]
+        const dominicalLettersElement = dominicalLettersElements[Time.GREGORIAN0]
+
+        switch (calendar) {
+            case Time.GREGORIAN0:
+                weekdayElement.textContent = weekdayWord(weekFromDate(date));
+
+                let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian0WeekdayNumberOfFirstDay]
+                if (isLeap) {
+                    const octoberFirst = Time.getGregorianOctoberFirst(date)
+                    const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
+                    dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
+                }
+                dominicalLettersElement.textContent = dominicalLetters;
+            break
+            case Time.JULIAN0:
+                weekdayElement.textContent = weekdayWord(Time.julian0DayOfWeek(julian0YMD));
+
+                dominicalLettersElement.textContent = Time.julian0DominicalLetters(julian0YMD);
+            break
+            case Time.INTERNATIONAL_FIXED:
+                weekdayElement.textContent = ifcDayOfWeek === -1 ? "No day of the week" : weekdayWord(/** */ifcDayOfWeek);
+
+                // This is an extension of the concept of dominical letters to the IFC invented for this program
+                // The reasoning goes something like if the kind of person that would invent the IFC heard about
+                // there being letters for representing which kinds of years there are, and that they count up
+                // from A, and then they just do the clearly sensible thing, somewhat smugly.
+                dominicalLettersElement.textContent = isLeap ? "B" : "A";
+            break
+            case Time.GREGORIAN1:
+                // Same as GREGORIAN0 because day of the week don't care what the year is. Leap years etc. don't affect it.
+                weekdayElement.textContent = weekdayWord(weekFromDate(date));
+
+                // TODO Implement this once we have the support functions for gregorian 1
+                //~ let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian1WeekdayNumberOfFirstDay]
+                //~ if (isLeap) {
+                    //~ const octoberFirst = Time.getGregorian1OctoberFirst(date)
+                    //~ const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
+                    //~ dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
+                //~ }
+                //~ dominicalLettersElement.textContent = dominicalLetters;
+            break
+        }
     }
-    dominicalLettersElements[Time.GREGORIAN0].textContent = dominicalLetters;
-
-    // This is an extention of the concept of dominical letters to the IFC invented for this program
-    // The reasoning goes something like if the kind of person that would invent the IFC heard about
-    // there being letters for representing which kinds of years there are, and that they count up
-    // from A, and then they just do the clearly sensible thing, somewhat smugly.
-    dominicalLettersElements[Time.INTERNATIONAL_FIXED].textContent = isLeap ? "B" : "A";
-
-    dominicalLettersElements[Time.JULIAN0].textContent = Time.julian0DominicalLetters(julian0YMD);
-
 
     ; // defensive semicolon because it happened more than once
     // here and took longer that I'd have liked to debug it.
@@ -1350,7 +1373,7 @@ const renderAt = (date) => {
 
     // IIFE for a fresh scope
     (() => {
-        const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * gregorianWeekdayNumberOfFirstDay);
+        const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * gregorian0WeekdayNumberOfFirstDay);
 
         let weekNumberCounter = 0;
         let weekNumberTime = firstDayOfFirstWeekTime;
@@ -1371,7 +1394,7 @@ const renderAt = (date) => {
 
     // IIFE for a fresh scope
     (() => {
-        const saturdayStartWeekdayNumberOfFirstDay = (gregorianWeekdayNumberOfFirstDay + 1) % 7;
+        const saturdayStartWeekdayNumberOfFirstDay = (gregorian0WeekdayNumberOfFirstDay + 1) % 7;
 
         const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * saturdayStartWeekdayNumberOfFirstDay);
 
@@ -1394,7 +1417,7 @@ const renderAt = (date) => {
 
     // IIFE for a fresh scope
     (() => {
-        const mondayStartWeekdayNumberOfFirstDay = sundayStartWeekNumberToMondayStart(gregorianWeekdayNumberOfFirstDay);
+        const mondayStartWeekdayNumberOfFirstDay = sundayStartWeekNumberToMondayStart(gregorian0WeekdayNumberOfFirstDay);
 
         const firstDayOfFirstWeekTime = startOfYear.getTime() - (Time.DAY_IN_MILLIS * mondayStartWeekdayNumberOfFirstDay);
 
