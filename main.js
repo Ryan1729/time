@@ -1319,19 +1319,19 @@ const renderAt = (date) => {
 
     for (let calendar = Time.GREGORIAN0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
         const weekdayElement = verbalEnglishWeekdayElements[calendar]
-        const dominicalLettersElement = dominicalLettersElements[Time.GREGORIAN0]
+        const dominicalLettersElement = dominicalLettersElements[calendar]
 
         switch (calendar) {
             case Time.GREGORIAN0:
                 weekdayElement.textContent = weekdayWord(weekFromDate(date));
 
-                let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian0WeekdayNumberOfFirstDay]
+                let g0DominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian0WeekdayNumberOfFirstDay]
                 if (isLeap) {
                     const octoberFirst = Time.getGregorianOctoberFirst(date)
                     const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
-                    dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
+                    g0DominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
                 }
-                dominicalLettersElement.textContent = dominicalLetters;
+                dominicalLettersElement.textContent = g0DominicalLetters;
             break
             case Time.JULIAN0:
                 weekdayElement.textContent = weekdayWord(Time.julian0DayOfWeek(julian0YMD));
@@ -1351,14 +1351,18 @@ const renderAt = (date) => {
                 // Same as GREGORIAN0 because day of the week don't care what the year is. Leap years etc. don't affect it.
                 weekdayElement.textContent = weekdayWord(weekFromDate(date));
 
-                // TODO Implement this once we have the support functions for gregorian 1
-                //~ let dominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian1WeekdayNumberOfFirstDay]
-                //~ if (isLeap) {
-                    //~ const octoberFirst = Time.getGregorian1OctoberFirst(date)
-                    //~ const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
-                    //~ dominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
-                //~ }
-                //~ dominicalLettersElement.textContent = dominicalLetters;
+                // This is makes a bit of an odd assumption, namely that we don't need to adjust anything for gregorian 1
+                // calculations besides the year number, implying that the year -3 is a leap year. We have a TODO
+                // elsewhere about fixing that
+                const gregorian1WeekdayNumberOfFirstDay = gregorian0WeekdayNumberOfFirstDay;
+
+                let g1DominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian1WeekdayNumberOfFirstDay]
+                if (isLeap) {
+                    const octoberFirst = Time.getGregorianOctoberFirst(date)
+                    const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
+                    g1DominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
+                }
+                dominicalLettersElement.textContent = g1DominicalLetters;
             break
         }
     }
@@ -2148,6 +2152,9 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 
 
 // TODO Have all four of gregorian with and without year 0, and julian with and without year 0, and clearly labelled
+// TODO The gregorain 0 stuff currently makes the assumption that the leap year calculation is unchanged, ignoring
+// TODO? Make more variations of leap years
+// TODO? Make a collapsible glossary of abbreviations and use them in the displayed text
 // TODO? Have IFC but without a year 0?
 // TODO show a calendar if no leap days were ever added, starting at time 0 for convenice
 //    Check if there isn't a name for this calendar, possibly with a different starting point
@@ -2164,9 +2171,6 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 // TODO show a gregorian calendar using a subset of the years that covers the possible years
 //   Maybe show 14 whole year calendars and show a dot jumping from day to day
 // TODO? The different types of whole year calendar thing but for the IFC? Or is that too boring?
-// TODO? show a 12 and 24 hour analogue clock with chinese telegraph digits? Or is that too boring? Also, a 12 hour verbal version
-// TODO show a continued Julian calendar
-// TODO show the Dominical letters for the given Julian year (https://en.wikipedia.org/wiki/Dominical_letter)
 // TODO show the day of the Pawukon as described in the article mentioned below. Apparently a particular date in the Julian calendar is a traditional base.
 //    https://en.wikipedia.org/wiki/Pawukon_calendar
 // TODO show French Republican decimal time
