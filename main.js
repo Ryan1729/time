@@ -114,10 +114,11 @@ const TIMEPIECE_IDS = [
     "analogue-clock-chinese-telegraph",
     "chinese-telegraph-month-day-hour-24",
     "analogue-clock-chinese-telegraph-24",
-    "chinese-telegraph-digits-month-day-hour",
+    "chinese-telegraph-digits-month-day-hour-row",
     "verbal-english-gregorian-0-weekday-row",
     "verbal-english-julian-0-weekday-row",
     "verbal-english-ifc-weekday-row",
+    "verbal-english-gregorian-1-weekday-row",
     "week-number-first-friday-row",
     "week-number-first-saturday-row",
     "week-number-first-sunday-row",
@@ -131,6 +132,7 @@ const TIMEPIECE_IDS = [
     "gregorian-0-dominical-letters-row",
     "international-fixed-dominical-letters-row",
     "julian-0-dominical-letters-row",
+    "gregorian-1-dominical-letters-row",
     "digital-gregorian-0-date-row",
     "digital-ifc-date-row",
     "digital-julian-0-date-row",
@@ -155,6 +157,7 @@ const TIMEPIECE_IDS = [
     "gregorian-0-calendar",
     "international-fixed-calendar",
     "julian-0-calendar",
+    "gregorian-1-calendar",
 ]
 
 const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
@@ -463,6 +466,228 @@ const calendarName = (calendar) => {
     }
 }
 
+/** @typedef {{ctx: CanvasRenderingContext2D, scale: number}} AnalogueClockCtx */
+
+/** @type {(id: ElemId, scale?: number) => AnalogueClockCtx}} */
+const getAnalogueClockCtx = (id, scale) => { // TODO: Still used?
+    scale ||= 1
+
+    const lengths = clockLengths(scale)
+
+    const canvas = document.getElementById(id)
+    canvas.width = lengths.clockWidth
+    canvas.height = lengths.clockHeight
+    return {
+        ctx: canvas.getContext("2d"),
+        scale,
+    };
+}
+
+// TODO replace unknown
+/** @typedef {unknown} ClockLengths */
+
+/** @type {{[scale: number]: ClockLengths}} */
+let clockLengthsMemo = {}
+
+/** @type {(scale: number) => ClockLengths}} */
+const clockLengths = (scale) => {
+    scale ||= 1
+
+    // TODO? Measure whether memoizing this was actually worth it?
+    if (!clockLengthsMemo[scale]) {
+        const clockWidth = 100 * scale
+        const clockHeight = 100 * scale
+        const clockX = clockWidth/2
+        const clockY = clockHeight/2
+        const clockRadius = clockWidth * 0.45
+        const clockNumberRadius = clockWidth * 0.375
+        const clockInnerEdgeRadius = clockRadius * 0.95
+        const clockSecondRadius = clockInnerEdgeRadius * 0.975
+        const clockMinuteRadius = clockInnerEdgeRadius * 0.95
+        const clockHourRadius = clockInnerEdgeRadius * 0.65
+
+        clockLengthsMemo[scale] = {
+            clockWidth,
+            clockHeight,
+            clockX,
+            clockY,
+            clockRadius,
+            clockNumberRadius,
+            clockInnerEdgeRadius,
+            clockSecondRadius,
+            clockMinuteRadius,
+            clockHourRadius,
+        }
+    }
+
+    return clockLengthsMemo[scale]
+}
+
+// TODO make these three functions compaosable/less duplicated?
+const appendVerbalAnaloguePair = ({
+    verbalId,
+    verbalClass,
+    analogueId,
+    analogueDescription,
+    analogueScale
+}) => {
+    let scale = analogueScale || 1;
+
+    const outer = document.createElement("div");
+    outer.className = "clock-row";
+
+    /** @type HTMLOutputElement */
+    const verbal = document.createElement("output");
+    verbal.id = verbalId;
+    verbal.className = verbalClass || "verbal";
+    outer.appendChild(verbal);
+
+    const lengths = clockLengths(scale)
+
+    const canvas = document.createElement("canvas");
+    canvas.id = analogueId;
+    canvas.innerText = analogueDescription;
+    canvas.width = lengths.clockWidth
+    canvas.height = lengths.clockHeight
+
+    outer.appendChild(canvas);
+
+    timepieces.appendChild(outer);
+
+    return {ctx: { ctx: canvas.getContext("2d"), scale }, verbal};
+}
+
+const appendVerbalClock = (id) => {
+    const outer = document.createElement("div");
+    outer.className = "clock-row";
+
+    /** @type HTMLOutputElement */
+    const verbal = document.createElement("output");
+    verbal.id = id;
+    verbal.className = "verbal";
+    outer.appendChild(verbal);
+
+    timepieces.appendChild(outer);
+
+    return verbal;
+}
+
+const appendAnalogueClock = ({
+    id,
+    description,
+    scale
+}) => {
+    scale ||= 1;
+
+    const outer = document.createElement("div");
+    outer.className = "clock-row";
+
+    const lengths = clockLengths(scale)
+
+    const canvas = document.createElement("canvas");
+    canvas.id = id;
+    canvas.innerText = description;
+    canvas.width = lengths.clockWidth
+    canvas.height = lengths.clockHeight
+
+    outer.appendChild(canvas);
+
+    timepieces.appendChild(outer);
+
+    return { ctx: canvas.getContext("2d"), scale };
+}
+
+const {ctx: analogueClock12Ctx, verbal: digitalClock12} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-12",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-12",
+    analogueDescription: "A standard analogue clock.",
+});
+
+const {ctx: analogueClock24Ctx, verbal: digitalClock24} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-24",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-24",
+    analogueDescription: "A 24-hour analogue clock.",
+});
+
+const {ctx: analogueClockBase12Ctx, verbal: digitalClockBase12} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-base-12",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-base-12",
+    analogueDescription: "A standard analogue clock with X, E, and 10 instead of 10, 11 and 12 respevtively.",
+});
+
+const {ctx: analogueClock24Base12Ctx, verbal: digitalClock24Base12} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-24-base-12",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-24-base-12",
+    analogueDescription: "A 24-hour analogue clock with X, E, and 10 instead of 10, 11 and 12 respevtively, and so on up to 23 being 1E, and 24 being 20.",
+});
+
+const {ctx: analogueClockBaseFactorialCtx, verbal: digitalClockBaseFactorial} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-base-factorial",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-base-factorial",
+    analogueDescription: "A standard analogue clock that uses the factorial number system (sans trailing 0) to represent the numbers from 1 to 12",
+});
+
+const {ctx: analogueClock24BaseFactorialCtx, verbal: digitalClock24BaseFactorial} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-24-base-factorial",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-24-base-factorial",
+    analogueDescription: "A 24-hour analogue clock that uses the factorial number system (sans trailing 0) to represent the numbers from 1 to 24",
+    analogueScale: 2,
+});
+
+const {ctx: analogueClockVerbalCtx, verbal: verbalClock} = appendVerbalAnaloguePair({
+    verbalId: "verbal-clock",
+    analogueId: "analogue-clock-verbal",
+    analogueDescription: "A standard analogue clock that uses words instead of numbers",
+    analogueScale: 2,
+});
+
+const {ctx: analogueClockVerbal24Ctx, verbal: verbalClock24} = appendVerbalAnaloguePair({
+    verbalId: "verbal-clock-24",
+    analogueId: "analogue-clock-verbal-24",
+    analogueDescription: "A 24-hour analogue clock that uses words instead of numbers",
+    analogueScale: 2,
+});
+
+const verbalTime = appendVerbalClock("verbal-time");
+
+const analogueClock12ZeroOffsetCtx = appendAnalogueClock({
+    id: "analogue-clock-12-0-offset",
+    description: "A standard analogue clock but rotated so that the 12 is on the far right.",
+});
+
+const {ctx: analogueClockEmojiNumbersCtx, verbal: analogueClockEmoji} = appendVerbalAnaloguePair({
+    verbalId: "analogue-clock-emoji",
+    analogueId: "analogue-clock-emoji-numbers",
+    analogueDescription: "A standard analogue clock that uses analogue clock emoji instead of numbers",
+    analogueScale: 2,
+});
+
+const {ctx: analogueClockChineseTelegraphCtx, verbal: chineseTelegraphMDH} = appendVerbalAnaloguePair({
+    verbalId: "chinese-telegraph-month-day-hour",
+    analogueId: "analogue-clock-chinese-telegraph",
+    analogueDescription: "A standard analogue clock that uses chinese telegraph hour symbols instead of numbers",
+    analogueScale: 2,
+});
+
+const {ctx: analogueClockChineseTelegraph24Ctx, verbal: chineseTelegraphMDH24} = appendVerbalAnaloguePair({
+    verbalId: "chinese-telegraph-month-day-hour-24",
+    analogueId: "analogue-clock-chinese-telegraph-24",
+    analogueDescription: "A 24-hour analogue clock that uses chinese telegraph hour symbols instead of numbers",
+    analogueScale: 2,
+});
+
+const chineseTelegraphDigitsMDH = appendLabelledRow({
+    prefix: "chinese-telegraph-digits-month-day-hour",
+    outputClass: "verbal",
+    labelText: "(Chinese Telegraph Month Day Hour digits)",
+})
+
 /** @type {ByCalendarKind<HTMLOutputElement>} */
 const verbalEnglishWeekdayElements = {
     [Time.GREGORIAN0]: appendLabelledRow({
@@ -708,62 +933,6 @@ const calendarElements = {
     [Time.GREGORIAN1]: appendCalendarElements("gregorian-1-calendar", "Gregorian 1"),
 }
 
-// TODO replace unknown
-/** @typedef {unknown} ClockLengths */
-
-/** @type {{[scale: number]: ClockLengths}} */
-let clockLengthsMemo = {}
-
-/** @type {(scale: number) => ClockLengths}} */
-const clockLengths = (scale) => {
-    scale ||= 1
-
-    // TODO? Measure whether memoizing this was actually worth it?
-    if (!clockLengthsMemo[scale]) {
-        const clockWidth = 100 * scale
-        const clockHeight = 100 * scale
-        const clockX = clockWidth/2
-        const clockY = clockHeight/2
-        const clockRadius = clockWidth * 0.45
-        const clockNumberRadius = clockWidth * 0.375
-        const clockInnerEdgeRadius = clockRadius * 0.95
-        const clockSecondRadius = clockInnerEdgeRadius * 0.975
-        const clockMinuteRadius = clockInnerEdgeRadius * 0.95
-        const clockHourRadius = clockInnerEdgeRadius * 0.65
-
-        clockLengthsMemo[scale] = {
-            clockWidth,
-            clockHeight,
-            clockX,
-            clockY,
-            clockRadius,
-            clockNumberRadius,
-            clockInnerEdgeRadius,
-            clockSecondRadius,
-            clockMinuteRadius,
-            clockHourRadius,
-        }
-    }
-
-    return clockLengthsMemo[scale]
-}
-
-const digitalClock12 = document.getElementById("digital-clock-12")
-const digitalClock24 = document.getElementById("digital-clock-24")
-const digitalClockBase12 = document.getElementById("digital-clock-base-12")
-const digitalClock24Base12 = document.getElementById("digital-clock-24-base-12")
-const digitalClockBaseFactorial = document.getElementById("digital-clock-base-factorial")
-const digitalClock24BaseFactorial = document.getElementById("digital-clock-24-base-factorial")
-
-const verbalClock = document.getElementById("verbal-clock")
-const verbalClock24 = document.getElementById("verbal-clock-24")
-const verbalTime = document.getElementById("verbal-time")
-
-const analogueClockEmoji = document.getElementById("analogue-clock-emoji")
-const chineseTelegraphMDH = document.getElementById("chinese-telegraph-month-day-hour")
-const chineseTelegraphMDH24 = document.getElementById("chinese-telegraph-month-day-hour-24")
-const chineseTelegraphDigitsMDH = document.getElementById("chinese-telegraph-digits-month-day-hour")
-
 // Month durations as written in
 // https://archive.org/details/astronomicalalmanac1961/page/n117/mode/1up
 const SYNODIC_MONTH_IN_MILLIS =
@@ -834,37 +1003,6 @@ const toAtMost10Chars = (n) => {
 
     return eightSigFigs
 }
-
-
-/** @typedef {{ctx: CanvasRenderingContext2D, scale: number}} AnalogueClockCtx */
-
-/** @type {(id: ElemId, scale?: number) => AnalogueClockCtx}} */
-const getAnalogueClockCtx = (id, scale) => {
-    scale ||= 1
-
-    const lengths = clockLengths(scale)
-
-    const canvas = document.getElementById(id)
-    canvas.width = lengths.clockWidth
-    canvas.height = lengths.clockHeight
-    return {
-        ctx: canvas.getContext("2d"),
-        scale,
-    };
-}
-
-const analogueClock12Ctx = getAnalogueClockCtx("analogue-clock-12")
-const analogueClock24Ctx = getAnalogueClockCtx("analogue-clock-24")
-const analogueClockBase12Ctx = getAnalogueClockCtx("analogue-clock-base-12")
-const analogueClock24Base12Ctx = getAnalogueClockCtx("analogue-clock-24-base-12")
-const analogueClockBaseFactorialCtx = getAnalogueClockCtx("analogue-clock-base-factorial")
-const analogueClock24BaseFactorialCtx = getAnalogueClockCtx("analogue-clock-24-base-factorial", 2)
-const analogueClockVerbalCtx = getAnalogueClockCtx("analogue-clock-verbal", 2)
-const analogueClockVerbal24Ctx = getAnalogueClockCtx("analogue-clock-verbal-24", 2)
-const analogueClock12ZeroOffsetCtx = getAnalogueClockCtx("analogue-clock-12-0-offset")
-const analogueClockEmojiNumbersCtx = getAnalogueClockCtx("analogue-clock-emoji-numbers", 2)
-const analogueClockChineseTelegraphCtx = getAnalogueClockCtx("analogue-clock-chinese-telegraph", 2)
-const analogueClockChineseTelegraph24Ctx = getAnalogueClockCtx("analogue-clock-chinese-telegraph-24", 2)
 
 /** @type {(time: EpochTime) => void} */
 const setFromTimeAndRender = (time) => {
