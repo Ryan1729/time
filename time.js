@@ -947,7 +947,7 @@ var Time = (function () {
         return gregorian0YMDToJulian0(gregorian0YMD(date))
     }
 
-    /** @type {(date: Date) => J0YMD} */
+    /** @type {(date: Date) => G1YMD} */
     const gregorian1YMD = (date) => {
         return gregorian0YMDToGregorian1(gregorian0YMD(date))
     }

@@ -17,11 +17,20 @@ const MEASURE_FRAMES = DEBUG_MODE
  * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, [3]: unknown } ]: Value; }} ByCalendarKind<Value>
  * */
 
+/** @typedef {0|1|2} CalendarAppearance */
 
 /** @typedef {0|1|2} BoxSpecKind */
 
+/** @typedef {{text: string|number, kind: BoxSpecKind, linkedTime: Integer}} BoxSpec */
+
+/** @typedef {BoxSpec[]} BoxSpecs */
+
+/** @typedef {{ monthText: string, boxSpecs: BoxSpecs, appearance: CalendarAppearance }} CalendarSpecs */
+
 /** @typedef {string} ElemIdPrefix */
 /** @typedef {ElemIdPrefix} ElemId */
+
+/** @typedef {string} ClassName */
 
 /** @typedef {number} Integer */
 
@@ -337,7 +346,7 @@ let startClientY;
 inputRange.addEventListener("pointerdown", (e) => {
     startClientY = e.clientY
 
-    l = inputRange.addEventListener("pointermove", (e) => {
+    inputRange.addEventListener("pointermove", (e) => {
       const yDelta = Math.abs(startClientY - e.clientY)
 
       const PIXELS_PER_STEP = 16;
@@ -415,7 +424,7 @@ const appendCalendarElements = (prefix, typeText) => {
     weekLabels.id = prefix + "-week-labels"
     weekLabels.className = "seven-columns thin-border-row"
 
-    for (weekday of ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]) {
+    for (const weekday of ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]) {
         const el = document.createElement("div")
         el.innerText = weekday
         weekLabels.appendChild(el)
@@ -523,7 +532,11 @@ const clockLengths = (scale) => {
     return clockLengthsMemo[scale]
 }
 
+
+/** @typedef {{ ctx: AnalogueClockCtx, verbal: HTMLOutputElement }} VerbalAnaloguePair */
+
 // TODO make these three functions compaosable/less duplicated?
+/** @type {(args: {verbalId: ElemId, verbalClass?: ClassName, analogueId: ElemId, analogueDescription: string, analogueScale?: Scale }) => VerbalAnaloguePair} */
 const appendVerbalAnaloguePair = ({
     verbalId,
     verbalClass,
@@ -557,6 +570,7 @@ const appendVerbalAnaloguePair = ({
     return {ctx: { ctx: canvas.getContext("2d"), scale }, verbal};
 }
 
+/** @type {(id: ElemId) => HTMLOutputElement} */
 const appendVerbalClock = (id) => {
     const outer = document.createElement("div");
     outer.className = "clock-row";
@@ -572,6 +586,7 @@ const appendVerbalClock = (id) => {
     return verbal;
 }
 
+/** @type {(args: {id: ElemId, description: string, scale?: Scale}) => AnalogueClockCtx} */
 const appendAnalogueClock = ({
     id,
     description,
@@ -1210,6 +1225,7 @@ const twentyFourHourClockVerbalXYForIndex = (index, scale) => {
             radiusScale = 0.85
         break
     }
+    let xOffset;
     switch (index) {
         case 1:
             xOffset = 12
@@ -1812,7 +1828,7 @@ const renderClock = ({time, ctx: ctxIn, divisor, numberXYs: numberXYsIn, topOfCl
     rotationForIndex ||= () => 0;
 
     const scale = ctxIn.scale
-    ctx = ctxIn.ctx
+    let ctx = ctxIn.ctx
 
     const lengths = clockLengths(scale)
 
@@ -2239,7 +2255,7 @@ const applyCalendarSpecs = (
 
 
 
-/** @type {(args: {text: string, kind: BoxSpecKind, linkedTime: number}) => string} */
+/** @type {(args: BoxSpec) => string} */
 const boxHtml = (
     {text, kind, linkedTime}
 ) => {
