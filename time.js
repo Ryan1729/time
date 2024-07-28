@@ -72,6 +72,7 @@ var Time = (function () {
     /** @typedef {Integer} G0Year */
     /** @typedef {Integer} J0Year */
     /** @typedef {Integer} IFCYear */
+    /** @typedef {Exclude<Integer, 0>} G1Year */
     /** @typedef {Integer} ZeroIndexedDayOfYear */
     /** @typedef {Integer} JulianDaysSinceJulianEpoch */
 
@@ -315,7 +316,7 @@ var Time = (function () {
 
                         const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.j0DayOfMonth
                         const dayOfWeekOfLastOfPrevious = julian0DayOfWeek(lastOfPreviousMonthYmd)
-                        const lastDateOfCurrentMonth = julianOneIndexedMonthLength({year: ymd.j0Year, month: ymd.j0Month})
+                        const lastDateOfCurrentMonth = julian0OneIndexedMonthLength({year: ymd.j0Year, month: ymd.j0Month})
                         const dayOfWeekOfFirstOfCurrent = julian0DayOfWeek({...ymd, j0DayOfMonth: 1})
                         const dayOfWeekOfFirstOfNext = julian0DayOfWeek(rollJulian0YMDByDays(ymd, lastDateOfCurrentMonth - ymd.j0DayOfMonth + 1))
 
@@ -353,7 +354,7 @@ var Time = (function () {
 
                             const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.g1DayOfMonth
                             const dayOfWeekOfLastOfPrevious = gregorian1DayOfWeek(lastOfPreviousMonthYmd)
-                            const lastDateOfCurrentMonth = gregorianOneIndexedMonthLength({year: ymd.g1Year, month: ymd.g1Month})
+                            const lastDateOfCurrentMonth = gregorian1OneIndexedMonthLength({year: ymd.g1Year, month: ymd.g1Month})
                             const dayOfWeekOfFirstOfCurrent = gregorian1DayOfWeek({...ymd, g1DayOfMonth: 1})
                             const dayOfWeekOfFirstOfNext = gregorian1DayOfWeek(rollGregorian1YMDByDays(ymd, lastDateOfCurrentMonth - ymd.g1DayOfMonth + 1))
 
@@ -447,9 +448,18 @@ var Time = (function () {
         return (year & 3) === 0
     }
 
-    /** @typedef {DayOfWeek} JulianDayOfWeek */
+    // TODO: consider adding an algorithm paramter here, and propagating
+    // that as an option upwards.
+    // Possible options:
+    // * isGregorian0LeapYear
+    // * isGregorian0LeapYear(y < 0 ? y + 1 : y)
+    // Others?
+    /** @type {(year: Integer) => boolean} */
+    const isGregorian1LeapYear = isGregorian0LeapYear;
 
-    /** @type {(j0YMD: J0YMD) => JulianDayOfWeek} */
+    /** @typedef {DayOfWeek} Julian0DayOfWeek */
+
+    /** @type {(j0YMD: J0YMD) => Julian0DayOfWeek} */
     const julian0DayOfWeek = (j0YMD) => {
         let n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
 
@@ -460,7 +470,23 @@ var Time = (function () {
             n += (-n) * DAYS_IN_WEEK
         }
         // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
-        return /** @type {JulianDayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
+        return /** @type {Julian0DayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
+    }
+
+    /** @typedef {DayOfWeek} Gregorian1DayOfWeek */
+
+    /** @type {(g1YMD: G1YMD) => Gregorian1DayOfWeek} */
+    const gregorian1DayOfWeek = (g1YMD) => {
+        let n = Math.floor(gregorian1YMDToJulianDaysSinceJulianEpoch(g1YMD))
+
+        // Map it to a positive number with the same modulous
+        // by adding a number we know is large enough, and is
+        // 0 after modding
+        if (n < 0) {
+            n += (-n) * DAYS_IN_WEEK
+        }
+        // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
+        return /** @type {Gregorian1DayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
     }
 
     /** @type {(n: Integer, modBy: Integer) => Integer} */
@@ -512,7 +538,7 @@ var Time = (function () {
 
     /** @type {(j0YMD: J0YMD, offsetInDays: Days) => J0YMD} */
     const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
-        let currentMonthLength = julianOneIndexedMonthLength({year: j0Year, month: j0Month})
+        let currentMonthLength = julian0OneIndexedMonthLength({year: j0Year, month: j0Month})
 
         let outYear = j0Year
         let outMonth = j0Month
@@ -531,7 +557,7 @@ var Time = (function () {
             }
             // We know outMonth is 1 to 12 now, given previous assumptions
 
-            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+            currentMonthLength = julian0OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
         }
 
         // TODO skip over years at once so we don't need to loop so
@@ -544,11 +570,62 @@ var Time = (function () {
                 outMonth = 12;
             }
             // We know outMonth is 1 to 12 now, given previous assumptions
-            currentMonthLength = julianOneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+            currentMonthLength = julian0OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
             outDayOfMonth += currentMonthLength;
         }
 
         return J0.ymd(
+            outYear,
+            outMonth,
+            /** @type {DayOfMonth} */ (outDayOfMonth),
+        )
+    }
+
+    /** @type {(g1YMD: G1YMD, offsetInDays: Days) => G1YMD} */
+    const rollGregorian1YMDByDays = ({g1Year, g1Month, g1DayOfMonth}, offsetInDays) => {
+        let currentMonthLength = gregorian1OneIndexedMonthLength({year: g1Year, month: g1Month})
+
+        let outYear = g1Year
+        let outMonth = g1Month
+        let outDayOfMonth = g1DayOfMonth + offsetInDays
+
+        // TODO skip over years at once so we don't need to loop so
+        // many times
+        while (outDayOfMonth > currentMonthLength) {
+            outDayOfMonth -= currentMonthLength;
+
+            outMonth += 1;
+            // We know outMonth is 2 to 13 now assuming outMonth was 1 to 12
+            if (outMonth > 12) {
+                outYear += 1;
+                if (outYear === 0) {
+                    outYear += 1;
+                }
+                outMonth = 1;
+            }
+            // We know outMonth is 1 to 12 now, given previous assumptions
+
+            currentMonthLength = gregorian1OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+        }
+
+        // TODO skip over years at once so we don't need to loop so
+        // many times
+        while (outDayOfMonth < 1) {
+            // We know outMonth is 0 to 11 now assuming outMonth was 1 to 12
+            outMonth -= 1;
+            if (outMonth < 1) {
+                outYear -= 1;
+                if (outYear === 0) {
+                    outYear -= 1;
+                }
+                outMonth = 12;
+            }
+            // We know outMonth is 1 to 12 now, given previous assumptions
+            currentMonthLength = gregorian1OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+            outDayOfMonth += currentMonthLength;
+        }
+
+        return G1.ymd(
             outYear,
             outMonth,
             /** @type {DayOfMonth} */ (outDayOfMonth),
@@ -914,11 +991,31 @@ var Time = (function () {
     }
 
     /** @type {(arg: {year: J0Year, month: Month}) => DayOfMonth} */
-    const julianOneIndexedMonthLength = ({year, month}) => {
+    const julian0OneIndexedMonthLength = ({year, month}) => {
         /** @type {LengthOfMonth[]} */
         const MONTH_LENGTHS = [
             31,
             isJulian0LeapYear(year) ? 29 : 28,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
+        ]
+        return MONTH_LENGTHS[month - 1]
+    }
+
+    /** @type {(arg: {year: G1Year, month: Month}) => DayOfMonth} */
+    const gregorian1OneIndexedMonthLength = ({year, month}) => {
+        /** @type {LengthOfMonth[]} */
+        const MONTH_LENGTHS = [
+            31,
+            isGregorian1LeapYear(year) ? 29 : 28,
             31,
             30,
             31,
@@ -979,6 +1076,35 @@ var Time = (function () {
         }
 
         return rollGregorian0YMDByDays(j0ToG0Dumb(j0YMD), daysDifference)
+    }
+
+    /** @type {(g0YMD: G0YMD) => G1YMD} */
+    const gregorian0YMDToGregorian1 = (g0YMD) => {
+        let daysDifference = gregorian1DaysDifferenceFromGregorian0YMD(g0YMD)
+
+        // This may implicitly assume that Every Gregorian 0 leap year is a Gregorian 1 one as well
+        return rollGregorian1YMDByDays(G1.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
+    }
+
+    /** @type {(g1YMD: G1YMD) => G0YMD} */
+    const gregorian1YMDToGregorian0 = (g1YMD) => {
+        let daysDifference = gregorian0DaysDifferenceFromGregorian1YMD(g1YMD)
+
+        // Being dumb is often the first step to being smart
+        /** @type {(g1YMD: G1YMD) => G0YMD} */
+        const g1ToG0Dumb = ({g1Year, g1Month, g1DayOfMonth}) => {
+            if (
+                g1Month === 2
+                && g1DayOfMonth === 29
+                && isGregorian1LeapYear(g1Year)
+                && !isGregorian0LeapYear(g1Year)
+            ) {
+                return G0.ymd(g1Year, 3, 1)
+            }
+            return G0.ymd(g1Year, g1Month, g1DayOfMonth)
+        }
+
+        return rollGregorian0YMDByDays(g1ToG0Dumb(g1YMD), daysDifference)
     }
 
     /** @type {(date: Date) => Date} */
@@ -1152,7 +1278,7 @@ var Time = (function () {
             case CURRENT:
             break
             case NEXT:
-                newYMD = rollJulian0YMDByDays(oldYMD, julianOneIndexedMonthLength({year: oldYMD.j0Year, month: oldYMD.j0Month}) - oldYMD.j0DayOfMonth + 1)
+                newYMD = rollJulian0YMDByDays(oldYMD, julian0OneIndexedMonthLength({year: oldYMD.j0Year, month: oldYMD.j0Month}) - oldYMD.j0DayOfMonth + 1)
             break
         }
 
