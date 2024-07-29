@@ -989,6 +989,16 @@ var Time = (function () {
 
         return difference
     }
+    
+    /** @type {(g0YMD: G0YMD) => Days} */
+    const gregorian1DaysDifferenceFromGregorian0YMD = (g0YMD) => {
+        return 0
+    }
+    
+    /** @type {(g1YMD: G1YMD) => Days} */
+    const gregorian0DaysDifferenceFromGregorian1YMD = (g1YMD) => {
+        return 0
+    }
 
     /** @type {(arg: {year: J0Year, month: Month}) => DayOfMonth} */
     const julian0OneIndexedMonthLength = ({year, month}) => {
@@ -1080,6 +1090,10 @@ var Time = (function () {
 
     /** @type {(g0YMD: G0YMD) => G1YMD} */
     const gregorian0YMDToGregorian1 = (g0YMD) => {
+        // TODO unwrap this if
+        if (true) {
+            return G1.ymd(g0YMD.g0Year <= 0 ? g0YMD.g0Year - 1 : g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth)
+        }
         let daysDifference = gregorian1DaysDifferenceFromGregorian0YMD(g0YMD)
 
         // This may implicitly assume that Every Gregorian 0 leap year is a Gregorian 1 one as well
@@ -1088,6 +1102,11 @@ var Time = (function () {
 
     /** @type {(g1YMD: G1YMD) => G0YMD} */
     const gregorian1YMDToGregorian0 = (g1YMD) => {
+        // TODO unwrap this if
+        if (true) {
+            return G0.ymd(g1YMD.g1Year < 0 ? g1YMD.g1Year + 1 : g1YMD.g1Year, g1YMD.g1Month, g1YMD.g1DayOfMonth)
+        }
+        
         let daysDifference = gregorian0DaysDifferenceFromGregorian1YMD(g1YMD)
 
         // Being dumb is often the first step to being smart
@@ -1485,6 +1504,11 @@ var Time = (function () {
                 Math.floor((30.6001 * (month + 1))) +
                 dayOfMonth) - 1524.5);
     };
+    
+    /** @type {(g1YMD: G1YMD, algorithm?: Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm) => JulianDaysSinceJulianEpoch} */
+    const gregorian1YMDToJulianDaysSinceJulianEpoch = ({g1Year, g1Month, g1DayOfMonth}, algorithm) => {
+        return gregorian0YMDToJulianDaysSinceJulianEpoch(G0.ymd(g1Year < 0 ? g1Year + 1: g1Year, g1Month, g1DayOfMonth), algorithm)
+    };
 
     return {
         calculateCalendarSpecs,
@@ -1549,8 +1573,11 @@ var Time = (function () {
         julian0YMD,
         gregorian0YMDToJulian0,
         julian0YMDToGregorian0,
+        gregorian0YMDToGregorian1,
+        gregorian1YMDToGregorian0,
         gregorian0YMDToJulianDaysSinceJulianEpoch,
         julian0YMDToJulianDaysSinceJulianEpoch,
+        gregorian1YMDToJulianDaysSinceJulianEpoch,
         gregorian0DaysDifferenceFromJulian0YMD,
         julian0DaysDifferenceFromGregorian0YMD,
         JOHN_WALKER,
