@@ -59,9 +59,6 @@ const MEASURE_FRAMES = DEBUG_MODE
 // TODO: Pull these functions into `Time` and use them everywhere we can
 // Return type technically not correct because of NaN, but that only happnens
 // for `Date`s with a time value of NaN which we intend to avoid.
-/** @type {(date: Date) => DayOfWeek} */
-const weekFromDate = (date) => /** @type {DayOfWeek} */ (date.getUTCDay());
-
 /** @type {(date: Date) => ZeroIndexedMonth} */
 const zeroIndexedMonthFromDate = (date) => /** @type {ZeroIndexedMonth} */ (date.getUTCMonth());
 
@@ -1265,7 +1262,7 @@ const sundayStartWeekNumberToMondayStart = (weekNumber) => {
 /** @type {(date: Date) => DayOfWeek} */
 const getISO8601WeekNumber = (date) => {
     const year = date.getUTCFullYear()
-    const sundayWeekdayNumber = weekFromDate(date);
+    const sundayWeekdayNumber = Time.weekFromDate(date);
     const weekdayNumber = sundayStartWeekNumberToMondayStart(sundayWeekdayNumber)
 
     const provisionalWeekNumber = Math.floor((10 + Time.get0IndexedDayOfYear(date) - weekdayNumber) / 7)
@@ -1460,41 +1457,35 @@ const renderAt = (date) => {
 
     const julian0YMD = Time.julian0YMD(date)
     const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
-    const ifcDayOfWeek = Time.ifcDayOfWeek(ifcMAndD)
 
     const year = date.getUTCFullYear()
     const isLeap = Time.isGregorian0LeapYear(year)
 
     const startOfYear = Time.getStartOfYear(date)
 
-    const gregorian0WeekdayNumberOfFirstDay = weekFromDate(startOfYear);
+    const gregorian0WeekdayNumberOfFirstDay = Time.weekFromDate(startOfYear);
 
     const DOMINICAL_LETTER_BY_WEEKDAY_NUMBER = ['A', 'G', 'F', 'E', 'D', 'C', 'B']
 
     for (let calendar = Time.GREGORIAN0; calendar < Time.CALENDAR_KIND_COUNT; calendar += 1) {
-        const weekdayElement = verbalEnglishWeekdayElements[calendar]
+        verbalEnglishWeekdayElements[calendar].textContent = Time.weekdayWordFromDateForCalendar(date, calendar);
+
         const dominicalLettersElement = dominicalLettersElements[calendar]
 
         switch (calendar) {
             case Time.GREGORIAN0:
-                weekdayElement.textContent = weekdayWord(weekFromDate(date));
-
                 let g0DominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian0WeekdayNumberOfFirstDay]
                 if (isLeap) {
                     const octoberFirst = Time.getGregorianOctoberFirst(date)
-                    const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
+                    const octoberFirstWeekdayNumber = Time.weekFromDate(octoberFirst)
                     g0DominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
                 }
                 dominicalLettersElement.textContent = g0DominicalLetters;
             break
             case Time.JULIAN0:
-                weekdayElement.textContent = weekdayWord(Time.julian0DayOfWeek(julian0YMD));
-
                 dominicalLettersElement.textContent = Time.julian0DominicalLetters(julian0YMD);
             break
             case Time.INTERNATIONAL_FIXED:
-                weekdayElement.textContent = ifcDayOfWeek === -1 ? "No day of the week" : weekdayWord(/** */ifcDayOfWeek);
-
                 // This is an extension of the concept of dominical letters to the IFC invented for this program
                 // The reasoning goes something like if the kind of person that would invent the IFC heard about
                 // there being letters for representing which kinds of years there are, and that they count up
@@ -1502,9 +1493,6 @@ const renderAt = (date) => {
                 dominicalLettersElement.textContent = isLeap ? "B" : "A";
             break
             case Time.GREGORIAN1:
-                // Same as GREGORIAN0 because day of the week don't care what the year is. Leap years etc. don't affect it.
-                weekdayElement.textContent = weekdayWord(weekFromDate(date));
-
                 // This is makes a bit of an odd assumption, namely that we don't need to adjust anything for gregorian 1
                 // calculations besides the year number, implying that the year -3 is a leap year. We have a TODO
                 // elsewhere about fixing that
@@ -1513,7 +1501,7 @@ const renderAt = (date) => {
                 let g1DominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian1WeekdayNumberOfFirstDay]
                 if (isLeap) {
                     const octoberFirst = Time.getGregorianOctoberFirst(date)
-                    const octoberFirstWeekdayNumber = weekFromDate(octoberFirst)
+                    const octoberFirstWeekdayNumber = Time.weekFromDate(octoberFirst)
                     g1DominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
                 }
                 dominicalLettersElement.textContent = g1DominicalLetters;
@@ -1774,36 +1762,6 @@ const renderAt = (date) => {
 
     // TODO align to node events and use that to count and display the number of node events
     dragonicMonth.textContent = toAtMost10Chars(time / DRAGONIC_MONTH_IN_MILLIS)
-}
-
-/** @type {(weekdayNumber: DayOfWeek) => string} */
-const weekdayWord = (weekdayNumber) => {
-    switch (weekdayNumber) {
-        default:
-            console.error("Unexpected weekdayNumber:" + weekdayNumber)
-            // fallthrough
-        case 0:
-            return "Sunday"
-        break
-        case 1:
-            return "Monday"
-        break
-        case 2:
-            return "Tuesday"
-        break
-        case 3:
-            return "Wednesday"
-        break
-        case 4:
-            return "Thursday"
-        break
-        case 5:
-            return "Friday"
-        break
-        case 6:
-            return "Saturday"
-        break
-    }
 }
 
 /** @type {(n: Hours, divisor: Integer) => string} */

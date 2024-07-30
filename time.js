@@ -457,6 +457,88 @@ var Time = (function () {
     /** @type {(year: Integer) => boolean} */
     const isGregorian1LeapYear = isGregorian0LeapYear;
 
+    /** @type {(weekdayNumber: DayOfWeek) => string} */
+    const weekdayWord = (weekdayNumber) => {
+        switch (weekdayNumber) {
+            default:
+                console.error("Unexpected weekdayNumber:" + weekdayNumber)
+                // fallthrough
+            case 0:
+                return "Sunday"
+            break
+            case 1:
+                return "Monday"
+            break
+            case 2:
+                return "Tuesday"
+            break
+            case 3:
+                return "Wednesday"
+            break
+            case 4:
+                return "Thursday"
+            break
+            case 5:
+                return "Friday"
+            break
+            case 6:
+                return "Saturday"
+            break
+        }
+    }
+
+    /** @type {(date: Date) => DayOfWeek} */
+    const weekFromDate = (date) => /** @type {DayOfWeek} */ (date.getUTCDay());
+
+    /** @type {(date: Date, calendar: CalendarKind) => DayOfWeek} */
+    const weekdayNumberFromDateForCalendar = (date, calendar) => {
+        switch (calendar) {
+            default:
+                console.error("unhandled calendar kind: " + calendar)
+
+        }
+    }
+
+    /** @type {(date: Date, calendar: CalendarKind) => string} */
+    const weekdayWordFromDateForCalendar = (date, calendar) => {
+        switch (calendar) {
+            default:
+                console.error("unhandled calendar kind: " + calendar)
+                // fallthrough
+            case GREGORIAN0:
+                return weekdayWord(weekFromDate(date));
+            break
+            case JULIAN0:
+                return weekdayWord(julian0DayOfWeek(julian0YMD(date)));
+            break
+            case INTERNATIONAL_FIXED:
+                const week = ifcDayOfWeek(ifcZeroIndexedMonthAndDay(date));
+                return week === -1 ? "No day of the week" : weekdayWord(week);
+            break
+            case GREGORIAN1:
+                // Same as GREGORIAN0 because day of the week don't care what the year is. Leap years etc. don't affect it.
+                return weekdayWord(weekFromDate(date));
+            break
+
+        }
+    }
+
+    /** @typedef {DayOfWeek} Gregorian0DayOfWeek */
+
+    /** @type {(g0YMD: G0YMD) => Gregorian0DayOfWeek} */
+    const gregorian0DayOfWeek = (g0YMD) => {
+        let n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
+
+        // Map it to a positive number with the same modulous
+        // by adding a number we know is large enough, and is
+        // 0 after modding
+        if (n < 0) {
+            n += (-n) * DAYS_IN_WEEK
+        }
+        // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
+        return /** @type {Julian0DayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
+    }
+
     /** @typedef {DayOfWeek} Julian0DayOfWeek */
 
     /** @type {(j0YMD: J0YMD) => Julian0DayOfWeek} */
@@ -989,12 +1071,12 @@ var Time = (function () {
 
         return difference
     }
-    
+
     /** @type {(g0YMD: G0YMD) => Days} */
     const gregorian1DaysDifferenceFromGregorian0YMD = (g0YMD) => {
         return 0
     }
-    
+
     /** @type {(g1YMD: G1YMD) => Days} */
     const gregorian0DaysDifferenceFromGregorian1YMD = (g1YMD) => {
         return 0
@@ -1106,7 +1188,7 @@ var Time = (function () {
         if (true) {
             return G0.ymd(g1YMD.g1Year < 0 ? g1YMD.g1Year + 1 : g1YMD.g1Year, g1YMD.g1Month, g1YMD.g1DayOfMonth)
         }
-        
+
         let daysDifference = gregorian0DaysDifferenceFromGregorian1YMD(g1YMD)
 
         // Being dumb is often the first step to being smart
@@ -1504,7 +1586,7 @@ var Time = (function () {
                 Math.floor((30.6001 * (month + 1))) +
                 dayOfMonth) - 1524.5);
     };
-    
+
     /** @type {(g1YMD: G1YMD, algorithm?: Gregorian0YMDToJulianDaysSinceJulianEpochAlgorithm) => JulianDaysSinceJulianEpoch} */
     const gregorian1YMDToJulianDaysSinceJulianEpoch = ({g1Year, g1Month, g1DayOfMonth}, algorithm) => {
         return gregorian0YMDToJulianDaysSinceJulianEpoch(G0.ymd(g1Year < 0 ? g1Year + 1: g1Year, g1Month, g1DayOfMonth), algorithm)
@@ -1527,8 +1609,8 @@ var Time = (function () {
         get0IndexedDayOfYear,
         isGregorian0LeapYear,
         isJulian0LeapYear,
-        julian0DayOfWeek,
-        ifcDayOfWeek,
+        weekdayWordFromDateForCalendar,
+        weekFromDate,
         gregorian1YearFromGregorian0Year,
         IFC_ZERO_INDEXED_LEAP_DAY_OF_YEAR,
         IFC_ZERO_INDEXED_LEAP_MONTH,
