@@ -95,76 +95,20 @@ const subsetNumber = document.getElementById("subset-number");
 
 const timepieces = document.getElementById("timepieces");
 
-const TIMEPIECE_IDS = [
-    "digital-clock-12",
-    "analogue-clock-12",
-    "digital-clock-24",
-    "analogue-clock-24",
-    "digital-clock-base-12",
-    "analogue-clock-base-12",
-    "digital-clock-24-base-12",
-    "analogue-clock-24-base-12",
-    "digital-clock-base-factorial",
-    "analogue-clock-base-factorial",
-    "digital-clock-24-base-factorial",
-    "analogue-clock-24-base-factorial",
-    "verbal-clock",
-    "analogue-clock-verbal",
-    "verbal-clock-24",
-    "analogue-clock-verbal-24",
-    "verbal-time",
-    "analogue-clock-12-0-offset",
-    "analogue-clock-emoji",
-    "analogue-clock-emoji-numbers",
-    "chinese-telegraph-month-day-hour",
-    "analogue-clock-chinese-telegraph",
-    "chinese-telegraph-month-day-hour-24",
-    "analogue-clock-chinese-telegraph-24",
-    "chinese-telegraph-digits-month-day-hour-row",
-    "verbal-english-gregorian-0-weekday-row",
-    "verbal-english-julian-0-weekday-row",
-    "verbal-english-ifc-weekday-row",
-    "verbal-english-gregorian-1-weekday-row",
-    "week-number-first-friday-row",
-    "week-number-first-saturday-row",
-    "week-number-first-sunday-row",
-    "week-number-iso-8601-row",
-    "week-number-ifc-row",
-    "week-card-first-friday-row",
-    "week-card-first-saturday-row",
-    "week-card-first-sunday-row",
-    "week-card-iso-8601-row",
-    "week-card-ifc-row",
-    "gregorian-0-dominical-letters-row",
-    "international-fixed-dominical-letters-row",
-    "julian-0-dominical-letters-row",
-    "gregorian-1-dominical-letters-row",
-    "digital-gregorian-0-date-row",
-    "digital-ifc-date-row",
-    "digital-julian-0-date-row",
-    "digital-gregorian-1-date-row",
-    "digital-gregorian-0-date-base-day-of-month-plus-one-row",
-    "digital-ifc-date-base-day-of-month-plus-one-row",
-    "digital-julian-0-date-base-day-of-month-plus-one-row",
-    "digital-gregorian-1-date-base-day-of-month-plus-one-row",
-    "digital-gregorian-0-date-base-factorial-row",
-    "digital-ifc-date-base-factorial-row",
-    "digital-julian-0-date-base-factorial-row",
-    "digital-gregorian-1-date-base-factorial-row",
-    "julian-day-john-walker-row",
-    "julian-day-fliegel-and-van-flandern-row",
-    "metrological-seasons-north-row",
-    "metrological-seasons-south-row",
-    "synodic-month-row",
-    "tropical-month-row",
-    "sideral-month-row",
-    "anomalistic-month-row",
-    "dragonic-month-row",
-    "gregorian-0-calendar",
-    "international-fixed-calendar",
-    "julian-0-calendar",
-    "gregorian-1-calendar",
-]
+const TIMEPIECE_IDS = []
+
+/** @type {(element: HTMLElement, ids?: ElemId[]) => void} */
+const appendTimepiece = (element, ids) => {
+    ids ||= [element.id]
+    ids = ids.filter(x => x)
+    if (ids.length <= 0) {
+        console.error("No ids for " + element)
+        return
+    }
+
+    TIMEPIECE_IDS.push(...ids)
+    timepieces.appendChild(element);
+}
 
 const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
 subsetNumber.value = ALL_TIMEPIECES_SUBSET
@@ -393,7 +337,7 @@ const appendLabelledRow = ({prefix, outputClass, labelText, labelHTML}) => {
 
     outer.appendChild(label);
 
-    timepieces.appendChild(outer);
+    appendTimepiece(outer);
 
     return output;
 }
@@ -451,7 +395,7 @@ const appendCalendarElements = (prefix, typeText) => {
         boxes,
         extraBoxesLabel,
         extraBoxes,
-        outer: timepieces.appendChild(outer),
+        outer: appendTimepiece(outer),
     };
 }
 
@@ -562,7 +506,7 @@ const appendVerbalAnaloguePair = ({
 
     outer.appendChild(canvas);
 
-    timepieces.appendChild(outer);
+    appendTimepiece(outer, [verbal.id, canvas.id]);
 
     return {ctx: { ctx: canvas.getContext("2d"), scale }, verbal};
 }
@@ -578,7 +522,7 @@ const appendVerbalClock = (id) => {
     verbal.className = "verbal";
     outer.appendChild(verbal);
 
-    timepieces.appendChild(outer);
+    appendTimepiece(outer, [verbal.id]);
 
     return verbal;
 }
@@ -604,7 +548,7 @@ const appendAnalogueClock = ({
 
     outer.appendChild(canvas);
 
-    timepieces.appendChild(outer);
+    appendTimepiece(outer, [canvas.id]);
 
     return { ctx: canvas.getContext("2d"), scale };
 }
@@ -884,6 +828,14 @@ for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
 
 /** @type {DateElements} */
 const dateElements = dateElementsPartial
+
+//~ const yyyyddd = appendLabelledRow({
+    //~ prefix: "yyyyddd",
+    //~ outputClass: "digital",
+    //~ labelHTML: `Seven digit ordinal date (YYYYDDD)`,
+//~ });
+//~ // TODO Add YYYYDDD, YYDDD, YDDD, YDDD'U'HH:MM (food packaging), and DDDY (1960-80's car parts) dates
+//~ appendLabelledRow
 
 const julianDayJohnWalker = appendLabelledRow({
     prefix: "julian-day-john-walker",
@@ -2262,7 +2214,12 @@ renderStep()
 
 console.log("Init: ", performance.now() - scriptStart, "ms")
 
-
+// TODO Add YYYYDDD, YYDDD, YDDD, YDDD'U'HH:MM (food packaging), and DDDY (1960-80's car parts) dates
+//   So an example of YDDD'U'HH:MM would be 4129U16:36
+//   Maybe have a type for the distinct calendar types that have different years and iterate over those keys?
+// TODO Add Chrysler's 10,000 day calendar, extened in both directions
+//    https://www.forabodiesonly.com/mopar/threads/trans-numbers.524105/
+//    https://maxwedge.com/articles/10k.php
 // TODO Have all four of gregorian with and without year 0, and julian with and without year 0, and clearly labelled
 // TODO The gregorain 0 stuff currently makes the assumption that the leap year calculation is unchanged, ignoring
 // TODO? Make more variations of leap years
