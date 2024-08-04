@@ -829,13 +829,32 @@ for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
 /** @type {DateElements} */
 const dateElements = dateElementsPartial
 
-//~ const yyyyddd = appendLabelledRow({
-    //~ prefix: "yyyyddd",
-    //~ outputClass: "digital",
-    //~ labelHTML: `Seven digit ordinal date (YYYYDDD)`,
-//~ });
-//~ // TODO Add YYYYDDD, YYDDD, YDDD, YDDD'U'HH:MM (food packaging), and DDDY (1960-80's car parts) dates
-//~ appendLabelledRow
+// Variations mainly found on food packaging {
+const yyyyddd = appendLabelledRow({
+    prefix: "yyyyddd",
+    outputClass: "digital",
+    labelHTML: `Full year ordinal date (Y...YDDD)`,
+});
+
+const yyddd = appendLabelledRow({
+    prefix: "yyddd",
+    outputClass: "digital",
+    labelHTML: `Five digit ordinal date (YYDDD)`,
+});
+
+const yddd = appendLabelledRow({
+    prefix: "yddd",
+    outputClass: "digital",
+    labelHTML: `Four digit ordinal date (YDDD)`,
+});
+// }
+
+// Found on 1960-80's car parts
+const dddy = appendLabelledRow({
+    prefix: "dddy",
+    outputClass: "digital",
+    labelHTML: `Four digit ordinal date (DDDY)`,
+});
 
 const julianDayJohnWalker = appendLabelledRow({
     prefix: "julian-day-john-walker",
@@ -1662,6 +1681,18 @@ const renderAt = (date) => {
 
     const g0YMD = Time.G0.ymd(year, oneIndexedMonth, dayOfMonth)
 
+    const dayOfYear = (Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) - Date.UTC(date.getUTCFullYear(), 0, 0)) / 24 / 60 / 60 / 1000;
+    // TODO? timepice for this on its own? That is, without padding.
+
+    const dayOfYear3Digits = padToNDigits(3, dayOfYear);
+
+    yyyyddd.textContent = g0YMD.g0Year + dayOfYear3Digits;
+    yyddd.textContent = (padToNDigits(2, g0YMD.g0Year).slice(-2)) + dayOfYear3Digits;
+
+    const lastDigitOfYear = (g0YMD.g0Year + "").slice(-1);
+    yddd.textContent = lastDigitOfYear + dayOfYear3Digits;
+    dddy.textContent = dayOfYear3Digits + lastDigitOfYear;
+
     julianDayJohnWalker.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.JOHN_WALKER)
     julianDayFliegelAndVanFlandern.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.FLIEGEL_AND_VAN_FLANDERN)
 
@@ -1924,6 +1955,17 @@ const padToTwoDigits = (n) => {
 /** @type {(n: Integer) => string} */
 const padToTwoDigitsBase12 = (n) => {
     return (n < 12 ? "0" : lastBase12Digit(n/12)) + lastBase12Digit(n)
+}
+
+/** @type {(digits: Integer, toPad: Integer) => string} */
+const padToNDigits = (digits, toPad) => {
+    let output = toPad + "";
+
+    while (output.length < digits) {
+        output = "0" + output
+    }
+
+    return output
 }
 
 /** @type {(digits: Integer, toPad: Integer) => string} */
@@ -2214,12 +2256,14 @@ renderStep()
 
 console.log("Init: ", performance.now() - scriptStart, "ms")
 
-// TODO Add YYYYDDD, YYDDD, YDDD, YDDD'U'HH:MM (food packaging), and DDDY (1960-80's car parts) dates
-//   So an example of YDDD'U'HH:MM would be 4129U16:36
-//   Maybe have a type for the distinct calendar types that have different years and iterate over those keys?
+// TODO? Add 12 and 24 hour variations for time paired with yyyyddd, yddd etc?
+// TODO Add more subsets
+//      ordinal date
+//      what else?
 // TODO Add Chrysler's 10,000 day calendar, extened in both directions
 //    https://www.forabodiesonly.com/mopar/threads/trans-numbers.524105/
 //    https://maxwedge.com/articles/10k.php
+// TODO? Add two and three leter month abbreviations? Maybe "YYYY mm DD"?
 // TODO Have all four of gregorian with and without year 0, and julian with and without year 0, and clearly labelled
 // TODO The gregorain 0 stuff currently makes the assumption that the leap year calculation is unchanged, ignoring
 // TODO? Make more variations of leap years
