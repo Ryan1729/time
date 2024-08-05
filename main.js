@@ -147,55 +147,6 @@ const setupCatergoryControls = ({addID, onlyID, removeID, subset}) => {
     remove.onclick = onRemove
 };
 
-setupCatergoryControls({
-    addID: "add-digital",
-    onlyID: "digital-only",
-    removeID: "remove-digital",
-    subset: subsetThatContains("digital"),
-});
-
-setupCatergoryControls({
-    addID: "add-analogue",
-    onlyID: "analogue-only",
-    removeID: "remove-analogue",
-    subset: subsetThatContains("analogue"),
-});
-
-setupCatergoryControls({
-    addID: "add-calendars",
-    onlyID: "calendars-only",
-    removeID: "remove-calendars",
-    subset: subsetThatContains("calendar"),
-});
-
-setupCatergoryControls({
-    addID: "add-week-numbers",
-    onlyID: "week-numbers-only",
-    removeID: "remove-week-numbers",
-    subset: subsetThatContains("week-number"),
-});
-
-setupCatergoryControls({
-    addID: "add-week-cards",
-    onlyID: "week-cards-only",
-    removeID: "remove-week-cards",
-    subset: subsetThatContains("week-card"),
-});
-
-setupCatergoryControls({
-    addID: "add-ordinal-dates",
-    onlyID: "ordinal-dates-only",
-    removeID: "remove-ordinal-dates",
-    subset: subsetThatContains("ddd"),
-});
-
-setupCatergoryControls({
-    addID: "add-dominical-letters",
-    onlyID: "dominical-letters-only",
-    removeID: "remove-dominical-letters",
-    subset: subsetThatContains("dominical-letter"),
-});
-
 /** @type {(mask: bigint) => void} */
 const setSubsetMask = (mask) => {
     subsetNumber.value = mask
@@ -928,6 +879,59 @@ const calendarElements = {
     [Time.JULIAN0]: appendCalendarElements("julian-0-calendar", "Julian 0"),
     [Time.GREGORIAN1]: appendCalendarElements("gregorian-1-calendar", "Gregorian 1"),
 }
+
+//
+// All timepiece s should be appened before this
+//
+
+setupCatergoryControls({
+    addID: "add-digital",
+    onlyID: "digital-only",
+    removeID: "remove-digital",
+    subset: subsetThatContains("digital"),
+});
+
+setupCatergoryControls({
+    addID: "add-analogue",
+    onlyID: "analogue-only",
+    removeID: "remove-analogue",
+    subset: subsetThatContains("analogue"),
+});
+
+setupCatergoryControls({
+    addID: "add-calendars",
+    onlyID: "calendars-only",
+    removeID: "remove-calendars",
+    subset: subsetThatContains("calendar"),
+});
+
+setupCatergoryControls({
+    addID: "add-week-numbers",
+    onlyID: "week-numbers-only",
+    removeID: "remove-week-numbers",
+    subset: subsetThatContains("week-number"),
+});
+
+setupCatergoryControls({
+    addID: "add-week-cards",
+    onlyID: "week-cards-only",
+    removeID: "remove-week-cards",
+    subset: subsetThatContains("week-card"),
+});
+
+setupCatergoryControls({
+    addID: "add-ordinal-dates",
+    onlyID: "ordinal-dates-only",
+    removeID: "remove-ordinal-dates",
+    subset: subsetThatContains("ddd"),
+});
+
+setupCatergoryControls({
+    addID: "add-dominical-letters",
+    onlyID: "dominical-letters-only",
+    removeID: "remove-dominical-letters",
+    subset: subsetThatContains("dominical-letter"),
+});
 
 // Month durations as written in
 // https://archive.org/details/astronomicalalmanac1961/page/n117/mode/1up
