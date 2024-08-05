@@ -182,6 +182,19 @@ setupCatergoryControls({
     subset: subsetThatContains("week-card"),
 });
 
+setupCatergoryControls({
+    addID: "add-ordinal-dates",
+    onlyID: "ordinal-dates-only",
+    removeID: "remove-ordinal-dates",
+    subset: subsetThatContains("ddd"),
+});
+
+setupCatergoryControls({
+    addID: "add-dominical-letters",
+    onlyID: "dominical-letters-only",
+    removeID: "remove-dominical-letters",
+    subset: subsetThatContains("dominical-letter"),
+});
 
 /** @type {(mask: bigint) => void} */
 const setSubsetMask = (mask) => {
