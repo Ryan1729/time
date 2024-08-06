@@ -95,6 +95,7 @@ const subsetNumber = document.getElementById("subset-number");
 
 const timepieces = document.getElementById("timepieces");
 
+/** @type {ElemId[]} */
 const TIMEPIECE_IDS = []
 
 /** @type {(element: HTMLElement, ids?: ElemId[]) => void} */
@@ -223,7 +224,7 @@ const RUNNING = "running"
 const PAUSED = "paused"
 
 let inputMode = RUNNING
-/** @type {(step: number) => void} */
+/** @type {() => void} */
 const onInput = () => {
     inputMode = PAUSED
     // TODO? Are we gonna want to debounce this?
@@ -472,7 +473,12 @@ const appendVerbalAnaloguePair = ({
 
     appendTimepiece(outer, [verbal.id, canvas.id]);
 
-    return {ctx: { ctx: canvas.getContext("2d"), scale }, verbal};
+    // Reasonable to expect this to always be non-null because:
+    // * "2d" is a valid context tpye
+    // * This is the first (and only) time we call getContext on this canvas
+    const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
+
+    return {ctx: { ctx, scale }, verbal};
 }
 
 /** @type {(id: ElemId) => HTMLOutputElement} */
@@ -513,8 +519,13 @@ const appendAnalogueClock = ({
     outer.appendChild(canvas);
 
     appendTimepiece(outer, [canvas.id]);
+    
+    // Reasonable to expect this to always be non-null because:
+    // * "2d" is a valid context tpye
+    // * This is the first (and only) time we call getContext on this canvas
+    const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
-    return { ctx: canvas.getContext("2d"), scale };
+    return { ctx, scale };
 }
 
 const {ctx: analogueClock12Ctx, verbal: digitalClock12} = appendVerbalAnaloguePair({
@@ -733,7 +744,7 @@ const DATE_MODE_COUNT = 3;
 
 /** @type {(calendar: CalendarKind, mode: DateMode) => DateKey} */
 const dateKeyFrom = (calendar, mode) => {
-    return (calendar * DATE_MODE_COUNT) + mode
+    return /** @type {DateKey} */ ((calendar * DATE_MODE_COUNT) + mode)
 }
 
 /** @type {{ [_key in 0|1|2|3|4|5|6|7|8]?: HTMLOutputElement | undefined; }} */
@@ -791,7 +802,7 @@ for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
 }
 
 /** @type {DateElements} */
-const dateElements = dateElementsPartial
+const dateElements = /** @type {DateElements} */ dateElementsPartial
 
 // Variations mainly found on food packaging {
 const yyyyddd = appendLabelledRow({
@@ -1011,7 +1022,7 @@ const setFromTimeAndRender = (time) => {
     renderAt(new Date(time))
 }
 
-/** @type {(radians: Radians, scale?: Scale, radiusScale?: Scale, xOffset?: W) => void} */
+/** @type {(radians: Radians, scale?: Scale, radiusScale?: Scale, xOffset?: W) => XY} */
 const clockNumberCenterXYForRadians = (radians, scale, radiusScale, xOffset) => {
     scale ||= 1
     radiusScale ||= 1

@@ -490,15 +490,6 @@ var Time = (function () {
     /** @type {(date: Date) => DayOfWeek} */
     const weekFromDate = (date) => /** @type {DayOfWeek} */ (date.getUTCDay());
 
-    /** @type {(date: Date, calendar: CalendarKind) => DayOfWeek} */
-    const weekdayNumberFromDateForCalendar = (date, calendar) => {
-        switch (calendar) {
-            default:
-                console.error("unhandled calendar kind: " + calendar)
-
-        }
-    }
-
     /** @type {(date: Date, calendar: CalendarKind) => string} */
     const weekdayWordFromDateForCalendar = (date, calendar) => {
         switch (calendar) {
@@ -527,7 +518,7 @@ var Time = (function () {
 
     /** @type {(g0YMD: G0YMD) => Gregorian0DayOfWeek} */
     const gregorian0DayOfWeek = (g0YMD) => {
-        let n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
+        let n = Math.floor(gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD))
 
         // Map it to a positive number with the same modulous
         // by adding a number we know is large enough, and is
@@ -536,7 +527,7 @@ var Time = (function () {
             n += (-n) * DAYS_IN_WEEK
         }
         // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
-        return /** @type {Julian0DayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
+        return /** @type {Gregorian0DayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
     }
 
     /** @typedef {DayOfWeek} Julian0DayOfWeek */
@@ -1432,7 +1423,7 @@ var Time = (function () {
     }
 
     /** @type {(n: number) => ZeroIndexedHour} */
-    const modToZeroIndexedHour = (n) => betterMod(n, 24);
+    const modToZeroIndexedHour = (n) => /** @type {ZeroIndexedHour} */ (betterMod(n, 24));
 
     /** @typedef {0|1|2} BoxSpecKind */
 

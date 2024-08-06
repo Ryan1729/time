@@ -328,7 +328,9 @@ it(() => {
     }
 })
 
-/** @type {[[Integer, Month, DayOfMonth], [Integer, Month, DayOfMonth]][]} GREGORIAN_JULIAN_PAIRS */
+/** @typedef {[Integer, Month, DayOfMonth]} YMDTuple */
+
+/** @type {[YMDTuple, YMDTuple, YMDTuple][]} GREGORIAN_JULIAN_PAIRS */
 const GREGORIAN_JULIAN_PAIRS = [
     // This uses the (non-standard) convention that both Gregorian and
     // Julian calendars have a year 0
