@@ -308,7 +308,7 @@ const appendLabelledRow = ({prefix, outputClass, labelText, labelHTML}) => {
 }
 
 // TODO replace unknown
-/** @typedef {unknown} CalendarElements */
+/** @typedef {{ monthLabel: HTMLDivElement, weekLabels: unknown, boxes: unknown, extraBoxesLabel: unknown, extraBoxes: unknown, outer: unknown }} CalendarElements */
 
 /** @type {(prefix: ElemIdPrefix, typeText: string) => CalendarElements} */
 const appendCalendarElements = (prefix, typeText) => {
@@ -802,7 +802,7 @@ for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
 }
 
 /** @type {DateElements} */
-const dateElements = /** @type {DateElements} */ dateElementsPartial
+const dateElements = /** @type {DateElements} */ (dateElementsPartial);
 
 // Variations mainly found on food packaging {
 const yyyyddd = appendLabelledRow({
@@ -1244,7 +1244,7 @@ const twentyFourHourClockNumberXYs = (scale) => range24.map(n => twentyFourHourC
 const twentyFourHourClockVerbalNumberXYs = (scale) => range24.map(n => twentyFourHourClockVerbalXYForIndex(n, scale))
 
 /** @type {(year: G0Year) => DayOfWeek} */
-const getDayOfWeekOfLastDayOfYear = (year) => (year + Math.floor(year/4) - Math.floor(year/100) + Math.floor(year/400)) % 7;
+const getDayOfWeekOfLastDayOfYear = (year) => /** @type {DayOfWeek} */ ((year + Math.floor(year/4) - Math.floor(year/100) + Math.floor(year/400)) % 7);
 
 /** @type {(year: G0Year) => number} */
 const getISO8601WeekCount = (year) => {
@@ -1255,10 +1255,12 @@ const getISO8601WeekCount = (year) => {
 /** @type {(weekNumber: DayOfWeek) => DayOfWeek} */
 const sundayStartWeekNumberToMondayStart = (weekNumber) => {
     // + 6 is - 1 mod 7, and this keeps us on the positive side of 0
-    return (weekNumber + 6) % 7;
+    return /** @type {DayOfWeek} */ ((weekNumber + 6) % 7);
 }
 
-/** @type {(date: Date) => DayOfWeek} */
+/** @typedef {Integer} Iso8601WeekNumber */
+
+/** @type {(date: Date) => {iso8601WeekNumber: Iso8601WeekNumber, yearOfISO8601Week: G0Year}} */
 const getISO8601WeekNumber = (date) => {
     const year = date.getUTCFullYear()
     const sundayWeekdayNumber = Time.weekFromDate(date);
@@ -1628,7 +1630,7 @@ const renderAt = (date) => {
     weekCardIFC.textContent = unicodePlayingCardForNumber(weekCardNumberIFC) + " of " + year
 
     /** @type {Month} */
-    const oneIndexedMonth = zeroIndexedMonth + 1
+    const oneIndexedMonth = /** @type {Month} */ (zeroIndexedMonth + 1);
 
     const ifcOneIndexedMonth = ifcMAndD.zeroIndexedMonthNumber + 1
 
@@ -1721,8 +1723,8 @@ const renderAt = (date) => {
     yddd.textContent = lastDigitOfYear + dayOfYear3Digits;
     dddy.textContent = dayOfYear3Digits + lastDigitOfYear;
 
-    julianDayJohnWalker.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.JOHN_WALKER)
-    julianDayFliegelAndVanFlandern.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.FLIEGEL_AND_VAN_FLANDERN)
+    julianDayJohnWalker.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.JOHN_WALKER) + ""
+    julianDayFliegelAndVanFlandern.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.FLIEGEL_AND_VAN_FLANDERN) + ""
 
     let northernMetrologicalSeason
     let southernMetrologicalSeason
@@ -1784,10 +1786,10 @@ const hoursToWord = (n, divisor) => {
     return intToWords(n)
 }
 
-/** @typedef {(index: Index) => string} TextForIndex */
+/** @typedef {(index: Index, divisor: Integer) => string} TextForIndex */
 /** @typedef {(index: Index) => Radians} RotationForIndex */
 
-/** @type {(args: {time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: (scale: Scale) => XY[], topOfClockShift?: number, textForIndex?: (index: Index) => string, rotationForIndex?: (index: Index) => Radians) => void} */
+/** @type {(args: {time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: (scale: Scale) => XY[], topOfClockShift?: number, textForIndex?: TextForIndex, rotationForIndex?: RotationForIndex) => void} */
 const renderClock = ({time, ctx: ctxIn, divisor, numberXYs: numberXYsIn, topOfClockShift, textForIndex: textForIndexIn, rotationForIndex}) => {
     divisor ||= 12
     /** @type {(scale: Scale) => XY[]} */
@@ -2172,7 +2174,7 @@ const chineseTelegraphSymbolForHour = (hour) => {
     return CHINESE_TELEGRAPH_HOUR_CHARS[hour]
 }
 
-/** @type {(hour: ZeroIndexedHour|OneIndexedHour) => string} */
+/** @type {(hour: ZeroIndexedHour|OneIndexedHour) => number} */
 const chineseTelegraphDigitsForHour = (hour) => {
     return 9800 + hour
 }
