@@ -519,7 +519,7 @@ const appendAnalogueClock = ({
     outer.appendChild(canvas);
 
     appendTimepiece(outer, [canvas.id]);
-    
+
     // Reasonable to expect this to always be non-null because:
     // * "2d" is a valid context tpye
     // * This is the first (and only) time we call getContext on this canvas
@@ -831,6 +831,12 @@ const dddy = appendLabelledRow({
     labelHTML: `Four digit ordinal date (DDDY)`,
 });
 
+const tenThousandDay = appendLabelledRow({
+    prefix: "ten-thousand-day",
+    outputClass: "digital",
+    labelHTML: "Chrysler's 10,000-Day Calendar",
+});
+
 const julianDayJohnWalker = appendLabelledRow({
     prefix: "julian-day-john-walker",
     outputClass: "verbal",
@@ -892,7 +898,7 @@ const calendarElements = {
 }
 
 //
-// All timepiece s should be appened before this
+// All timepiece's should be appened before this section of the code
 //
 
 setupCatergoryControls({
@@ -1276,6 +1282,8 @@ const getISO8601WeekNumber = (date) => {
         return {iso8601WeekNumber: provisionalWeekNumber, yearOfISO8601Week: year}
     }
 }
+
+const TEN_THOUSAND_DAY_BASE_TIME = Date.UTC(1961, 7 - 1, 28);
 
 /** @type {(date: Date) => void} */
 const renderAt = (date) => {
@@ -1722,6 +1730,8 @@ const renderAt = (date) => {
     const lastDigitOfYear = (g0YMD.g0Year + "").slice(-1);
     yddd.textContent = lastDigitOfYear + dayOfYear3Digits;
     dddy.textContent = dayOfYear3Digits + lastDigitOfYear;
+
+    tenThousandDay.textContent = Math.floor((time - TEN_THOUSAND_DAY_BASE_TIME) / Time.DAY_IN_MILLIS)
 
     julianDayJohnWalker.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.JOHN_WALKER) + ""
     julianDayFliegelAndVanFlandern.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.FLIEGEL_AND_VAN_FLANDERN) + ""
@@ -2287,23 +2297,19 @@ renderStep()
 console.log("Init: ", performance.now() - scriptStart, "ms")
 
 // TODO? Add 12 and 24 hour variations for time paired with yyyyddd, yddd etc?
-// TODO Add more subsets
-//      ordinal date
-//      what else?
-// TODO Add Chrysler's 10,000 day calendar, extened in both directions
-//    https://www.forabodiesonly.com/mopar/threads/trans-numbers.524105/
-//    https://maxwedge.com/articles/10k.php
+// TODO? Add days since UNIX epoch?
+//  If so, might as well add seconds, minutes etc.
+//  Y2038 value as 32 bits?
 // TODO? Add two and three leter month abbreviations? Maybe "YYYY mm DD"?
 // TODO Have all four of gregorian with and without year 0, and julian with and without year 0, and clearly labelled
-// TODO The gregorain 0 stuff currently makes the assumption that the leap year calculation is unchanged, ignoring
 // TODO? Make more variations of leap years
 // TODO? Make a collapsible glossary of abbreviations and use them in the displayed text
 // TODO? Have IFC but without a year 0?
 // TODO show a calendar if no leap days were ever added, starting at time 0 for convenice
 //    Check if there isn't a name for this calendar, possibly with a different starting point
-// TODO show a calendar if no days were always added, starting at time 0 for convenice
+// TODO show a calendar if leap days were always added, starting at time 0 for convenice
 // TODO show a calendar if leap days were added to december instead, like would be sensible given we start at January
-//    Maybe do a roman calendar startign at March first?
+//    Maybe do a roman calendar starting at March first?
 //    Seems like the actual roman calendar is more complciated than that
 // TODO Is there a calendar that fits with the tarot deck including the major arcana? If not, invent one.
 //   78 cards total, 22 major arcana, 56 minor arcana of 4 suits of 14 cards each
