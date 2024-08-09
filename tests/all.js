@@ -416,7 +416,9 @@ const GREGORIAN_JULIAN_PAIRS = [
     [[1900,  4, 12], [1900,  3, 30], [1900,  4, 12]],
     [[1900,  4, 13], [1900,  3, 31], [1900,  4, 13]],
     [[1900,  4, 14], [1900,  4,  1], [1900,  4, 14]],
+    [[1970,  1,  1], [1969, 12, 19], [1970,  1,  1]],
     [[2001,  9,  9], [2001,  8, 27], [2001,  9,  9]],
+    [[2023, 10, 31], [2023, 10, 18], [2023, 10, 31]],
     [[2100,  2, 28], [2100,  2, 15], [2100,  2, 28]],
     [[2100,  3,  1], [2100,  2, 16], [2100,  3,  1]],
     [[2100,  3, 13], [2100,  2, 28], [2100,  3, 13]],
@@ -684,6 +686,67 @@ it(() => {
             actual > expectedMin && actual < expectedMax,
             "julianLinkedTimeFromDayOfMonth out of range for " + [jY, jM, jD] + ", expected between " + expectedMin + " and " + expectedMax + ", got " + actual +
             ". Difference is " + (actual < expectedMin ? expectedMin - actual : actual - expectedMax) / Time.DAY_IN_MILLIS + " day(s) "
+        )
+    }
+})
+
+it(() => {
+    for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
+        const [[g0Y, g0M, g0D], _, [g1Y, g1M, g1D]] = GREGORIAN_JULIAN_PAIRS[i]
+
+        if (g0Y !== g1Y || g0M !== g1M || g0D !== g1D) {
+            continue
+        }
+
+        const g0YMD = Time.G0.ymd(g0Y, g0M, g0D);
+        const g1YMD = Time.G1.ymd(g1Y, g1M, g1D);
+
+        const g0Weekday = Time.gregorian0DayOfWeek(g0YMD);
+        const g1Weekday = Time.gregorian1DayOfWeek(g1YMD);
+
+        assert(
+            g0Weekday === g1Weekday,
+            "mismatched day of the week for " + [g1Y, g1M, g1D] + ": " + g0Weekday + " !== " + g1Weekday
+        )
+    }
+})
+
+// Technically redundant, but makes for better feedback during failures
+it(() => {
+    const g0YMD = Time.G0.ymd(1970, 1, 1)
+    const g0Weekday = Time.gregorian0DayOfWeek(g0YMD);
+    // Jan 1st, 1970 was a Thursday (4)
+    assert(
+        g0Weekday === 4,
+        "mismatched day of the week for " + [1970, 1, 1] + ": " + g0Weekday + " !== " + 4
+    )
+})
+
+it(() => {
+    for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
+        const [[g0Y, g0M, g0D], _, [g1Y, g1M, g1D]] = GREGORIAN_JULIAN_PAIRS[i]
+
+        if (g0Y !== g1Y || g0M !== g1M || g0D !== g1D) {
+            continue
+        }
+
+        const date = new Date(Date.UTC(g0Y, g0M - 1, g0D))
+
+        const g0YMD = Time.G0.ymd(g0Y, g0M, g0D);
+        const g1YMD = Time.G1.ymd(g1Y, g1M, g1D);
+
+        const dateWeekday = Time.weekFromDate(date);
+        const g0Weekday = Time.gregorian0DayOfWeek(g0YMD);
+        const g1Weekday = Time.gregorian1DayOfWeek(g1YMD);
+
+        assert(
+            dateWeekday === g0Weekday,
+            "mismatched with date-based day of the week for " + [g1Y, g1M, g1D] + ": " + dateWeekday + " !== " + g0Weekday
+        )
+
+        assert(
+            g0Weekday === g1Weekday,
+            "mismatched with G0YMD-based day of the week for " + [g1Y, g1M, g1D] + ": " + g0Weekday + " !== " + g1Weekday
         )
     }
 })

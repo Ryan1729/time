@@ -1600,6 +1600,8 @@ var Time = (function () {
         get0IndexedDayOfYear,
         isGregorian0LeapYear,
         isJulian0LeapYear,
+        gregorian0DayOfWeek,
+        gregorian1DayOfWeek,
         weekdayWordFromDateForCalendar,
         weekFromDate,
         gregorian1YearFromGregorian0Year,
