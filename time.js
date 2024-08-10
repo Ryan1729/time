@@ -1132,40 +1132,12 @@ var Time = (function () {
 
     /** @type {(g0YMD: G0YMD) => G1YMD} */
     const gregorian0YMDToGregorian1 = (g0YMD) => {
-        // TODO unwrap this if
-        if (true) {
-            return G1.ymd(g0YMD.g0Year <= 0 ? g0YMD.g0Year - 1 : g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth)
-        }
-        let daysDifference = gregorian1DaysDifferenceFromGregorian0YMD(g0YMD)
-
-        // This may implicitly assume that Every Gregorian 0 leap year is a Gregorian 1 one as well
-        return rollGregorian1YMDByDays(G1.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
+        return G1.ymd(g0YMD.g0Year <= 0 ? g0YMD.g0Year - 1 : g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth)
     }
 
     /** @type {(g1YMD: G1YMD) => G0YMD} */
     const gregorian1YMDToGregorian0 = (g1YMD) => {
-        // TODO unwrap this if
-        if (true) {
-            return G0.ymd(g1YMD.g1Year < 0 ? g1YMD.g1Year + 1 : g1YMD.g1Year, g1YMD.g1Month, g1YMD.g1DayOfMonth)
-        }
-
-        let daysDifference = gregorian0DaysDifferenceFromGregorian1YMD(g1YMD)
-
-        // Being dumb is often the first step to being smart
-        /** @type {(g1YMD: G1YMD) => G0YMD} */
-        const g1ToG0Dumb = ({g1Year, g1Month, g1DayOfMonth}) => {
-            if (
-                g1Month === 2
-                && g1DayOfMonth === 29
-                && isGregorian1LeapYear(g1Year)
-                && !isGregorian0LeapYear(g1Year)
-            ) {
-                return G0.ymd(g1Year, 3, 1)
-            }
-            return G0.ymd(g1Year, g1Month, g1DayOfMonth)
-        }
-
-        return rollGregorian0YMDByDays(g1ToG0Dumb(g1YMD), daysDifference)
+        return G0.ymd(g1YMD.g1Year < 0 ? g1YMD.g1Year + 1 : g1YMD.g1Year, g1YMD.g1Month, g1YMD.g1DayOfMonth)
     }
 
     /** @type {(date: Date) => Date} */
