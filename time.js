@@ -343,58 +343,27 @@ var Time = (function () {
                     pageBounds() {
                         const date = this.date
 
-                        if (DEBUG_MODE) {
-                            const ymd = gregorian1YMD(date)
+                        const ymd = gregorian1YMD(date)
 
-                            const firstOfCurrentMonth = new Date(ymd.g1Year, ymd.g1Month - 1, 1)
-                            // Using just `date` instead of firstOfCurrentMonth has timezone issues.
-                            const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
-
-                            const lastOfPreviousMonthYmd = rollGregorian1YMDByDays(ymd, -ymd.g1DayOfMonth)
-
-                            const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.g1DayOfMonth
-                            const dayOfWeekOfLastOfPrevious = gregorian1DayOfWeek(lastOfPreviousMonthYmd)
-                            const lastDateOfCurrentMonth = gregorian1OneIndexedMonthLength({year: ymd.g1Year, month: ymd.g1Month})
-                            const dayOfWeekOfFirstOfCurrent = gregorian1DayOfWeek({...ymd, g1DayOfMonth: 1})
-                            const dayOfWeekOfFirstOfNext = gregorian1DayOfWeek(rollGregorian1YMDByDays(ymd, lastDateOfCurrentMonth - ymd.g1DayOfMonth + 1))
-
-                            return {
-                                dayOfMonth: ymd.g1DayOfMonth,
-                                lastDateOfPreviousMonth,
-                                dayOfWeekOfLastOfPrevious,
-                                lastDateOfCurrentMonth,
-                                dayOfWeekOfFirstOfCurrent,
-                                dayOfWeekOfFirstOfNext,
-                                maxBoxesPerPage: 42,
-                                monthText,
-                                appearance: DEFAULT_APPEARANCE,
-                            };
-                        }
-
-                        const year = gregorian1YearFromDate(date)
-                        const month = date.getUTCMonth()
-                        const dayOfMonth = date.getUTCDate()
-
-                        const firstOfCurrentMonth = new Date(year, month, 1)
-
+                        const firstOfCurrentMonth = new Date(ymd.g1Year, ymd.g1Month - 1, 1)
                         // Using just `date` instead of firstOfCurrentMonth has timezone issues.
                         const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
 
-                        const lastOfPreviousMonth = new Date(year, month, 0)
+                        const lastOfPreviousMonthYmd = rollGregorian1YMDByDays(ymd, -ymd.g1DayOfMonth)
 
-                        const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
-                        const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
-                        const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
-                        const dayOfWeekOfFirstOfCurrent = firstOfCurrentMonth.getUTCDay()
-                        const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
+                        const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.g1DayOfMonth
+                        const dayOfWeekOfLastOfPrevious = gregorian1DayOfWeek(lastOfPreviousMonthYmd)
+                        const lastDateOfCurrentMonth = gregorian1OneIndexedMonthLength({year: ymd.g1Year, month: ymd.g1Month})
+                        const dayOfWeekOfFirstOfCurrent = gregorian1DayOfWeek({...ymd, g1DayOfMonth: 1})
+                        const dayOfWeekOfFirstOfNext = gregorian1DayOfWeek(rollGregorian1YMDByDays(ymd, lastDateOfCurrentMonth - ymd.g1DayOfMonth + 1))
 
                         return {
-                            dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
-                            lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
-                            dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
-                            lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
-                            dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
-                            dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
+                            dayOfMonth: ymd.g1DayOfMonth,
+                            lastDateOfPreviousMonth,
+                            dayOfWeekOfLastOfPrevious,
+                            lastDateOfCurrentMonth,
+                            dayOfWeekOfFirstOfCurrent,
+                            dayOfWeekOfFirstOfNext,
                             maxBoxesPerPage: 42,
                             monthText,
                             appearance: DEFAULT_APPEARANCE,
@@ -1381,35 +1350,26 @@ var Time = (function () {
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const gregorian1LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        if (DEBUG_MODE) {
-            const oldYMD = gregorian1YMD(date)
+        const oldYMD = gregorian1YMD(date)
 
-            let newYMD = oldYMD
-            switch (monthDelta) {
-                case PREVIOUS:
-                    newYMD = rollGregorian1YMDByDays(oldYMD, -oldYMD.g1DayOfMonth)
-                break
-                default:
-                    console.error("Unexpected monthDelta: " + monthDelta)
-                    // fallthrough
-                case CURRENT:
-                break
-                case NEXT:
-                    newYMD = rollGregorian1YMDByDays(oldYMD, gregorian1OneIndexedMonthLength({year: oldYMD.g1Year, month: oldYMD.g1Month}) - oldYMD.g1DayOfMonth + 1)
-                break
-            }
-
-            const g0YMD = gregorian1YMDToGregorian0({...newYMD, g1DayOfMonth: dayOfMonth})
-
-            return timeFromGregorian0(g0YMD)
+        let newYMD = oldYMD
+        switch (monthDelta) {
+            case PREVIOUS:
+                newYMD = rollGregorian1YMDByDays(oldYMD, -oldYMD.g1DayOfMonth)
+            break
+            default:
+                console.error("Unexpected monthDelta: " + monthDelta)
+                // fallthrough
+            case CURRENT:
+            break
+            case NEXT:
+                newYMD = rollGregorian1YMDByDays(oldYMD, gregorian1OneIndexedMonthLength({year: oldYMD.g1Year, month: oldYMD.g1Month}) - oldYMD.g1DayOfMonth + 1)
+            break
         }
 
-        const startOfDay = new Date(0);
-        startOfDay.setUTCFullYear(gregorian1YearFromDate(date))
-        startOfDay.setUTCMonth(date.getUTCMonth() + monthDelta)
-        startOfDay.setUTCDate(dayOfMonth)
+        const g0YMD = gregorian1YMDToGregorian0({...newYMD, g1DayOfMonth: dayOfMonth})
 
-        return startOfDay.getTime()
+        return timeFromGregorian0(g0YMD)
     }
 
     /** @type {(g0YMD: G0YMD) => Integer} */
