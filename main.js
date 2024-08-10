@@ -1731,7 +1731,7 @@ const renderAt = (date) => {
     yddd.textContent = lastDigitOfYear + dayOfYear3Digits;
     dddy.textContent = dayOfYear3Digits + lastDigitOfYear;
 
-    tenThousandDay.textContent = Math.floor((time - TEN_THOUSAND_DAY_BASE_TIME) / Time.DAY_IN_MILLIS)
+    tenThousandDay.textContent = Math.floor((time - TEN_THOUSAND_DAY_BASE_TIME) / Time.DAY_IN_MILLIS) + "";
 
     julianDayJohnWalker.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.JOHN_WALKER) + ""
     julianDayFliegelAndVanFlandern.textContent = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD, Time.FLIEGEL_AND_VAN_FLANDERN) + ""

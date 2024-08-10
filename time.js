@@ -518,7 +518,7 @@ var Time = (function () {
 
     /** @type {(g0YMD: G0YMD) => Gregorian0DayOfWeek} */
     const gregorian0DayOfWeek = (g0YMD) => {
-        let n = Math.floor(gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD))
+        let n = Math.ceil(gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD))
 
         // Map it to a positive number with the same modulous
         // by adding a number we know is large enough, and is
@@ -534,7 +534,7 @@ var Time = (function () {
 
     /** @type {(j0YMD: J0YMD) => Julian0DayOfWeek} */
     const julian0DayOfWeek = (j0YMD) => {
-        let n = Math.floor(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
+        let n = Math.ceil(julian0YMDToJulianDaysSinceJulianEpoch(j0YMD))
 
         // Map it to a positive number with the same modulous
         // by adding a number we know is large enough, and is
@@ -550,7 +550,7 @@ var Time = (function () {
 
     /** @type {(g1YMD: G1YMD) => Gregorian1DayOfWeek} */
     const gregorian1DayOfWeek = (g1YMD) => {
-        let n = Math.floor(gregorian1YMDToJulianDaysSinceJulianEpoch(g1YMD))
+        let n = Math.ceil(gregorian1YMDToJulianDaysSinceJulianEpoch(g1YMD))
 
         // Map it to a positive number with the same modulous
         // by adding a number we know is large enough, and is
