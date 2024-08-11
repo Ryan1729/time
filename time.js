@@ -279,7 +279,7 @@ var Time = (function () {
                                     : DEFAULT_APPEARANCE
 
                         const dayOfWeekOfFirstOfCurrent = 0
-                        // Set to after DAYS in week to preventloop.
+                        // Set to after DAYS in week to prevent loop.
                         // TODO signal in a less coupled way
                         const dayOfWeekOfFirstOfNext = DAYS_IN_WEEK + 1
 
@@ -1294,6 +1294,40 @@ var Time = (function () {
         startOfDay.setUTCDate(dayOfMonth)
 
         return startOfDay.getTime()
+    }
+
+    /** @typedef {{}} BoundsFuncs */
+
+    // TODO make sure this function works at all, (using typechecking as
+    // one metric) then consider start whether using it for all linked
+    // times would be better.
+    // End goal is to make it more pleasant/less intimidating to add a
+    // new calendar type.
+    // A relevant open question is whether ifcLinkedTimeFromDayOfMonth
+    // using this would be correct
+
+    /** @type {(funcs: BoundsFuncs, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const funcsLinkedTimeFromDayOfMonth = (funcs, date, monthDelta, dayOfMonth) => {
+        const oldYMD = funcs.toYMD(date)
+
+        let newYMD = oldYMD
+        switch (monthDelta) {
+            case PREVIOUS:
+                newYMD = funcs.rollByDays(oldYMD, -funcs.getDayOfMonth(oldYMD))
+            break
+            default:
+                console.error("Unexpected monthDelta: " + monthDelta)
+                // fallthrough
+            case CURRENT:
+            break
+            case NEXT:
+                newYMD = funcs.rollByDays(oldYMD, funcs.getMonthLength(oldYMD) - funcs.getDayOfMonth(oldYMD) + 1)
+            break
+        }
+
+        const g0YMD = funcs.toGregorian0(funcs.setDayOfMonth(newYMD, dayOfMonth))
+
+        return timeFromGregorian0(g0YMD)
     }
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
