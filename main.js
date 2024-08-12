@@ -85,15 +85,87 @@ const TAU = 2 * Math.PI
 /** @typedef {number} W */
 /** @typedef {number} H */
 
-const displayedStep = document.getElementById("displayed-step");
-const raw = document.getElementById("raw");
-const utcString = document.getElementById("utc-string");
-const inputRange = document.getElementById("selected-time");
-const inputNumber = document.getElementById("selected-time-number");
+const root = document.getElementById("root");
 
+const timepieces = document.createElement("div");
+timepieces.style.display = "grid";
+root.appendChild(timepieces);
+
+const raw = document.createElement("output");
+timepieces.appendChild(raw);
+const utcString = document.createElement("output");
+timepieces.appendChild(utcString);
+
+const displayedStep = document.getElementById("displayed-step");
+
+const inputRange = document.getElementById("selected-time");
+
+const inputNumber = document.getElementById("selected-time-number");
 const subsetNumber = document.getElementById("subset-number");
 
-const timepieces = document.getElementById("timepieces");
+const subsetButtons = document.getElementById("subset-buttons");
+
+const appendCategoryControls = ({subsetName, idInfix}) => {
+    const categoryControls = document.createElement("span");
+    categoryControls.className = "category-controls";
+
+    const subsetLabel = document.createElement("span");
+    subsetLabel.innerHTML = subsetName;
+    subsetLabel.className = "center-text";
+    categoryControls.appendChild(subsetLabel);
+    
+    const removeButton = document.createElement("button");
+    removeButton.id = "remove-" + idInfix;
+    removeButton.innerHTML = "&amp;~"
+    categoryControls.appendChild(removeButton);
+    
+    const equalsButton = document.createElement("button");
+    equalsButton.id = idInfix + "-only";
+    equalsButton.innerHTML = "=";
+    categoryControls.appendChild(equalsButton);
+    
+    const addButton = document.createElement("button");
+    addButton.id = "add-" + idInfix;
+    addButton.innerHTML = "|";
+    categoryControls.appendChild(addButton);
+
+    subsetButtons.appendChild(categoryControls);
+}
+
+appendCategoryControls({
+    subsetName: "digital", 
+    idInfix: "digital"
+});
+
+appendCategoryControls({
+    subsetName: "analogue", 
+    idInfix: "analogue"
+});
+
+appendCategoryControls({
+    subsetName: "ordinal dates (ddd)", 
+    idInfix: "ordinal-dates"
+});
+
+appendCategoryControls({
+    subsetName: "calendars", 
+    idInfix: "calendars"
+});
+
+appendCategoryControls({
+    subsetName: "week numbers", 
+    idInfix: "week-numbers"
+});
+
+appendCategoryControls({
+    subsetName: "week cards", 
+    idInfix: "week-cards"
+});
+
+appendCategoryControls({
+    subsetName: "dominical letters", 
+    idInfix: "dominical-letters"
+});
 
 /** @type {ElemId[]} */
 const TIMEPIECE_IDS = []
@@ -2305,6 +2377,11 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 // TODO? Make more variations of leap years
 // TODO? Make a collapsible glossary of abbreviations and use them in the displayed text
 // TODO? Have IFC but without a year 0?
+// TODO show a calendar with all the days visible on it at once
+//      One design for this is a row for each month.
+//      Are there other sensible options? 
+//          52-53 week rows?
+// TODO? Is all at once interesting enoigh to do for every calendar?
 // TODO show a calendar if no leap days were ever added, starting at time 0 for convenice
 //    Check if there isn't a name for this calendar, possibly with a different starting point
 // TODO show a calendar if leap days were always added, starting at time 0 for convenice
@@ -2340,6 +2417,8 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 // TODO? show if the current day or other time period is mildy interesting in a different calendar than usual?
 //    For example, IFC April fool's day, King of hearts week
 //    But is there enough of these to be worth it? There are more of these if there's more calendars
+// TODO show a duodecahedron slowly rotaing to show what month it is. 
+//      The face of the given month is face on in the exact middle of the month
 // TODO? Find a random generator of something, say names, and define a total order to its output and thus map the output to some appropriate time period with a repeating cycle, e.g. name of the day or hour
 
 // TODO? add labels to more of the timepieces, maybe making them optional?

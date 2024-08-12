@@ -39,6 +39,8 @@ a:visited {
   display: inline-flex;
   flex-direction: column;
   gap: 0.5ex;
+  margin-left: 0.25em;
+  margin-right: 0.25em;
 }
 .seven-columns {
   display: grid;
@@ -118,7 +120,7 @@ a:visited {
 </head>
 
 <body>
-    <div>
+    <div id="root">
         <div class="button-container">
             <button type="button" id="minus">−</button>
             <button type="button" id="play-pause">&#x23EF;</button>
@@ -133,59 +135,14 @@ a:visited {
             </summary>
             <div style="display: grid;">
                 <input id="subset-number" type="number" />
-                <span>
+                <span id="subset-buttons" >
                     <button id="subset-shift-up"> &lt;&lt; </button>
                     <button id="subset-shift-down"> &gt;&gt; </button>
-                    <span class="category-controls">
-                        <span class="center-text">digital</span>
-                        <button id="remove-digital"> &amp;~ </button>
-                        <button id="digital-only"> = </button>
-                        <button id="add-digital"> | </button>
-                    </span>
-                    <span class="category-controls">
-                        <span class="center-text">analogue</span>
-                        <button id="remove-analogue"> &amp;~ </button>
-                        <button id="analogue-only"> = </button>
-                        <button id="add-analogue"> | </button>
-                    </span>
-                    <span class="category-controls">
-                        <span class="center-text">ordinal dates (ddd)</span>
-                        <button id="remove-ordinal-dates"> &amp;~ </button>
-                        <button id="ordinal-dates-only"> = </button>
-                        <button id="add-ordinal-dates"> | </button>
-                    </span>
-                    <span class="category-controls">
-                        <span class="center-text">calendars</span>
-                        <button id="remove-calendars"> &amp;~ </button>
-                        <button id="calendars-only"> = </button>
-                        <button id="add-calendars"> | </button>
-                    </span>
-                    <span class="category-controls">
-                        <span class="center-text">week numbers</span>
-                        <button id="remove-week-numbers"> &amp;~ </button>
-                        <button id="week-numbers-only"> = </button>
-                        <button id="add-week-numbers"> | </button>
-                    </span>
-                    <span class="category-controls">
-                        <span class="center-text">week cards</span>
-                        <button id="remove-week-cards"> &amp;~ </button>
-                        <button id="week-cards-only"> = </button>
-                        <button id="add-week-cards"> | </button>
-                    </span>
-                    <span class="category-controls">
-                        <span class="center-text">dominical letters</span>
-                        <button id="remove-dominical-letters"> &amp;~ </button>
-                        <button id="dominical-letters-only"> = </button>
-                        <button id="add-dominical-letters"> | </button>
-                    </span>
+                    <!-- elements added here at runtime -->
                 </span>
             </div>
         </details>
-        <div id="timepieces" style="display: grid;">
-            <output id="raw"></output>
-            <output id="utc-string"></output>
-            <!-- other elements added below at runtime -->
-        </div>
+        <!-- elements added here at runtime -->
     </div>
     <script src="factorialBase.js"></script>
     <script src="time.js"></script>
