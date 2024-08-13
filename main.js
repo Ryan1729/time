@@ -87,24 +87,44 @@ const TAU = 2 * Math.PI
 
 const root = document.getElementById("root");
 
-const timepieces = document.createElement("div");
-timepieces.style.display = "grid";
-root.appendChild(timepieces);
-
-const raw = document.createElement("output");
-timepieces.appendChild(raw);
-const utcString = document.createElement("output");
-timepieces.appendChild(utcString);
-
 const displayedStep = document.getElementById("displayed-step");
 
 const inputRange = document.getElementById("selected-time");
 
 const inputNumber = document.getElementById("selected-time-number");
-const subsetNumber = document.getElementById("subset-number");
 
-const subsetButtons = document.getElementById("subset-buttons");
+const subsetDetails = document.createElement("details");
+root.appendChild(subsetDetails);
 
+const subsetSummary = document.createElement("summary");
+subsetSummary.textContent = "Subset Controls";
+subsetDetails.appendChild(subsetSummary);
+
+const subsetRoot = document.createElement("div");
+subsetRoot.id = "subset-root";
+subsetRoot.style.display = "grid";
+subsetDetails.appendChild(subsetRoot);
+
+const subsetNumber = document.createElement("input");
+subsetNumber.id = "subset-number";
+subsetNumber.type = "number";
+subsetRoot.appendChild(subsetNumber);
+
+const subsetButtons = document.createElement("span");
+subsetButtons.id = "subset-buttons";
+subsetRoot.appendChild(subsetButtons);
+
+const shiftUpButton = document.createElement("button");
+shiftUpButton.id = "subset-shift-up"
+shiftUpButton.innerHTML = "&lt;&lt;"
+subsetButtons.appendChild(shiftUpButton);
+
+const shiftDownButton = document.createElement("button");
+shiftDownButton.id = "subset-shift-down"
+shiftDownButton.innerHTML = "&gt;&gt;"
+subsetButtons.appendChild(shiftDownButton);
+
+/** @type {(args: {subsetName: string, idInfix: ElemId}) => void} */
 const appendCategoryControls = ({subsetName, idInfix}) => {
     const categoryControls = document.createElement("span");
     categoryControls.className = "category-controls";
@@ -167,6 +187,15 @@ appendCategoryControls({
     idInfix: "dominical-letters"
 });
 
+const timepieces = document.createElement("div");
+timepieces.style.display = "grid";
+root.appendChild(timepieces);
+
+const raw = document.createElement("output");
+timepieces.appendChild(raw);
+const utcString = document.createElement("output");
+timepieces.appendChild(utcString);
+
 /** @type {ElemId[]} */
 const TIMEPIECE_IDS = []
 
@@ -182,9 +211,6 @@ const appendTimepiece = (element, ids) => {
     TIMEPIECE_IDS.push(...ids)
     timepieces.appendChild(element);
 }
-
-const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
-subsetNumber.value = ALL_TIMEPIECES_SUBSET
 
 /** @type {(substr: string) => bigint} */
 const subsetThatContains = (substr) => {
@@ -222,7 +248,7 @@ const setupCatergoryControls = ({addID, onlyID, removeID, subset}) => {
 
 /** @type {(mask: bigint) => void} */
 const setSubsetMask = (mask) => {
-    subsetNumber.value = mask
+    subsetNumber.value = mask + ""
 
     for (let index = 0; index < TIMEPIECE_IDS.length; index += 1) {
         const element = document.getElementById(TIMEPIECE_IDS[index])
@@ -972,6 +998,9 @@ const calendarElements = {
 //
 // All timepiece's should be appened before this section of the code
 //
+
+const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
+subsetNumber.value = ALL_TIMEPIECES_SUBSET
 
 setupCatergoryControls({
     addID: "add-digital",
