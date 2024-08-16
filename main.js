@@ -85,13 +85,24 @@ const TAU = 2 * Math.PI
 /** @typedef {number} W */
 /** @typedef {number} H */
 
+// TODO? get rid of the IDs we aren't using?
+
 const root = document.getElementById("root");
 
-const displayedStep = document.getElementById("displayed-step");
+const inputRange = document.createElement("input"); 
+inputRange.id = "selected-time";
+inputRange.type = "range";
+inputRange.style.width = "100%";
+root.appendChild(inputRange);
 
-const inputRange = document.getElementById("selected-time");
+const inputNumber = document.createElement("input"); 
+inputNumber.id = "selected-time-number";
+inputNumber.type = "number";
+root.appendChild(inputNumber);
 
-const inputNumber = document.getElementById("selected-time-number");
+const displayedStep = document.createElement("output");
+displayedStep.id = "displayed-step";
+root.appendChild(displayedStep);
 
 const subsetDetails = document.createElement("details");
 root.appendChild(subsetDetails);
@@ -150,7 +161,7 @@ const appendCategoryControls = ({subsetName, idInfix}) => {
     categoryControls.appendChild(addButton);
 
     subsetButtons.appendChild(categoryControls);
-}
+};
 
 appendCategoryControls({
     subsetName: "digital", 
@@ -301,11 +312,11 @@ const TIME_ROUND_TO = 1_000_000_000_000
 const defaultLowEdge = Math.floor(startTime / TIME_ROUND_TO) * TIME_ROUND_TO
 const defaultHighEdge = Math.ceil(startTime / TIME_ROUND_TO) * TIME_ROUND_TO
 
-inputRange.min = inputNumber.min = defaultLowEdge
-inputRange.max = inputNumber.max = defaultHighEdge
+inputRange.min = inputNumber.min = defaultLowEdge + ""
+inputRange.max = inputNumber.max = defaultHighEdge + ""
 /** @type {(step: number) => void} */
 const setStep = (step) => {
-    inputRange.step = inputNumber.step = step
+    inputRange.step = inputNumber.step = step + ""
     if (step === 1) {
         displayedStep.textContent = ''
     } else {
@@ -314,7 +325,7 @@ const setStep = (step) => {
 }
 /** @type {(time: EpochTime) => void} */
 const setFromTime = (time) => {
-    inputRange.value = inputNumber.value = time
+    inputRange.value = inputNumber.value = time + ""
 }
 setFromTime(startTime)
 
@@ -322,11 +333,13 @@ const RUNNING = "running"
 const PAUSED = "paused"
 
 let inputMode = RUNNING
-/** @type {() => void} */
-const onInput = () => {
+/** @type {(event: Event) => void} */
+const onInput = (event) => {
+    // TODO? Are we gonna want to debounce this event handler?
     inputMode = PAUSED
-    // TODO? Are we gonna want to debounce this?
-    const v = event.target.value
+    
+    // This event handler should only be attached to `input` events.
+    const v = (/** @type HTMLInputElement */(event.currentTarget)).value
     const parsed = parseInt(v)
 
     const min = parseInt(inputRange.min)
@@ -363,18 +376,18 @@ inputRange.addEventListener("pointerdown", (e) => {
 });
 inputRange.addEventListener("pointerup", (e) => {
     // Avoid jittering the input when releasing
-    const selectedValue = inputRange.value
+    const selectedValue = parseInt(inputRange.value)
     setTimeout(() => setFromTime(selectedValue), 8)
 });
 
 const minus = document.getElementById("minus");
 minus.onclick = () => {
-    inputRange.min = inputNumber.min = parseInt(inputRange.min) - TIME_ROUND_TO
+    inputRange.min = inputNumber.min = (parseInt(inputRange.min) - TIME_ROUND_TO) + ""
 };
 
 const plus = document.getElementById("plus");
 plus.onclick = () => {
-    inputRange.max = inputNumber.max = parseInt(inputRange.max) + TIME_ROUND_TO
+    inputRange.max = inputNumber.max = (parseInt(inputRange.max) + TIME_ROUND_TO) + ""
 };
 
 /** @type {(args: {prefix: string, outputClass: string, labelText?: string, labelHTML?: string}) => HTMLOutputElement} */
@@ -480,21 +493,6 @@ const calendarName = (calendar) => {
 }
 
 /** @typedef {{ctx: CanvasRenderingContext2D, scale: number}} AnalogueClockCtx */
-
-/** @type {(id: ElemId, scale?: number) => AnalogueClockCtx}} */
-const getAnalogueClockCtx = (id, scale) => { // TODO: Still used?
-    scale ||= 1
-
-    const lengths = clockLengths(scale)
-
-    const canvas = document.getElementById(id)
-    canvas.width = lengths.clockWidth
-    canvas.height = lengths.clockHeight
-    return {
-        ctx: canvas.getContext("2d"),
-        scale,
-    };
-}
 
 // TODO replace unknown
 /** @typedef {unknown} ClockLengths */
@@ -1000,7 +998,7 @@ const calendarElements = {
 //
 
 const ALL_TIMEPIECES_SUBSET = (1n << BigInt(TIMEPIECE_IDS.length)) - 1n
-subsetNumber.value = ALL_TIMEPIECES_SUBSET
+subsetNumber.value = ALL_TIMEPIECES_SUBSET + ""
 
 setupCatergoryControls({
     addID: "add-digital",
@@ -2411,6 +2409,9 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 //      Are there other sensible options? 
 //          52-53 week rows?
 // TODO? Is all at once interesting enoigh to do for every calendar?
+// TODO show a statement about the current day, so like
+//   * 1st Saturday of the month
+//   * 4th (last) Wednesday of the month
 // TODO show a calendar if no leap days were ever added, starting at time 0 for convenice
 //    Check if there isn't a name for this calendar, possibly with a different starting point
 // TODO show a calendar if leap days were always added, starting at time 0 for convenice
