@@ -107,8 +107,7 @@ const isNormalEnoughNumber = (n) => {
 //  config/hackery
 //
 
-// TODO make this typecheck when/if we care
-global.DEBUG_MODE = true
+(/** @type {{[key in string]: boolean}} */ (global).DEBUG_MODE = true);
 
 // tests
 it(() => {

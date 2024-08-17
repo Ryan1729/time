@@ -1296,7 +1296,16 @@ var Time = (function () {
         return startOfDay.getTime()
     }
 
-    /** @typedef {{}} BoundsFuncs */
+    /**
+     * @template YMD
+     * @typedef {{
+     *   toYMD: (date: Date) => YMD,
+     *   rollByDays: (oldYMD: YMD, days: Integer) => YMD,
+     *   getDayOfMonth: (oldYMD: YMD) => DayOfMonth,
+     *   setDayOfMonth: (oldYMD: YMD, dayOfMonth: DayOfMonth) => YMD,
+     *   getMonthLength: (oldYMD: YMD) => DayOfMonth,
+     *   toGregorian0: (oldYMD: YMD) => G0YMD,
+     * }} BoundsFuncs<YMD> */
 
     // TODO make sure this function works at all, (using typechecking as
     // one metric) then consider start whether using it for all linked
@@ -1306,7 +1315,8 @@ var Time = (function () {
     // A relevant open question is whether ifcLinkedTimeFromDayOfMonth
     // using this would be correct
 
-    /** @type {(funcs: BoundsFuncs, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    /** @template YMD
+     * @type {(funcs: BoundsFuncs<YMD>, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const funcsLinkedTimeFromDayOfMonth = (funcs, date, monthDelta, dayOfMonth) => {
         const oldYMD = funcs.toYMD(date)
 
