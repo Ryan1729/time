@@ -1307,6 +1307,16 @@ var Time = (function () {
      *   toGregorian0: (oldYMD: YMD) => G0YMD,
      * }} BoundsFuncs<YMD> */
 
+    /** @type {BoundsFuncs<J0YMD>} */
+    const julian0BoundFuncs = {
+        toYMD: julian0YMD,
+        rollByDays: rollJulian0YMDByDays,
+        getDayOfMonth: (ymd) => ymd.j0DayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, j0DayOfMonth: dayOfMonth }),
+        getMonthLength: ({j0Year: year, j0Month: month}) => julian0OneIndexedMonthLength({year, month}),
+        toGregorian0: julian0YMDToGregorian0,
+    };
+
     // TODO make sure this function works at all, (using typechecking as
     // one metric) then consider start whether using it for all linked
     // times would be better.
@@ -1342,26 +1352,9 @@ var Time = (function () {
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const julianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        const oldYMD = julian0YMD(date)
-
-        let newYMD = oldYMD
-        switch (monthDelta) {
-            case PREVIOUS:
-                newYMD = rollJulian0YMDByDays(oldYMD, -oldYMD.j0DayOfMonth)
-            break
-            default:
-                console.error("Unexpected monthDelta: " + monthDelta)
-                // fallthrough
-            case CURRENT:
-            break
-            case NEXT:
-                newYMD = rollJulian0YMDByDays(oldYMD, julian0OneIndexedMonthLength({year: oldYMD.j0Year, month: oldYMD.j0Month}) - oldYMD.j0DayOfMonth + 1)
-            break
-        }
-
-        const g0YMD = julian0YMDToGregorian0({...newYMD, j0DayOfMonth: dayOfMonth})
-
-        return timeFromGregorian0(g0YMD)
+        // Needing to cast to BoundsFuncs<any> is annoying, but giving
+        // the constant the more specific type does catch some errors.
+        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (julian0BoundFuncs), date, monthDelta, dayOfMonth);
     }
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
