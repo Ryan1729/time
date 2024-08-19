@@ -1042,32 +1042,27 @@ var Time = (function () {
         return 0
     }
 
-    /** @type {(arg: {year: J0Year, month: Month}) => DayOfMonth} */
-    const julian0OneIndexedMonthLength = ({year, month}) => {
-        /** @type {LengthOfMonth[]} */
-        const MONTH_LENGTHS = [
-            31,
-            isJulian0LeapYear(year) ? 29 : 28,
-            31,
-            30,
-            31,
-            30,
-            31,
-            31,
-            30,
-            31,
-            30,
-            31,
-        ]
-        return MONTH_LENGTHS[month - 1]
+    /** @type {(arg: {year: G0Year, month: Month}) => LengthOfMonth} */
+    const gregorian0OneIndexedMonthLength = (arg) => {
+        return standardMonthLengthForLeapYearFunc(isGregorian0LeapYear, arg);
     }
 
-    /** @type {(arg: {year: G1Year, month: Month}) => DayOfMonth} */
-    const gregorian1OneIndexedMonthLength = ({year, month}) => {
+    /** @type {(arg: {year: J0Year, month: Month}) => LengthOfMonth} */
+    const julian0OneIndexedMonthLength = (arg) => {
+        return standardMonthLengthForLeapYearFunc(isJulian0LeapYear, arg);
+    }
+
+    /** @type {(arg: {year: G1Year, month: Month}) => LengthOfMonth} */
+    const gregorian1OneIndexedMonthLength = (arg) => {
+        return standardMonthLengthForLeapYearFunc(isGregorian1LeapYear, arg);
+    }
+
+    /** @type {(isLeap: (year: number) => boolean, arg: {year: number, month: Month}) => LengthOfMonth} */
+    const standardMonthLengthForLeapYearFunc = (isLeap, {year, month}) => {
         /** @type {LengthOfMonth[]} */
         const MONTH_LENGTHS = [
             31,
-            isGregorian1LeapYear(year) ? 29 : 28,
+            isLeap(year) ? 29 : 28,
             31,
             30,
             31,
@@ -1286,16 +1281,6 @@ var Time = (function () {
         return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
     }
 
-    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const gregorian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        const startOfDay = new Date(0);
-        startOfDay.setUTCFullYear(date.getUTCFullYear())
-        startOfDay.setUTCMonth(date.getUTCMonth() + monthDelta)
-        startOfDay.setUTCDate(dayOfMonth)
-
-        return startOfDay.getTime()
-    }
-
     /**
      * @template YMD
      * @typedef {{
@@ -1307,6 +1292,16 @@ var Time = (function () {
      *   toGregorian0: (oldYMD: YMD) => G0YMD,
      * }} BoundsFuncs<YMD> */
 
+    /** @type {BoundsFuncs<G0YMD>} */
+    const gregorian0BoundFuncs = {
+        toYMD: gregorian0YMD,
+        rollByDays: rollGregorian0YMDByDays,
+        getDayOfMonth: (ymd) => ymd.g0DayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, g0DayOfMonth: dayOfMonth }),
+        getMonthLength: ({g0Year: year, g0Month: month}) => gregorian0OneIndexedMonthLength({year, month}),
+        toGregorian0: ymd => ymd,
+    };
+
     /** @type {BoundsFuncs<J0YMD>} */
     const julian0BoundFuncs = {
         toYMD: julian0YMD,
@@ -1315,6 +1310,16 @@ var Time = (function () {
         setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, j0DayOfMonth: dayOfMonth }),
         getMonthLength: ({j0Year: year, j0Month: month}) => julian0OneIndexedMonthLength({year, month}),
         toGregorian0: julian0YMDToGregorian0,
+    };
+
+    /** @type {BoundsFuncs<G1YMD>} */
+    const gregorian1BoundFuncs = {
+        toYMD: gregorian1YMD,
+        rollByDays: rollGregorian1YMDByDays,
+        getDayOfMonth: (ymd) => ymd.g1DayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, g1DayOfMonth: dayOfMonth }),
+        getMonthLength: ({g1Year: year, g1Month: month}) => gregorian1OneIndexedMonthLength({year, month}),
+        toGregorian0: gregorian1YMDToGregorian0,
     };
 
     // TODO make sure this function works at all, (using typechecking as
@@ -1351,6 +1356,13 @@ var Time = (function () {
     }
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const gregorian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        // Needing to cast to BoundsFuncs<any> is annoying, but giving
+        // the constant the more specific type does catch some errors.
+        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (gregorian0BoundFuncs), date, monthDelta, dayOfMonth);
+    }
+
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const julianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
         // Needing to cast to BoundsFuncs<any> is annoying, but giving
         // the constant the more specific type does catch some errors.
@@ -1359,26 +1371,9 @@ var Time = (function () {
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
     const gregorian1LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        const oldYMD = gregorian1YMD(date)
-
-        let newYMD = oldYMD
-        switch (monthDelta) {
-            case PREVIOUS:
-                newYMD = rollGregorian1YMDByDays(oldYMD, -oldYMD.g1DayOfMonth)
-            break
-            default:
-                console.error("Unexpected monthDelta: " + monthDelta)
-                // fallthrough
-            case CURRENT:
-            break
-            case NEXT:
-                newYMD = rollGregorian1YMDByDays(oldYMD, gregorian1OneIndexedMonthLength({year: oldYMD.g1Year, month: oldYMD.g1Month}) - oldYMD.g1DayOfMonth + 1)
-            break
-        }
-
-        const g0YMD = gregorian1YMDToGregorian0({...newYMD, g1DayOfMonth: dayOfMonth})
-
-        return timeFromGregorian0(g0YMD)
+        // Needing to cast to BoundsFuncs<any> is annoying, but giving
+        // the constant the more specific type does catch some errors.
+        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (gregorian1BoundFuncs), date, monthDelta, dayOfMonth);
     }
 
     /** @type {(g0YMD: G0YMD) => Integer} */
