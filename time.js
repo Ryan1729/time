@@ -333,7 +333,7 @@ var Time = (function () {
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        return julianLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
+                        return julian0LinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
                     }
                 }
             break
@@ -370,11 +370,17 @@ var Time = (function () {
                         };
                     },
                     linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
+
                         return gregorian1LinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
                     }
                 }
             break
         }
+
+        // TODO It seems better if we can just pass an object of functions
+        // so we only have one switch on `kind`. So start by passing a
+        // boundsFuncs here, and then make linkedTimeFromDayOfMonth a
+        // boundFunc field.
 
         return calculateCalendarSpecsInner(boundsProvider)
     }
@@ -1322,13 +1328,28 @@ var Time = (function () {
         toGregorian0: gregorian1YMDToGregorian0,
     };
 
-    // TODO make sure this function works at all, (using typechecking as
-    // one metric) then consider start whether using it for all linked
-    // times would be better.
-    // End goal is to make it more pleasant/less intimidating to add a
-    // new calendar type.
-    // A relevant open question is whether ifcLinkedTimeFromDayOfMonth
-    // using this would be correct
+    /** @template YMD
+     * @type {(calendar: CalendarKind, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const linkedTimeFromDayOfMonth = (calendar, date, monthDelta, dayOfMonth) => {
+        switch (calendar) {
+            default:
+                console.error("unhandled calendar kind: " + calendar)
+                // fallthrough
+            case GREGORIAN0:
+                return gregorian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+            case JULIAN0:
+                return julian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+            case INTERNATIONAL_FIXED:
+                // TODO? Can we use funcsLinkedTimeFromDayOfMonth instead for this?
+                return ifcLinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+            case GREGORIAN1:
+                return gregorian1LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+        }
+    };
 
     /** @template YMD
      * @type {(funcs: BoundsFuncs<YMD>, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
@@ -1363,7 +1384,7 @@ var Time = (function () {
     }
 
     /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const julianLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+    const julian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
         // Needing to cast to BoundsFuncs<any> is annoying, but giving
         // the constant the more specific type does catch some errors.
         return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (julian0BoundFuncs), date, monthDelta, dayOfMonth);
@@ -1621,7 +1642,7 @@ var Time = (function () {
         julian0DaysDifferenceFromGregorian0YMD,
         JOHN_WALKER,
         FLIEGEL_AND_VAN_FLANDERN,
-        julianLinkedTimeFromDayOfMonth,
+        julian0LinkedTimeFromDayOfMonth,
         julian0DominicalLetters,
     }
 }())

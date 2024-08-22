@@ -675,7 +675,7 @@ it(() => {
 
         const expectedMiddle = date.getTime()
 
-        const actual = Time.julianLinkedTimeFromDayOfMonth(date, Time.CURRENT, jD)
+        const actual = Time.julian0LinkedTimeFromDayOfMonth(date, Time.CURRENT, jD)
 
         const expectedMin = expectedMiddle - (Time.DAY_IN_MILLIS / 2)
 
@@ -683,7 +683,7 @@ it(() => {
 
         assert(
             actual > expectedMin && actual < expectedMax,
-            "julianLinkedTimeFromDayOfMonth out of range for " + [jY, jM, jD] + ", expected between " + expectedMin + " and " + expectedMax + ", got " + actual +
+            "julian0LinkedTimeFromDayOfMonth out of range for " + [jY, jM, jD] + ", expected between " + expectedMin + " and " + expectedMax + ", got " + actual +
             ". Difference is " + (actual < expectedMin ? expectedMin - actual : actual - expectedMax) / Time.DAY_IN_MILLIS + " day(s) "
         )
     }
