@@ -140,20 +140,343 @@ var Time = (function () {
     /** @typedef {number} Time */
     /** @typedef {{dayOfMonth: DayOfMonth, lastDateOfPreviousMonth: DayOfMonth, dayOfWeekOfLastOfPrevious: DayOfWeek, lastDateOfCurrentMonth: DayOfMonth, dayOfWeekOfFirstOfCurrent: DayOfWeek, dayOfWeekOfFirstOfNext: DayOfWeek, maxBoxesPerPage: Integer, monthText: string, appearance: CalendarAppearance}} CalendarBounds */
     /** @typedef {Max1Delta} MonthDelta */
+
+        /** @type {(date: Date) => G0YMD} */
+    const gregorian0YMD = (date) => {
+        const gYear = date.getUTCFullYear()
+        const gMonth = date.getUTCMonth()
+        const gDayOfMonth = date.getUTCDate()
+
+        return G0.ymd(gYear, /** @type Month */ (gMonth + 1), /** @type DayOfMonth */ (gDayOfMonth))
+    }
+
+    /** @type {(date: Date) => J0YMD} */
+    const julian0YMD = (date) => {
+        return gregorian0YMDToJulian0(gregorian0YMD(date))
+    }
+
+    /** @type {(date: Date) => G1YMD} */
+    const gregorian1YMD = (date) => {
+        return gregorian0YMDToGregorian1(gregorian0YMD(date))
+    }
+
+    /** @type {(g0YMD: G0YMD) => J0YMD} */
+    const gregorian0YMDToJulian0 = (g0YMD) => {
+        let daysDifference = julian0DaysDifferenceFromGregorian0YMD(g0YMD)
+
+        // Every Gregorian leap year is a Julian one as well
+        return rollJulian0YMDByDays(J0.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
+    }
+
+    /** @type {(j0YMD: J0YMD) => G0YMD} */
+    const julian0YMDToGregorian0 = (j0YMD) => {
+        let daysDifference = gregorian0DaysDifferenceFromJulian0YMD(j0YMD)
+
+        // Being dumb is often the first step to being smart
+        /** @type {(j0YMD: J0YMD) => G0YMD} */
+        const j0ToG0Dumb = ({j0Year, j0Month, j0DayOfMonth}) => {
+            if (
+                j0Month === 2
+                && j0DayOfMonth === 29
+                && isJulian0LeapYear(j0Year)
+                && !isGregorian0LeapYear(j0Year)
+            ) {
+                return G0.ymd(j0Year, 3, 1)
+            }
+            return G0.ymd(j0Year, j0Month, j0DayOfMonth)
+        }
+
+        return rollGregorian0YMDByDays(j0ToG0Dumb(j0YMD), daysDifference)
+    }
+
+    /** @type {(g0YMD: G0YMD) => G1YMD} */
+    const gregorian0YMDToGregorian1 = (g0YMD) => {
+        return G1.ymd(g0YMD.g0Year <= 0 ? g0YMD.g0Year - 1 : g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth)
+    }
+
+    /** @type {(g1YMD: G1YMD) => G0YMD} */
+    const gregorian1YMDToGregorian0 = (g1YMD) => {
+        return G0.ymd(g1YMD.g1Year < 0 ? g1YMD.g1Year + 1 : g1YMD.g1Year, g1YMD.g1Month, g1YMD.g1DayOfMonth)
+    }
+
+    /** @type {(j0YMD: J0YMD, offsetInDays: Days) => J0YMD} */
+    const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
+        let currentMonthLength = julian0OneIndexedMonthLength({year: j0Year, month: j0Month})
+
+        let outYear = j0Year
+        let outMonth = j0Month
+        let outDayOfMonth = j0DayOfMonth + offsetInDays
+
+        // TODO skip over years at once so we don't need to loop so
+        // many times
+        while (outDayOfMonth > currentMonthLength) {
+            outDayOfMonth -= currentMonthLength;
+
+            outMonth += 1;
+            // We know outMonth is 2 to 13 now assuming outMonth was 1 to 12
+            if (outMonth > 12) {
+                outYear += 1;
+                outMonth = 1;
+            }
+            // We know outMonth is 1 to 12 now, given previous assumptions
+
+            currentMonthLength = julian0OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+        }
+
+        // TODO skip over years at once so we don't need to loop so
+        // many times
+        while (outDayOfMonth < 1) {
+            // We know outMonth is 0 to 11 now assuming outMonth was 1 to 12
+            outMonth -= 1;
+            if (outMonth < 1) {
+                outYear -= 1;
+                outMonth = 12;
+            }
+            // We know outMonth is 1 to 12 now, given previous assumptions
+            currentMonthLength = julian0OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+            outDayOfMonth += currentMonthLength;
+        }
+
+        return J0.ymd(
+            outYear,
+            outMonth,
+            /** @type {DayOfMonth} */ (outDayOfMonth),
+        )
+    }
+
+    /** @type {(g1YMD: G1YMD, offsetInDays: Days) => G1YMD} */
+    const rollGregorian1YMDByDays = ({g1Year, g1Month, g1DayOfMonth}, offsetInDays) => {
+        let currentMonthLength = gregorian1OneIndexedMonthLength({year: g1Year, month: g1Month})
+
+        let outYear = g1Year
+        let outMonth = g1Month
+        let outDayOfMonth = g1DayOfMonth + offsetInDays
+
+        // TODO skip over years at once so we don't need to loop so
+        // many times
+        while (outDayOfMonth > currentMonthLength) {
+            outDayOfMonth -= currentMonthLength;
+
+            outMonth += 1;
+            // We know outMonth is 2 to 13 now assuming outMonth was 1 to 12
+            if (outMonth > 12) {
+                outYear += 1;
+                if (outYear === 0) {
+                    outYear += 1;
+                }
+                outMonth = 1;
+            }
+            // We know outMonth is 1 to 12 now, given previous assumptions
+
+            currentMonthLength = gregorian1OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+        }
+
+        // TODO skip over years at once so we don't need to loop so
+        // many times
+        while (outDayOfMonth < 1) {
+            // We know outMonth is 0 to 11 now assuming outMonth was 1 to 12
+            outMonth -= 1;
+            if (outMonth < 1) {
+                outYear -= 1;
+                if (outYear === 0) {
+                    outYear -= 1;
+                }
+                outMonth = 12;
+            }
+            // We know outMonth is 1 to 12 now, given previous assumptions
+            currentMonthLength = gregorian1OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
+            outDayOfMonth += currentMonthLength;
+        }
+
+        return G1.ymd(
+            outYear,
+            outMonth,
+            /** @type {DayOfMonth} */ (outDayOfMonth),
+        )
+    }
+
+    // TODO This is apparently slower than doing calculations as in
+    // rollJulian0YMDByDays, so eventaully make it more like that
+    // function if this gets used enough for that to matter
+    /** @type {(g0YMD: G0YMD, offsetInDays: Days) => G0YMD} */
+    const rollGregorian0YMDByDays = ({g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth}, offsetInDays) => {
+        const output = new Date(0);
+        output.setUTCFullYear(year)
+        output.setUTCMonth(month - 1)
+        output.setUTCDate(dayOfMonth + offsetInDays)
+
+        return G0.ymd(
+            output.getUTCFullYear(),
+            /** @type {Month} */ (output.getUTCMonth() + 1),
+            /** @type {DayOfMonth} */ (output.getUTCDate()),
+        )
+    }
+
+    /** @template YMD
+     * @type {(calendar: CalendarKind, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const linkedTimeFromDayOfMonth = (calendar, date, monthDelta, dayOfMonth) => {
+        switch (calendar) {
+            default:
+                console.error("unhandled calendar kind: " + calendar)
+                // fallthrough
+            case GREGORIAN0:
+                return gregorian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+            case JULIAN0:
+                return julian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+            case INTERNATIONAL_FIXED:
+                // TODO? Can we use funcsLinkedTimeFromDayOfMonth instead for this?
+                return ifcLinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+            case GREGORIAN1:
+                return gregorian1LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
+            break
+        }
+    };
+
+    /** @template YMD
+     * @type {(funcs: BoundsFuncs<YMD>, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const funcsLinkedTimeFromDayOfMonth = (funcs, date, monthDelta, dayOfMonth) => {
+        const oldYMD = funcs.toYMD(date)
+
+        let newYMD = oldYMD
+        switch (monthDelta) {
+            case PREVIOUS:
+                newYMD = funcs.rollByDays(oldYMD, -funcs.getDayOfMonth(oldYMD))
+            break
+            default:
+                console.error("Unexpected monthDelta: " + monthDelta)
+                // fallthrough
+            case CURRENT:
+            break
+            case NEXT:
+                newYMD = funcs.rollByDays(oldYMD, funcs.getMonthLength(oldYMD) - funcs.getDayOfMonth(oldYMD) + 1)
+            break
+        }
+
+        const g0YMD = funcs.toGregorian0(funcs.setDayOfMonth(newYMD, dayOfMonth))
+
+        return timeFromGregorian0(g0YMD)
+    }
+
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const gregorian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        // Needing to cast to BoundsFuncs<any> is annoying, but giving
+        // the constant the more specific type does catch some errors.
+        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (gregorian0BoundFuncs), date, monthDelta, dayOfMonth);
+    }
+
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const julian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        // Needing to cast to BoundsFuncs<any> is annoying, but giving
+        // the constant the more specific type does catch some errors.
+        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (julian0BoundFuncs), date, monthDelta, dayOfMonth);
+    }
+
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const gregorian1LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        // Needing to cast to BoundsFuncs<any> is annoying, but giving
+        // the constant the more specific type does catch some errors.
+        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (gregorian1BoundFuncs), date, monthDelta, dayOfMonth);
+    }
+
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const ifcLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        const year = date.getUTCFullYear()
+
+        const {
+            zeroIndexedMonthNumber,
+        } = ifcZeroIndexedMonthAndDay(date)
+
+        const firstDayOfYearInMonth = ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
+            zeroIndexedMonthNumber: /** @type {ZeroIndexedIFCMonth} */ (betterMod(zeroIndexedMonthNumber + monthDelta, IFC_MONTH_COUNT)),
+            year,
+        })
+
+        const targetDayOfYear = firstDayOfYearInMonth + (dayOfMonth - 1)
+
+        const startOfYear = new Date(0);
+        startOfYear.setUTCFullYear(year)
+
+        return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
+    }
+
+    /**
+     * @template YMD
+     * @typedef {{
+     *   toYMD: (date: Date) => YMD,
+     *   rollByDays: (oldYMD: YMD, days: Integer) => YMD,
+     *   getDayOfMonth: (oldYMD: YMD) => DayOfMonth,
+     *   setDayOfMonth: (oldYMD: YMD, dayOfMonth: DayOfMonth) => YMD,
+     *   getMonthLength: (oldYMD: YMD) => Integer,
+     *   toGregorian0: (oldYMD: YMD) => G0YMD,
+     *   linkedTimeFromDayOfMonth: (date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time,
+     * }} BoundsFuncs<YMD> */
+
+    /** @type {BoundsFuncs<G0YMD>} */
+    const gregorian0BoundFuncs = {
+        toYMD: gregorian0YMD,
+        rollByDays: rollGregorian0YMDByDays,
+        getDayOfMonth: (ymd) => ymd.g0DayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, g0DayOfMonth: dayOfMonth }),
+        getMonthLength: ({g0Year: year, g0Month: month}) => gregorian0OneIndexedMonthLength({year, month}),
+        toGregorian0: ymd => ymd,
+        linkedTimeFromDayOfMonth: gregorian0LinkedTimeFromDayOfMonth,
+    };
+
+    /** @type {BoundsFuncs<J0YMD>} */
+    const julian0BoundFuncs = {
+        toYMD: julian0YMD,
+        rollByDays: rollJulian0YMDByDays,
+        getDayOfMonth: (ymd) => ymd.j0DayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, j0DayOfMonth: dayOfMonth }),
+        getMonthLength: ({j0Year: year, j0Month: month}) => julian0OneIndexedMonthLength({year, month}),
+        toGregorian0: julian0YMDToGregorian0,
+        linkedTimeFromDayOfMonth: julian0LinkedTimeFromDayOfMonth,
+    };
+
+    /** @type {BoundsFuncs<G1YMD>} */
+    const gregorian1BoundFuncs = {
+        toYMD: gregorian1YMD,
+        rollByDays: rollGregorian1YMDByDays,
+        getDayOfMonth: (ymd) => ymd.g1DayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, g1DayOfMonth: dayOfMonth }),
+        getMonthLength: ({g1Year: year, g1Month: month}) => gregorian1OneIndexedMonthLength({year, month}),
+        toGregorian0: gregorian1YMDToGregorian0,
+        linkedTimeFromDayOfMonth: gregorian1LinkedTimeFromDayOfMonth,
+    };
+
+    /** @typedef {{ifcYear: IFCYear, ifcMonth: Month, ifcDayOfMonth: DayOfMonth}} IFCYMD */
+
+    /** @type {BoundsFuncs<IFCYMD>} */
+    const ifcBoundFuncs = {
+        // Most of these aren't called currently, so just put in something that typechecks
+        // Might end up using them later
+        toYMD: () => ({ifcYear: 1, ifcMonth: 1, ifcDayOfMonth: 1}),
+        rollByDays: () => ({ifcYear: 1, ifcMonth: 1, ifcDayOfMonth: 1}),
+        getDayOfMonth: (ymd) => ymd.ifcDayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, ifcDayOfMonth: dayOfMonth }),
+        getMonthLength: ({ifcYear: year, ifcMonth: month}) => ifcOneIndexedMonthLength({year, month}),
+        toGregorian0: () => (G0.ymd(1,1,1)),//ifcYMDToGregorian0,
+        linkedTimeFromDayOfMonth: ifcLinkedTimeFromDayOfMonth,
+    };
+
     /** @typedef {{
      * date: Date,
      * pageBounds: () => CalendarBounds,
-     * linkedTimeFromDayOfMonth: (monthDelta: MonthDelta, dayOfMonth: DayOfMonth) => Time
      * }} BoundsProvider */
 
     /** @type {(kind: CalendarKind, date: Date) => CalendarSpecs} */
     const calculateCalendarSpecs = (kind, date) => {
+        let boundsFuncs;
         /** @type {BoundsProvider} */
         let boundsProvider;
         switch (kind) {
             default:
                 console.error("Invalid calendar kind: " + kind)
             case GREGORIAN0:
+                boundsFuncs = gregorian0BoundFuncs;
                 boundsProvider = {
                     date,
                     pageBounds() {
@@ -188,12 +511,10 @@ var Time = (function () {
                             appearance: DEFAULT_APPEARANCE,
                         };
                     },
-                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        return gregorian0LinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
-                    }
                 }
             break
             case INTERNATIONAL_FIXED:
+                boundsFuncs = ifcBoundFuncs;
                 boundsProvider = {
                     date,
                     pageBounds() {
@@ -295,12 +616,10 @@ var Time = (function () {
                             appearance,
                         };
                     },
-                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        return ifcLinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
-                    },
                 }
             break
             case JULIAN0:
+                boundsFuncs = julian0BoundFuncs;
                 boundsProvider = {
                     date,
                     pageBounds() {
@@ -332,12 +651,10 @@ var Time = (function () {
                             appearance: DEFAULT_APPEARANCE,
                         };
                     },
-                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-                        return julian0LinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
-                    }
                 }
             break
             case GREGORIAN1:
+                boundsFuncs = gregorian1BoundFuncs;
                 boundsProvider = {
                     date,
                     pageBounds() {
@@ -369,10 +686,6 @@ var Time = (function () {
                             appearance: DEFAULT_APPEARANCE,
                         };
                     },
-                    linkedTimeFromDayOfMonth(monthDelta, dayOfMonth) {
-
-                        return gregorian1LinkedTimeFromDayOfMonth(this.date, monthDelta, dayOfMonth)
-                    }
                 }
             break
         }
@@ -382,7 +695,7 @@ var Time = (function () {
         // boundsFuncs here, and then make linkedTimeFromDayOfMonth a
         // boundFunc field.
 
-        return calculateCalendarSpecsInner(boundsProvider)
+        return calculateCalendarSpecsInner(boundsFuncs, boundsProvider)
     }
 
     /** @type {(year: Integer) => boolean} */
@@ -583,119 +896,6 @@ var Time = (function () {
     const julian0DominicalLetters = (julian0YMD) => {
         return JULIAN0_DOMINICAL_LETTERS[betterMod(julian0YMD.j0Year, 28)];
     };
-
-    /** @type {(j0YMD: J0YMD, offsetInDays: Days) => J0YMD} */
-    const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
-        let currentMonthLength = julian0OneIndexedMonthLength({year: j0Year, month: j0Month})
-
-        let outYear = j0Year
-        let outMonth = j0Month
-        let outDayOfMonth = j0DayOfMonth + offsetInDays
-
-        // TODO skip over years at once so we don't need to loop so
-        // many times
-        while (outDayOfMonth > currentMonthLength) {
-            outDayOfMonth -= currentMonthLength;
-
-            outMonth += 1;
-            // We know outMonth is 2 to 13 now assuming outMonth was 1 to 12
-            if (outMonth > 12) {
-                outYear += 1;
-                outMonth = 1;
-            }
-            // We know outMonth is 1 to 12 now, given previous assumptions
-
-            currentMonthLength = julian0OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
-        }
-
-        // TODO skip over years at once so we don't need to loop so
-        // many times
-        while (outDayOfMonth < 1) {
-            // We know outMonth is 0 to 11 now assuming outMonth was 1 to 12
-            outMonth -= 1;
-            if (outMonth < 1) {
-                outYear -= 1;
-                outMonth = 12;
-            }
-            // We know outMonth is 1 to 12 now, given previous assumptions
-            currentMonthLength = julian0OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
-            outDayOfMonth += currentMonthLength;
-        }
-
-        return J0.ymd(
-            outYear,
-            outMonth,
-            /** @type {DayOfMonth} */ (outDayOfMonth),
-        )
-    }
-
-    /** @type {(g1YMD: G1YMD, offsetInDays: Days) => G1YMD} */
-    const rollGregorian1YMDByDays = ({g1Year, g1Month, g1DayOfMonth}, offsetInDays) => {
-        let currentMonthLength = gregorian1OneIndexedMonthLength({year: g1Year, month: g1Month})
-
-        let outYear = g1Year
-        let outMonth = g1Month
-        let outDayOfMonth = g1DayOfMonth + offsetInDays
-
-        // TODO skip over years at once so we don't need to loop so
-        // many times
-        while (outDayOfMonth > currentMonthLength) {
-            outDayOfMonth -= currentMonthLength;
-
-            outMonth += 1;
-            // We know outMonth is 2 to 13 now assuming outMonth was 1 to 12
-            if (outMonth > 12) {
-                outYear += 1;
-                if (outYear === 0) {
-                    outYear += 1;
-                }
-                outMonth = 1;
-            }
-            // We know outMonth is 1 to 12 now, given previous assumptions
-
-            currentMonthLength = gregorian1OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
-        }
-
-        // TODO skip over years at once so we don't need to loop so
-        // many times
-        while (outDayOfMonth < 1) {
-            // We know outMonth is 0 to 11 now assuming outMonth was 1 to 12
-            outMonth -= 1;
-            if (outMonth < 1) {
-                outYear -= 1;
-                if (outYear === 0) {
-                    outYear -= 1;
-                }
-                outMonth = 12;
-            }
-            // We know outMonth is 1 to 12 now, given previous assumptions
-            currentMonthLength = gregorian1OneIndexedMonthLength({year: outYear, month: /** @type Month */ (outMonth)})
-            outDayOfMonth += currentMonthLength;
-        }
-
-        return G1.ymd(
-            outYear,
-            outMonth,
-            /** @type {DayOfMonth} */ (outDayOfMonth),
-        )
-    }
-
-    // TODO This is apparently slower than doing calculations as in
-    // rollJulian0YMDByDays, so eventaully make it more like that
-    // function if this gets used enough for that to matter
-    /** @type {(g0YMD: G0YMD, offsetInDays: Days) => G0YMD} */
-    const rollGregorian0YMDByDays = ({g0Year: year, g0Month: month, g0DayOfMonth: dayOfMonth}, offsetInDays) => {
-        const output = new Date(0);
-        output.setUTCFullYear(year)
-        output.setUTCMonth(month - 1)
-        output.setUTCDate(dayOfMonth + offsetInDays)
-
-        return G0.ymd(
-            output.getUTCFullYear(),
-            /** @type {Month} */ (output.getUTCMonth() + 1),
-            /** @type {DayOfMonth} */ (output.getUTCDate()),
-        )
-    }
 
     /*
     // Year Month Day Less-Than
@@ -1083,62 +1283,18 @@ var Time = (function () {
         return MONTH_LENGTHS[month - 1]
     }
 
-    /** @type {(date: Date) => G0YMD} */
-    const gregorian0YMD = (date) => {
-        const gYear = date.getUTCFullYear()
-        const gMonth = date.getUTCMonth()
-        const gDayOfMonth = date.getUTCDate()
+    /** @type {(arg: {year: IFCYear, month: Month}) => number} */
+    const ifcOneIndexedMonthLength = ({year, month}) => {
+        const zeroIndexedMonthNumber = month - 1;
+        if (zeroIndexedMonthNumber < IFC_ZERO_INDEXED_YEAR_DAY_MONTH) {
+            const isLeap = isGregorian0LeapYear(year);
 
-        return G0.ymd(gYear, /** @type Month */ (gMonth + 1), /** @type DayOfMonth */ (gDayOfMonth))
-    }
-
-    /** @type {(date: Date) => J0YMD} */
-    const julian0YMD = (date) => {
-        return gregorian0YMDToJulian0(gregorian0YMD(date))
-    }
-
-    /** @type {(date: Date) => G1YMD} */
-    const gregorian1YMD = (date) => {
-        return gregorian0YMDToGregorian1(gregorian0YMD(date))
-    }
-
-    /** @type {(g0YMD: G0YMD) => J0YMD} */
-    const gregorian0YMDToJulian0 = (g0YMD) => {
-        let daysDifference = julian0DaysDifferenceFromGregorian0YMD(g0YMD)
-
-        // Every Gregorian leap year is a Julian one as well
-        return rollJulian0YMDByDays(J0.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
-    }
-
-    /** @type {(j0YMD: J0YMD) => G0YMD} */
-    const julian0YMDToGregorian0 = (j0YMD) => {
-        let daysDifference = gregorian0DaysDifferenceFromJulian0YMD(j0YMD)
-
-        // Being dumb is often the first step to being smart
-        /** @type {(j0YMD: J0YMD) => G0YMD} */
-        const j0ToG0Dumb = ({j0Year, j0Month, j0DayOfMonth}) => {
-            if (
-                j0Month === 2
-                && j0DayOfMonth === 29
-                && isJulian0LeapYear(j0Year)
-                && !isGregorian0LeapYear(j0Year)
-            ) {
-                return G0.ymd(j0Year, 3, 1)
-            }
-            return G0.ymd(j0Year, j0Month, j0DayOfMonth)
+            return (isLeap && zeroIndexedMonthNumber === (IFC_ZERO_INDEXED_LEAP_MONTH + 1))
+                ? IFC_NORMAL_DAYS_PER_MONTH + 1
+                : IFC_NORMAL_DAYS_PER_MONTH
+        } else {
+            return 1;
         }
-
-        return rollGregorian0YMDByDays(j0ToG0Dumb(j0YMD), daysDifference)
-    }
-
-    /** @type {(g0YMD: G0YMD) => G1YMD} */
-    const gregorian0YMDToGregorian1 = (g0YMD) => {
-        return G1.ymd(g0YMD.g0Year <= 0 ? g0YMD.g0Year - 1 : g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth)
-    }
-
-    /** @type {(g1YMD: G1YMD) => G0YMD} */
-    const gregorian1YMDToGregorian0 = (g1YMD) => {
-        return G0.ymd(g1YMD.g1Year < 0 ? g1YMD.g1Year + 1 : g1YMD.g1Year, g1YMD.g1Month, g1YMD.g1DayOfMonth)
     }
 
     /** @type {(date: Date) => Date} */
@@ -1165,8 +1321,6 @@ var Time = (function () {
             1
         )
     }
-
-
 
     /** @type {(date: Date) => ZeroIndexedDayOfYear} */
     const get0IndexedDayOfYear = (date) => {
@@ -1266,136 +1420,6 @@ var Time = (function () {
         }
     }
 
-    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const ifcLinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        const year = date.getUTCFullYear()
-
-        const {
-            zeroIndexedMonthNumber,
-        } = ifcZeroIndexedMonthAndDay(date)
-
-        const firstDayOfYearInMonth = ifcZeroIndexedMonthToZeroIndexedFirstDayOfYearInMonth({
-            zeroIndexedMonthNumber: /** @type {ZeroIndexedIFCMonth} */ (betterMod(zeroIndexedMonthNumber + monthDelta, IFC_MONTH_COUNT)),
-            year,
-        })
-
-        const targetDayOfYear = firstDayOfYearInMonth + (dayOfMonth - 1)
-
-        const startOfYear = new Date(0);
-        startOfYear.setUTCFullYear(year)
-
-        return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
-    }
-
-    /**
-     * @template YMD
-     * @typedef {{
-     *   toYMD: (date: Date) => YMD,
-     *   rollByDays: (oldYMD: YMD, days: Integer) => YMD,
-     *   getDayOfMonth: (oldYMD: YMD) => DayOfMonth,
-     *   setDayOfMonth: (oldYMD: YMD, dayOfMonth: DayOfMonth) => YMD,
-     *   getMonthLength: (oldYMD: YMD) => DayOfMonth,
-     *   toGregorian0: (oldYMD: YMD) => G0YMD,
-     * }} BoundsFuncs<YMD> */
-
-    /** @type {BoundsFuncs<G0YMD>} */
-    const gregorian0BoundFuncs = {
-        toYMD: gregorian0YMD,
-        rollByDays: rollGregorian0YMDByDays,
-        getDayOfMonth: (ymd) => ymd.g0DayOfMonth,
-        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, g0DayOfMonth: dayOfMonth }),
-        getMonthLength: ({g0Year: year, g0Month: month}) => gregorian0OneIndexedMonthLength({year, month}),
-        toGregorian0: ymd => ymd,
-    };
-
-    /** @type {BoundsFuncs<J0YMD>} */
-    const julian0BoundFuncs = {
-        toYMD: julian0YMD,
-        rollByDays: rollJulian0YMDByDays,
-        getDayOfMonth: (ymd) => ymd.j0DayOfMonth,
-        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, j0DayOfMonth: dayOfMonth }),
-        getMonthLength: ({j0Year: year, j0Month: month}) => julian0OneIndexedMonthLength({year, month}),
-        toGregorian0: julian0YMDToGregorian0,
-    };
-
-    /** @type {BoundsFuncs<G1YMD>} */
-    const gregorian1BoundFuncs = {
-        toYMD: gregorian1YMD,
-        rollByDays: rollGregorian1YMDByDays,
-        getDayOfMonth: (ymd) => ymd.g1DayOfMonth,
-        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, g1DayOfMonth: dayOfMonth }),
-        getMonthLength: ({g1Year: year, g1Month: month}) => gregorian1OneIndexedMonthLength({year, month}),
-        toGregorian0: gregorian1YMDToGregorian0,
-    };
-
-    /** @template YMD
-     * @type {(calendar: CalendarKind, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const linkedTimeFromDayOfMonth = (calendar, date, monthDelta, dayOfMonth) => {
-        switch (calendar) {
-            default:
-                console.error("unhandled calendar kind: " + calendar)
-                // fallthrough
-            case GREGORIAN0:
-                return gregorian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-            case JULIAN0:
-                return julian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-            case INTERNATIONAL_FIXED:
-                // TODO? Can we use funcsLinkedTimeFromDayOfMonth instead for this?
-                return ifcLinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-            case GREGORIAN1:
-                return gregorian1LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-        }
-    };
-
-    /** @template YMD
-     * @type {(funcs: BoundsFuncs<YMD>, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const funcsLinkedTimeFromDayOfMonth = (funcs, date, monthDelta, dayOfMonth) => {
-        const oldYMD = funcs.toYMD(date)
-
-        let newYMD = oldYMD
-        switch (monthDelta) {
-            case PREVIOUS:
-                newYMD = funcs.rollByDays(oldYMD, -funcs.getDayOfMonth(oldYMD))
-            break
-            default:
-                console.error("Unexpected monthDelta: " + monthDelta)
-                // fallthrough
-            case CURRENT:
-            break
-            case NEXT:
-                newYMD = funcs.rollByDays(oldYMD, funcs.getMonthLength(oldYMD) - funcs.getDayOfMonth(oldYMD) + 1)
-            break
-        }
-
-        const g0YMD = funcs.toGregorian0(funcs.setDayOfMonth(newYMD, dayOfMonth))
-
-        return timeFromGregorian0(g0YMD)
-    }
-
-    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const gregorian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        // Needing to cast to BoundsFuncs<any> is annoying, but giving
-        // the constant the more specific type does catch some errors.
-        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (gregorian0BoundFuncs), date, monthDelta, dayOfMonth);
-    }
-
-    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const julian0LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        // Needing to cast to BoundsFuncs<any> is annoying, but giving
-        // the constant the more specific type does catch some errors.
-        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (julian0BoundFuncs), date, monthDelta, dayOfMonth);
-    }
-
-    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const gregorian1LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
-        // Needing to cast to BoundsFuncs<any> is annoying, but giving
-        // the constant the more specific type does catch some errors.
-        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (gregorian1BoundFuncs), date, monthDelta, dayOfMonth);
-    }
 
     /** @type {(g0YMD: G0YMD) => Integer} */
     const timeFromGregorian0 = (g0YMD) => {
@@ -1422,8 +1446,11 @@ var Time = (function () {
 
     /** @typedef {{ monthText: string, boxSpecs: BoxSpecs, appearance: CalendarAppearance }} CalendarSpecs */
 
-    /** @type {(boundsProvider: BoundsProvider) => CalendarSpecs} */
-    const calculateCalendarSpecsInner = (boundsProvider) => {
+    /** @typedef {BoundsFuncs<G0YMD> | BoundsFuncs<J0YMD> | BoundsFuncs<G1YMD> | BoundsFuncs<IFCYMD>} KnownBoundsFuncs */
+
+    /**
+     * @type {(boundsFunc: KnownBoundsFuncs, boundsProvider: BoundsProvider) => CalendarSpecs} */
+    const calculateCalendarSpecsInner = (boundsFuncs, boundsProvider) => {
         const {
             dayOfMonth,
             lastDateOfPreviousMonth,
@@ -1448,7 +1475,7 @@ var Time = (function () {
             calendarBoxSpecs[boxIndex] = {
                 text: firstVisibleDayOfMonth,
                 kind: OTHER_MONTH,
-                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(PREVIOUS, firstVisibleDayOfMonth)
+                linkedTime: boundsFuncs.linkedTimeFromDayOfMonth(boundsProvider.date, PREVIOUS, firstVisibleDayOfMonth)
             }
             boxIndex += 1
         }
@@ -1464,7 +1491,8 @@ var Time = (function () {
             calendarBoxSpecs[boxIndex] = {
                 text: i,
                 kind,
-                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(
+                linkedTime: boundsFuncs.linkedTimeFromDayOfMonth(
+                    boundsProvider.date,
                     CURRENT,
                     // Valid because i is known to be between 1 and lastDateOfCurrentMonth inclusive
                     /** @type {DayOfMonth} */(i)
@@ -1483,7 +1511,8 @@ var Time = (function () {
             calendarBoxSpecs[boxIndex] = {
                 text: nextMonthDate,
                 kind: OTHER_MONTH,
-                linkedTime: boundsProvider.linkedTimeFromDayOfMonth(
+                linkedTime: boundsFuncs.linkedTimeFromDayOfMonth(
+                    boundsProvider.date,
                     NEXT,
                     // Valid because nextMonthDate is known to be between 1 and DAYS_IN_WEEK
                     /** @type {DayOfMonth} */(nextMonthDate)
