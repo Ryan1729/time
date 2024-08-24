@@ -412,6 +412,7 @@ var Time = (function () {
      *   getMonthLength: (oldYMD: YMD) => Integer,
      *   toGregorian0: (oldYMD: YMD) => G0YMD,
      *   linkedTimeFromDayOfMonth: (date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time,
+     *   pageBounds: (date: Date) => CalendarBounds,
      * }} BoundsFuncs<YMD> */
 
     /** @type {BoundsFuncs<G0YMD>} */
@@ -423,6 +424,36 @@ var Time = (function () {
         getMonthLength: ({g0Year: year, g0Month: month}) => gregorian0OneIndexedMonthLength({year, month}),
         toGregorian0: ymd => ymd,
         linkedTimeFromDayOfMonth: gregorian0LinkedTimeFromDayOfMonth,
+        pageBounds: (date) => {
+            const year = date.getUTCFullYear();
+            const month = date.getUTCMonth();
+            const dayOfMonth = date.getUTCDate();
+
+            const firstOfCurrentMonth = new Date(year, month, 1)
+
+            // Using just `date` instead of firstOfCurrentMonth has timezone issues.
+            const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
+
+            const lastOfPreviousMonth = new Date(year, month, 0)
+
+            const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
+            const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
+            const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
+            const dayOfWeekOfFirstOfCurrent = firstOfCurrentMonth.getUTCDay()
+            const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
+
+            return {
+                dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
+                lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
+                dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
+                lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
+                dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
+                dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
+                maxBoxesPerPage: 42,
+                monthText,
+                appearance: DEFAULT_APPEARANCE,
+            };
+        },
     };
 
     /** @type {BoundsFuncs<J0YMD>} */
@@ -434,6 +465,33 @@ var Time = (function () {
         getMonthLength: ({j0Year: year, j0Month: month}) => julian0OneIndexedMonthLength({year, month}),
         toGregorian0: julian0YMDToGregorian0,
         linkedTimeFromDayOfMonth: julian0LinkedTimeFromDayOfMonth,
+        pageBounds: (date) => {
+            const ymd = julian0YMD(date)
+
+            const firstOfCurrentMonth = new Date(ymd.j0Year, ymd.j0Month - 1, 1)
+            // Using just `date` instead of firstOfCurrentMonth has timezone issues.
+            const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
+
+            const lastOfPreviousMonthYmd = rollJulian0YMDByDays(ymd, -ymd.j0DayOfMonth)
+
+            const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.j0DayOfMonth
+            const dayOfWeekOfLastOfPrevious = julian0DayOfWeek(lastOfPreviousMonthYmd)
+            const lastDateOfCurrentMonth = julian0OneIndexedMonthLength({year: ymd.j0Year, month: ymd.j0Month})
+            const dayOfWeekOfFirstOfCurrent = julian0DayOfWeek({...ymd, j0DayOfMonth: 1})
+            const dayOfWeekOfFirstOfNext = julian0DayOfWeek(rollJulian0YMDByDays(ymd, lastDateOfCurrentMonth - ymd.j0DayOfMonth + 1))
+
+            return {
+                dayOfMonth: ymd.j0DayOfMonth,
+                lastDateOfPreviousMonth,
+                dayOfWeekOfLastOfPrevious,
+                lastDateOfCurrentMonth,
+                dayOfWeekOfFirstOfCurrent,
+                dayOfWeekOfFirstOfNext,
+                maxBoxesPerPage: 42,
+                monthText,
+                appearance: DEFAULT_APPEARANCE,
+            };
+        },
     };
 
     /** @type {BoundsFuncs<G1YMD>} */
@@ -445,6 +503,33 @@ var Time = (function () {
         getMonthLength: ({g1Year: year, g1Month: month}) => gregorian1OneIndexedMonthLength({year, month}),
         toGregorian0: gregorian1YMDToGregorian0,
         linkedTimeFromDayOfMonth: gregorian1LinkedTimeFromDayOfMonth,
+        pageBounds: (date) => {
+            const ymd = gregorian1YMD(date)
+
+            const firstOfCurrentMonth = new Date(ymd.g1Year, ymd.g1Month - 1, 1)
+            // Using just `date` instead of firstOfCurrentMonth has timezone issues.
+            const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
+
+            const lastOfPreviousMonthYmd = rollGregorian1YMDByDays(ymd, -ymd.g1DayOfMonth)
+
+            const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.g1DayOfMonth
+            const dayOfWeekOfLastOfPrevious = gregorian1DayOfWeek(lastOfPreviousMonthYmd)
+            const lastDateOfCurrentMonth = gregorian1OneIndexedMonthLength({year: ymd.g1Year, month: ymd.g1Month})
+            const dayOfWeekOfFirstOfCurrent = gregorian1DayOfWeek({...ymd, g1DayOfMonth: 1})
+            const dayOfWeekOfFirstOfNext = gregorian1DayOfWeek(rollGregorian1YMDByDays(ymd, lastDateOfCurrentMonth - ymd.g1DayOfMonth + 1))
+
+            return {
+                dayOfMonth: ymd.g1DayOfMonth,
+                lastDateOfPreviousMonth,
+                dayOfWeekOfLastOfPrevious,
+                lastDateOfCurrentMonth,
+                dayOfWeekOfFirstOfCurrent,
+                dayOfWeekOfFirstOfNext,
+                maxBoxesPerPage: 42,
+                monthText,
+                appearance: DEFAULT_APPEARANCE,
+            };
+        },
     };
 
     /** @typedef {{ifcYear: IFCYear, ifcMonth: Month, ifcDayOfMonth: DayOfMonth}} IFCYMD */
@@ -459,243 +544,128 @@ var Time = (function () {
         setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, ifcDayOfMonth: dayOfMonth }),
         getMonthLength: ({ifcYear: year, ifcMonth: month}) => ifcOneIndexedMonthLength({year, month}),
         toGregorian0: () => (G0.ymd(1,1,1)),//ifcYMDToGregorian0,
+        // The ones from here on are called.
         linkedTimeFromDayOfMonth: ifcLinkedTimeFromDayOfMonth,
-    };
+        pageBounds: (date) => {
+            const {
+                zeroIndexedMonthNumber,
+                dayOfMonth,
+            } = ifcZeroIndexedMonthAndDay(date)
 
-    /** @typedef {{
-     * date: Date,
-     * pageBounds: () => CalendarBounds,
-     * }} BoundsProvider */
+            let monthText
+            switch (zeroIndexedMonthNumber) {
+                default:
+                    console.error("Unknown Month for: " + zeroIndexedMonthNumber)
+                    // fallthrough
+                case 0:
+                    monthText = "January"
+                break
+                case 1:
+                    monthText = "February"
+                break
+                case 2:
+                    monthText = "March"
+                break
+                case 3:
+                    monthText = "April"
+                break
+                case 4:
+                    monthText = "May"
+                break
+                case IFC_ZERO_INDEXED_LEAP_MONTH:
+                    monthText = "June"
+                break
+                case 6:
+                    monthText = "Sol"
+                break
+                case 7:
+                    monthText = "July"
+                break
+                case 8:
+                    monthText = "August"
+                break
+                case 9:
+                    monthText = "September"
+                break
+                case 10:
+                    monthText = "October"
+                break
+                case 11:
+                    monthText = "November"
+                break
+                case 12:
+                    monthText = "December"
+                break
+                case IFC_ZERO_INDEXED_YEAR_DAY_MONTH:
+                    monthText = "Year Day"
+                break
+            }
+
+            const year = date.getUTCFullYear()
+
+            const isLeap = isGregorian0LeapYear(year)
+
+            const lastDateOfPreviousMonth =
+                (isLeap && zeroIndexedMonthNumber === (IFC_ZERO_INDEXED_LEAP_MONTH + 1))
+                ? IFC_NORMAL_DAYS_PER_MONTH + 1
+                : IFC_NORMAL_DAYS_PER_MONTH
+            // Always start the months on a sunday, even if
+            // there was a leap day.
+            const dayOfWeekOfLastOfPrevious = 6
+            const lastDateOfCurrentMonth =
+                zeroIndexedMonthNumber === IFC_ZERO_INDEXED_YEAR_DAY_MONTH
+                    ? 1
+                    : (isLeap && zeroIndexedMonthNumber === IFC_ZERO_INDEXED_LEAP_MONTH)
+                        ? IFC_NORMAL_DAYS_PER_MONTH + 1
+                        : IFC_NORMAL_DAYS_PER_MONTH
+
+            const appearance =
+                zeroIndexedMonthNumber === IFC_ZERO_INDEXED_YEAR_DAY_MONTH
+                    ? HIDE_WEEK_ROW
+                    : (isLeap && zeroIndexedMonthNumber === IFC_ZERO_INDEXED_LEAP_MONTH)
+                        ? LAST_DAY_OUTSIDE_WEEK
+                        : DEFAULT_APPEARANCE
+
+            const dayOfWeekOfFirstOfCurrent = 0
+            // Set to after DAYS in week to prevent loop.
+            // TODO signal in a less coupled way
+            const dayOfWeekOfFirstOfNext = DAYS_IN_WEEK + 1
+
+            return {
+                dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
+                lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
+                dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
+                lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
+                dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
+                dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
+                maxBoxesPerPage: lastDateOfCurrentMonth,
+                monthText,
+                appearance,
+            };
+        },
+    };
 
     /** @type {(kind: CalendarKind, date: Date) => CalendarSpecs} */
     const calculateCalendarSpecs = (kind, date) => {
         let boundsFuncs;
-        /** @type {BoundsProvider} */
-        let boundsProvider;
         switch (kind) {
             default:
                 console.error("Invalid calendar kind: " + kind)
             case GREGORIAN0:
                 boundsFuncs = gregorian0BoundFuncs;
-                boundsProvider = {
-                    date,
-                    pageBounds() {
-                        const date = this.date
-
-                        const year = date.getUTCFullYear()
-                        const month = date.getUTCMonth()
-                        const dayOfMonth = date.getUTCDate()
-
-                        const firstOfCurrentMonth = new Date(year, month, 1)
-
-                        // Using just `date` instead of firstOfCurrentMonth has timezone issues.
-                        const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
-
-                        const lastOfPreviousMonth = new Date(year, month, 0)
-
-                        const lastDateOfPreviousMonth = lastOfPreviousMonth.getUTCDate()
-                        const dayOfWeekOfLastOfPrevious = lastOfPreviousMonth.getUTCDay()
-                        const lastDateOfCurrentMonth = new Date(year, month + 1, 0).getUTCDate()
-                        const dayOfWeekOfFirstOfCurrent = firstOfCurrentMonth.getUTCDay()
-                        const dayOfWeekOfFirstOfNext = new Date(year, month + 1, 1).getUTCDay()
-
-                        return {
-                            dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
-                            lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
-                            dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
-                            lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
-                            dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
-                            dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
-                            maxBoxesPerPage: 42,
-                            monthText,
-                            appearance: DEFAULT_APPEARANCE,
-                        };
-                    },
-                }
             break
             case INTERNATIONAL_FIXED:
                 boundsFuncs = ifcBoundFuncs;
-                boundsProvider = {
-                    date,
-                    pageBounds() {
-                        const date = this.date
-
-                        const {
-                            zeroIndexedMonthNumber,
-                            dayOfMonth,
-                        } = ifcZeroIndexedMonthAndDay(date)
-
-                        let monthText
-                        switch (zeroIndexedMonthNumber) {
-                            default:
-                                console.error("Unknown Month for: " + zeroIndexedMonthNumber)
-                                // fallthrough
-                            case 0:
-                                monthText = "January"
-                            break
-                            case 1:
-                                monthText = "February"
-                            break
-                            case 2:
-                                monthText = "March"
-                            break
-                            case 3:
-                                monthText = "April"
-                            break
-                            case 4:
-                                monthText = "May"
-                            break
-                            case IFC_ZERO_INDEXED_LEAP_MONTH:
-                                monthText = "June"
-                            break
-                            case 6:
-                                monthText = "Sol"
-                            break
-                            case 7:
-                                monthText = "July"
-                            break
-                            case 8:
-                                monthText = "August"
-                            break
-                            case 9:
-                                monthText = "September"
-                            break
-                            case 10:
-                                monthText = "October"
-                            break
-                            case 11:
-                                monthText = "November"
-                            break
-                            case 12:
-                                monthText = "December"
-                            break
-                            case IFC_ZERO_INDEXED_YEAR_DAY_MONTH:
-                                monthText = "Year Day"
-                            break
-                        }
-
-                        const year = date.getUTCFullYear()
-
-                        const isLeap = isGregorian0LeapYear(year)
-
-                        const lastDateOfPreviousMonth =
-                            (isLeap && zeroIndexedMonthNumber === (IFC_ZERO_INDEXED_LEAP_MONTH + 1))
-                            ? IFC_NORMAL_DAYS_PER_MONTH + 1
-                            : IFC_NORMAL_DAYS_PER_MONTH
-                        // Always start the months on a sunday, even if
-                        // there was a leap day.
-                        const dayOfWeekOfLastOfPrevious = 6
-                        const lastDateOfCurrentMonth =
-                            zeroIndexedMonthNumber === IFC_ZERO_INDEXED_YEAR_DAY_MONTH
-                                ? 1
-                                : (isLeap && zeroIndexedMonthNumber === IFC_ZERO_INDEXED_LEAP_MONTH)
-                                    ? IFC_NORMAL_DAYS_PER_MONTH + 1
-                                    : IFC_NORMAL_DAYS_PER_MONTH
-
-                        const appearance =
-                            zeroIndexedMonthNumber === IFC_ZERO_INDEXED_YEAR_DAY_MONTH
-                                ? HIDE_WEEK_ROW
-                                : (isLeap && zeroIndexedMonthNumber === IFC_ZERO_INDEXED_LEAP_MONTH)
-                                    ? LAST_DAY_OUTSIDE_WEEK
-                                    : DEFAULT_APPEARANCE
-
-                        const dayOfWeekOfFirstOfCurrent = 0
-                        // Set to after DAYS in week to prevent loop.
-                        // TODO signal in a less coupled way
-                        const dayOfWeekOfFirstOfNext = DAYS_IN_WEEK + 1
-
-                        return {
-                            dayOfMonth: /** @type DayOfMonth */ (dayOfMonth),
-                            lastDateOfPreviousMonth: /** @type DayOfMonth */ (lastDateOfPreviousMonth),
-                            dayOfWeekOfLastOfPrevious: /** @type DayOfWeek */ (dayOfWeekOfLastOfPrevious),
-                            lastDateOfCurrentMonth:  /** @type DayOfMonth */ (lastDateOfCurrentMonth),
-                            dayOfWeekOfFirstOfCurrent: /** @type DayOfWeek */ (dayOfWeekOfFirstOfCurrent),
-                            dayOfWeekOfFirstOfNext: /** @type DayOfWeek */ (dayOfWeekOfFirstOfNext),
-                            maxBoxesPerPage: lastDateOfCurrentMonth,
-                            monthText,
-                            appearance,
-                        };
-                    },
-                }
             break
             case JULIAN0:
                 boundsFuncs = julian0BoundFuncs;
-                boundsProvider = {
-                    date,
-                    pageBounds() {
-                        const date = this.date
-
-                        const ymd = julian0YMD(date)
-
-                        const firstOfCurrentMonth = new Date(ymd.j0Year, ymd.j0Month - 1, 1)
-                        // Using just `date` instead of firstOfCurrentMonth has timezone issues.
-                        const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
-
-                        const lastOfPreviousMonthYmd = rollJulian0YMDByDays(ymd, -ymd.j0DayOfMonth)
-
-                        const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.j0DayOfMonth
-                        const dayOfWeekOfLastOfPrevious = julian0DayOfWeek(lastOfPreviousMonthYmd)
-                        const lastDateOfCurrentMonth = julian0OneIndexedMonthLength({year: ymd.j0Year, month: ymd.j0Month})
-                        const dayOfWeekOfFirstOfCurrent = julian0DayOfWeek({...ymd, j0DayOfMonth: 1})
-                        const dayOfWeekOfFirstOfNext = julian0DayOfWeek(rollJulian0YMDByDays(ymd, lastDateOfCurrentMonth - ymd.j0DayOfMonth + 1))
-
-                        return {
-                            dayOfMonth: ymd.j0DayOfMonth,
-                            lastDateOfPreviousMonth,
-                            dayOfWeekOfLastOfPrevious,
-                            lastDateOfCurrentMonth,
-                            dayOfWeekOfFirstOfCurrent,
-                            dayOfWeekOfFirstOfNext,
-                            maxBoxesPerPage: 42,
-                            monthText,
-                            appearance: DEFAULT_APPEARANCE,
-                        };
-                    },
-                }
             break
             case GREGORIAN1:
                 boundsFuncs = gregorian1BoundFuncs;
-                boundsProvider = {
-                    date,
-                    pageBounds() {
-                        const date = this.date
-
-                        const ymd = gregorian1YMD(date)
-
-                        const firstOfCurrentMonth = new Date(ymd.g1Year, ymd.g1Month - 1, 1)
-                        // Using just `date` instead of firstOfCurrentMonth has timezone issues.
-                        const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
-
-                        const lastOfPreviousMonthYmd = rollGregorian1YMDByDays(ymd, -ymd.g1DayOfMonth)
-
-                        const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.g1DayOfMonth
-                        const dayOfWeekOfLastOfPrevious = gregorian1DayOfWeek(lastOfPreviousMonthYmd)
-                        const lastDateOfCurrentMonth = gregorian1OneIndexedMonthLength({year: ymd.g1Year, month: ymd.g1Month})
-                        const dayOfWeekOfFirstOfCurrent = gregorian1DayOfWeek({...ymd, g1DayOfMonth: 1})
-                        const dayOfWeekOfFirstOfNext = gregorian1DayOfWeek(rollGregorian1YMDByDays(ymd, lastDateOfCurrentMonth - ymd.g1DayOfMonth + 1))
-
-                        return {
-                            dayOfMonth: ymd.g1DayOfMonth,
-                            lastDateOfPreviousMonth,
-                            dayOfWeekOfLastOfPrevious,
-                            lastDateOfCurrentMonth,
-                            dayOfWeekOfFirstOfCurrent,
-                            dayOfWeekOfFirstOfNext,
-                            maxBoxesPerPage: 42,
-                            monthText,
-                            appearance: DEFAULT_APPEARANCE,
-                        };
-                    },
-                }
             break
         }
 
-        // TODO It seems better if we can just pass an object of functions
-        // so we only have one switch on `kind`. So start by passing a
-        // boundsFuncs here, and then make linkedTimeFromDayOfMonth a
-        // boundFunc field.
-
-        return calculateCalendarSpecsInner(boundsFuncs, boundsProvider)
+        return calculateCalendarSpecsInner(date, boundsFuncs)
     }
 
     /** @type {(year: Integer) => boolean} */
@@ -1449,8 +1419,8 @@ var Time = (function () {
     /** @typedef {BoundsFuncs<G0YMD> | BoundsFuncs<J0YMD> | BoundsFuncs<G1YMD> | BoundsFuncs<IFCYMD>} KnownBoundsFuncs */
 
     /**
-     * @type {(boundsFunc: KnownBoundsFuncs, boundsProvider: BoundsProvider) => CalendarSpecs} */
-    const calculateCalendarSpecsInner = (boundsFuncs, boundsProvider) => {
+     * @type {(date: Date, boundsFunc: KnownBoundsFuncs) => CalendarSpecs} */
+    const calculateCalendarSpecsInner = (date, boundsFuncs) => {
         const {
             dayOfMonth,
             lastDateOfPreviousMonth,
@@ -1461,7 +1431,7 @@ var Time = (function () {
             maxBoxesPerPage,
             monthText,
             appearance,
-        } = boundsProvider.pageBounds()
+        } = boundsFuncs.pageBounds(date);
 
         let calendarBoxSpecs = new Array(maxBoxesPerPage)
         let boxIndex = 0;
@@ -1475,7 +1445,7 @@ var Time = (function () {
             calendarBoxSpecs[boxIndex] = {
                 text: firstVisibleDayOfMonth,
                 kind: OTHER_MONTH,
-                linkedTime: boundsFuncs.linkedTimeFromDayOfMonth(boundsProvider.date, PREVIOUS, firstVisibleDayOfMonth)
+                linkedTime: boundsFuncs.linkedTimeFromDayOfMonth(date, PREVIOUS, firstVisibleDayOfMonth)
             }
             boxIndex += 1
         }
@@ -1492,7 +1462,7 @@ var Time = (function () {
                 text: i,
                 kind,
                 linkedTime: boundsFuncs.linkedTimeFromDayOfMonth(
-                    boundsProvider.date,
+                    date,
                     CURRENT,
                     // Valid because i is known to be between 1 and lastDateOfCurrentMonth inclusive
                     /** @type {DayOfMonth} */(i)
@@ -1512,7 +1482,7 @@ var Time = (function () {
                 text: nextMonthDate,
                 kind: OTHER_MONTH,
                 linkedTime: boundsFuncs.linkedTimeFromDayOfMonth(
-                    boundsProvider.date,
+                    date,
                     NEXT,
                     // Valid because nextMonthDate is known to be between 1 and DAYS_IN_WEEK
                     /** @type {DayOfMonth} */(nextMonthDate)
