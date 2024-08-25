@@ -1,7 +1,7 @@
 var Time = (function () {
     "use strict";
 
-    /** @typedef {0|1|2|3} CalendarKind */
+    /** @typedef {0|1|2|3|4} CalendarKind */
 
     /** @type {CalendarKind} */
     const GREGORIAN0 = 0
@@ -11,8 +11,10 @@ var Time = (function () {
     const JULIAN0 = 2
     /** @type {CalendarKind} */
     const GREGORIAN1 = 3
+    /** @type {CalendarKind} */
+    const JULIAN1 = 4
 
-    const CALENDAR_KIND_COUNT = 4
+    const CALENDAR_KIND_COUNT = 5
 
     const GREGORIAN0_MONTH_FORMATTER = new Intl.DateTimeFormat('default', { month: 'long' });
 
@@ -311,29 +313,6 @@ var Time = (function () {
             /** @type {DayOfMonth} */ (output.getUTCDate()),
         )
     }
-
-    /** @template YMD
-     * @type {(calendar: CalendarKind, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
-    const linkedTimeFromDayOfMonth = (calendar, date, monthDelta, dayOfMonth) => {
-        switch (calendar) {
-            default:
-                console.error("unhandled calendar kind: " + calendar)
-                // fallthrough
-            case GREGORIAN0:
-                return gregorian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-            case JULIAN0:
-                return julian0LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-            case INTERNATIONAL_FIXED:
-                // TODO? Can we use funcsLinkedTimeFromDayOfMonth instead for this?
-                return ifcLinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-            case GREGORIAN1:
-                return gregorian1LinkedTimeFromDayOfMonth(date, monthDelta, dayOfMonth);
-            break
-        }
-    };
 
     /** @template YMD
      * @type {(funcs: BoundsFuncs<YMD>, date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
@@ -663,6 +642,7 @@ var Time = (function () {
             case GREGORIAN1:
                 boundsFuncs = gregorian1BoundFuncs;
             break
+            
         }
 
         return calculateCalendarSpecsInner(date, boundsFuncs)
@@ -1573,6 +1553,7 @@ var Time = (function () {
         INTERNATIONAL_FIXED,
         JULIAN0,
         GREGORIAN1,
+        JULIAN1,
         CALENDAR_KIND_COUNT,
         G0,
         G1,

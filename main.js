@@ -14,7 +14,7 @@ const MEASURE_FRAMES = DEBUG_MODE
 // REMEBMER TO UPDATE ByCalendarKind IF ADDING TO CalendarKind
 /**
  * @template Value
- * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, [3]: unknown } ]: Value; }} ByCalendarKind<Value>
+ * @typedef {{ [_key in keyof { [0]: unknown, [1]: unknown, [2]: unknown, [3]: unknown, [4]: unknown } ]: Value; }} ByCalendarKind<Value>
  * */
 
 /** @typedef {0|1|2} CalendarAppearance */
@@ -737,6 +737,11 @@ const verbalEnglishWeekdayElements = {
         outputClass: "verbal",
         labelText: "(Gregorian 1 weekday)",
     }),
+    [Time.JULIAN1]: appendLabelledRow({
+        prefix: "verbal-english-julian-1-weekday",
+        outputClass: "verbal",
+        labelText: "(Julian 1 weekday)",
+    }),
 }
 
 const weekNumberFirstFriday = appendLabelledRow({
@@ -790,6 +795,11 @@ const dominicalLettersElements = {
         prefix: "gregorian-1-dominical-letters",
         outputClass: "verbal",
         labelText: "(Gregorian 1 Dominical Letters for Year)",
+    }),
+    [Time.JULIAN1]: appendLabelledRow({
+        prefix: "julian-1-dominical-letters",
+        outputClass: "verbal",
+        labelText: "(Julian 1 Dominical Letters for Year)",
     }),
 };
 
@@ -991,6 +1001,7 @@ const calendarElements = {
     [Time.INTERNATIONAL_FIXED]: appendCalendarElements("international-fixed-calendar", "International Fixed"),
     [Time.JULIAN0]: appendCalendarElements("julian-0-calendar", "Julian 0"),
     [Time.GREGORIAN1]: appendCalendarElements("gregorian-1-calendar", "Gregorian 1"),
+    [Time.JULIAN1]: appendCalendarElements("julian-1-calendar", "Julian 1"),
 }
 
 //
