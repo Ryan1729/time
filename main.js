@@ -489,6 +489,8 @@ const calendarName = (calendar) => {
             return "Julian 0"
         case Time.GREGORIAN1:
             return "Gregorian 1"
+        case Time.JULIAN1:
+            return "Julian 1"
     }
 }
 
@@ -896,6 +898,9 @@ for (let mode = PLAIN_DATE; mode < DATE_MODE_COUNT; mode += 1) {
             break
             case Time.GREGORIAN1:
                 calendarClass = "gregorian-1";
+            break
+            case Time.JULIAN1:
+                calendarClass = "julian-1";
             break
         }
 
@@ -1576,6 +1581,7 @@ const renderAt = (date) => {
 
     const julian0YMD = Time.julian0YMD(date)
     const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
+    const julian1YMD = Time.julian1YMD(date);
 
     const year = date.getUTCFullYear()
     const isLeap = Time.isGregorian0LeapYear(year)
@@ -1592,6 +1598,9 @@ const renderAt = (date) => {
         const dominicalLettersElement = dominicalLettersElements[calendar]
 
         switch (calendar) {
+            default:
+                console.error("unhandled calendar kind: " + calendar)
+                // fallthrough
             case Time.GREGORIAN0:
                 let g0DominicalLetters = DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[gregorian0WeekdayNumberOfFirstDay]
                 if (isLeap) {
@@ -1624,6 +1633,9 @@ const renderAt = (date) => {
                     g1DominicalLetters += DOMINICAL_LETTER_BY_WEEKDAY_NUMBER[octoberFirstWeekdayNumber]
                 }
                 dominicalLettersElement.textContent = g1DominicalLetters;
+            break
+            case Time.JULIAN1:
+                dominicalLettersElement.textContent = Time.julian1DominicalLetters(julian1YMD);
             break
         }
     }
@@ -1779,6 +1791,9 @@ const renderAt = (date) => {
                         case Time.GREGORIAN1:
                             element.textContent = `${Time.gregorian1YearFromGregorian0Year(year)}-${padToTwoDigits(oneIndexedMonth)}-${padToTwoDigits(dayOfMonth)}`
                         break
+                        case Time.JULIAN1:
+                            element.textContent = `${julian1YMD.j1Year}-${padToTwoDigits(julian1YMD.j1Month)}-${padToTwoDigits(julian1YMD.j1DayOfMonth)}`
+                        break
                     }
                 break
                 case BASE_DAY_OF_MONTH_PLUS_ONE:
@@ -1802,6 +1817,9 @@ const renderAt = (date) => {
                         case Time.GREGORIAN1:
                             element.textContent = `${Time.gregorian1YearFromGregorian0Year(year).toString(base)}-${padStringToTwoDigits(oneIndexedMonth.toString(base))}-${padStringToTwoDigits(dayOfMonth.toString(base))}`
                         break
+                        case Time.JULIAN1:
+                            element.textContent = `${julian1YMD.j1Year.toString(base)}-${padStringToTwoDigits(julian1YMD.j1Month.toString(base))}-${padStringToTwoDigits(julian1YMD.j1DayOfMonth.toString(base))}`
+                        break
                     }
                 break
                 case BASE_FACTORIAL:
@@ -1820,6 +1838,9 @@ const renderAt = (date) => {
                         break
                         case Time.GREGORIAN1:
                             element.textContent = `${FactorialBase.stringOf(Time.gregorian1YearFromGregorian0Year(year))}-${padToNDigitsBaseFactorial(3, oneIndexedMonth)}-${padToNDigitsBaseFactorial(5, dayOfMonth)}`
+                        break
+                        case Time.JULIAN1:
+                            element.textContent = `${FactorialBase.stringOf(julian1YMD.j1Year)}-${padToNDigitsBaseFactorial(3, julian1YMD.j1Month)}-${padToNDigitsBaseFactorial(5, julian1YMD.j1DayOfMonth)}`
                         break
                     }
                 break

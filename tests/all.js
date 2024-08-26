@@ -299,11 +299,11 @@ it(() => {
     for (let i = 0; i < GREGORIAN_EXAMPLES.length; i += 1) {
         const [[gY, gM, gD], expected] = GREGORIAN_EXAMPLES[i];
 
-        const actual = Time.julian0DaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
+        const actual = Time.julianDaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
 
         assert(
             actual === expected,
-            "julian0DaysDifferenceFromGregorian0YMD mismatch for " + [gY, gM, gD] + ", expected " + expected + " got " + actual
+            "julianDaysDifferenceFromGregorian0YMD mismatch for " + [gY, gM, gD] + ", expected " + expected + " got " + actual
         )
     }
 })
