@@ -89,13 +89,13 @@ const TAU = 2 * Math.PI
 
 const root = document.getElementById("root");
 
-const inputRange = document.createElement("input"); 
+const inputRange = document.createElement("input");
 inputRange.id = "selected-time";
 inputRange.type = "range";
 inputRange.style.width = "100%";
 root.appendChild(inputRange);
 
-const inputNumber = document.createElement("input"); 
+const inputNumber = document.createElement("input");
 inputNumber.id = "selected-time-number";
 inputNumber.type = "number";
 root.appendChild(inputNumber);
@@ -144,17 +144,17 @@ const appendCategoryControls = ({subsetName, idInfix}) => {
     subsetLabel.innerHTML = subsetName;
     subsetLabel.className = "center-text";
     categoryControls.appendChild(subsetLabel);
-    
+
     const removeButton = document.createElement("button");
     removeButton.id = "remove-" + idInfix;
     removeButton.innerHTML = "&amp;~"
     categoryControls.appendChild(removeButton);
-    
+
     const equalsButton = document.createElement("button");
     equalsButton.id = idInfix + "-only";
     equalsButton.innerHTML = "=";
     categoryControls.appendChild(equalsButton);
-    
+
     const addButton = document.createElement("button");
     addButton.id = "add-" + idInfix;
     addButton.innerHTML = "|";
@@ -164,37 +164,37 @@ const appendCategoryControls = ({subsetName, idInfix}) => {
 };
 
 appendCategoryControls({
-    subsetName: "digital", 
+    subsetName: "digital",
     idInfix: "digital"
 });
 
 appendCategoryControls({
-    subsetName: "analogue", 
+    subsetName: "analogue",
     idInfix: "analogue"
 });
 
 appendCategoryControls({
-    subsetName: "ordinal dates (ddd)", 
+    subsetName: "ordinal dates (ddd)",
     idInfix: "ordinal-dates"
 });
 
 appendCategoryControls({
-    subsetName: "calendars", 
+    subsetName: "calendars",
     idInfix: "calendars"
 });
 
 appendCategoryControls({
-    subsetName: "week numbers", 
+    subsetName: "week numbers",
     idInfix: "week-numbers"
 });
 
 appendCategoryControls({
-    subsetName: "week cards", 
+    subsetName: "week cards",
     idInfix: "week-cards"
 });
 
 appendCategoryControls({
-    subsetName: "dominical letters", 
+    subsetName: "dominical letters",
     idInfix: "dominical-letters"
 });
 
@@ -337,7 +337,7 @@ let inputMode = RUNNING
 const onInput = (event) => {
     // TODO? Are we gonna want to debounce this event handler?
     inputMode = PAUSED
-    
+
     // This event handler should only be attached to `input` events.
     const v = (/** @type HTMLInputElement */(event.currentTarget)).value
     const parsed = parseInt(v)
@@ -2438,7 +2438,7 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 // TODO? Have IFC but without a year 0?
 // TODO show a calendar with all the days visible on it at once
 //      One design for this is a row for each month.
-//      Are there other sensible options? 
+//      Are there other sensible options?
 //          52-53 week rows?
 // TODO? Is all at once interesting enoigh to do for every calendar?
 // TODO show a statement about the current day, so like
@@ -2479,7 +2479,7 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 // TODO? show if the current day or other time period is mildy interesting in a different calendar than usual?
 //    For example, IFC April fool's day, King of hearts week
 //    But is there enough of these to be worth it? There are more of these if there's more calendars
-// TODO show a duodecahedron slowly rotaing to show what month it is. 
+// TODO show a duodecahedron slowly rotaing to show what month it is.
 //      The face of the given month is face on in the exact middle of the month
 // TODO? Find a random generator of something, say names, and define a total order to its output and thus map the output to some appropriate time period with a repeating cycle, e.g. name of the day or hour
 

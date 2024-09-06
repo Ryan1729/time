@@ -214,6 +214,27 @@ var Time = (function () {
         return rollJulian1YMDByDays(J1.ymd(g0YMD.g0Year, g0YMD.g0Month, g0YMD.g0DayOfMonth), -daysDifference)
     }
 
+    /** @type {(j1YMD: J1YMD) => G0YMD} */
+    const julian1YMDToGregorian0 = (j1YMD) => {
+        let daysDifference = gregorian0DaysDifferenceFromJulian1YMD(j1YMD)
+
+        // Being dumb is often the first step to being smart
+        /** @type {(j1YMD: J1YMD) => G0YMD} */
+        const j1ToG0Dumb = ({j1Year, j1Month, j1DayOfMonth}) => {
+            if (
+                j1Month === 2
+                && j1DayOfMonth === 29
+                && isJulian1LeapYear(j1Year)
+                && !isGregorian0LeapYear(j1Year)
+            ) {
+                return G0.ymd(j1Year, 3, 1)
+            }
+            return G0.ymd(j1Year, j1Month, j1DayOfMonth)
+        }
+
+        return rollGregorian0YMDByDays(j1ToG0Dumb(j1YMD), daysDifference)
+    }
+
     /** @type {(j0YMD: J0YMD, offsetInDays: Days) => J0YMD} */
     const rollJulian0YMDByDays = ({j0Year, j0Month, j0DayOfMonth}, offsetInDays) => {
         let currentMonthLength = julian0OneIndexedMonthLength({year: j0Year, month: j0Month})
@@ -437,6 +458,13 @@ var Time = (function () {
         startOfYear.setUTCFullYear(year)
 
         return startOfYear.getTime() + (targetDayOfYear * DAY_IN_MILLIS)
+    }
+
+    /** @type {(date: Date, monthDelta: Integer, dayOfMonth: DayOfMonth) => Time} */
+    const julian1LinkedTimeFromDayOfMonth = (date, monthDelta, dayOfMonth) => {
+        // Needing to cast to BoundsFuncs<any> is annoying, but giving
+        // the constant the more specific type does catch some errors.
+        return funcsLinkedTimeFromDayOfMonth(/** @type {BoundsFuncs<any>} */ (julian1BoundFuncs), date, monthDelta, dayOfMonth);
     }
 
     /**
@@ -682,6 +710,44 @@ var Time = (function () {
         },
     };
 
+    /** @type {BoundsFuncs<J1YMD>} */
+    const julian1BoundFuncs = {
+        toYMD: julian1YMD,
+        rollByDays: rollJulian1YMDByDays,
+        getDayOfMonth: (ymd) => ymd.j1DayOfMonth,
+        setDayOfMonth: (oldYMD, dayOfMonth) => ({ ...oldYMD, j1DayOfMonth: dayOfMonth }),
+        getMonthLength: ({j1Year: year, j1Month: month}) => julian1OneIndexedMonthLength({year, month}),
+        toGregorian0: julian1YMDToGregorian0,
+        linkedTimeFromDayOfMonth: julian1LinkedTimeFromDayOfMonth,
+        pageBounds: (date) => {
+            const ymd = julian1YMD(date)
+
+            const firstOfCurrentMonth = new Date(ymd.j1Year, ymd.j1Month - 1, 1)
+            // Using just `date` instead of firstOfCurrentMonth has timezone issues.
+            const monthText = GREGORIAN0_MONTH_FORMATTER.format(firstOfCurrentMonth)
+
+            const lastOfPreviousMonthYmd = rollJulian1YMDByDays(ymd, -ymd.j1DayOfMonth)
+
+            const lastDateOfPreviousMonth = lastOfPreviousMonthYmd.j1DayOfMonth
+            const dayOfWeekOfLastOfPrevious = julian1DayOfWeek(lastOfPreviousMonthYmd)
+            const lastDateOfCurrentMonth = julian1OneIndexedMonthLength({year: ymd.j1Year, month: ymd.j1Month})
+            const dayOfWeekOfFirstOfCurrent = julian1DayOfWeek({...ymd, j1DayOfMonth: 1})
+            const dayOfWeekOfFirstOfNext = julian1DayOfWeek(rollJulian1YMDByDays(ymd, lastDateOfCurrentMonth - ymd.j1DayOfMonth + 1))
+
+            return {
+                dayOfMonth: ymd.j1DayOfMonth,
+                lastDateOfPreviousMonth,
+                dayOfWeekOfLastOfPrevious,
+                lastDateOfCurrentMonth,
+                dayOfWeekOfFirstOfCurrent,
+                dayOfWeekOfFirstOfNext,
+                maxBoxesPerPage: 42,
+                monthText,
+                appearance: DEFAULT_APPEARANCE,
+            };
+        },
+    };
+
     /** @type {(kind: CalendarKind, date: Date) => CalendarSpecs} */
     const calculateCalendarSpecs = (kind, date) => {
         let boundsFuncs;
@@ -700,7 +766,9 @@ var Time = (function () {
             case GREGORIAN1:
                 boundsFuncs = gregorian1BoundFuncs;
             break
-            
+            case JULIAN1:
+                boundsFuncs = julian1BoundFuncs;
+            break
         }
 
         return calculateCalendarSpecsInner(date, boundsFuncs)
@@ -870,7 +938,7 @@ var Time = (function () {
         // JD 0 is a Monday, so JD -1 is a Sunday, so shift forward one
         return /** @type {Gregorian1DayOfWeek} */ ((n + 1) % DAYS_IN_WEEK)
     }
-    
+
     /** @typedef {DayOfWeek} Julian1DayOfWeek */
 
     /** @type {(j1YMD: J1YMD) => Julian1DayOfWeek} */
@@ -933,7 +1001,7 @@ var Time = (function () {
     const julian0DominicalLetters = (julian0YMD) => {
         return JULIAN0_DOMINICAL_LETTERS[betterMod(julian0YMD.j0Year, 28)];
     };
-    
+
     /** @type {(julian1YMD: J1YMD) => string} */
     const julian1DominicalLetters = (julian1YMD) => {
         const y = julian1YMD.j1Year;
@@ -1291,6 +1359,11 @@ var Time = (function () {
         return 0
     }
 
+    /** @type {(j1YMD: J1YMD) => Days} */
+    const gregorian0DaysDifferenceFromJulian1YMD = ({j1Year, j1Month, j1DayOfMonth}) => {
+        return gregorian0DaysDifferenceFromJulian0YMD(J0.ymd(j1Year < 0 ? j1Year + 1: j1Year, j1Month, j1DayOfMonth))
+    }
+
     /** @type {(arg: {year: G0Year, month: Month}) => LengthOfMonth} */
     const gregorian0OneIndexedMonthLength = (arg) => {
         return standardMonthLengthForLeapYearFunc(isGregorian0LeapYear, arg);
@@ -1494,7 +1567,7 @@ var Time = (function () {
 
     /** @typedef {{ monthText: string, boxSpecs: BoxSpecs, appearance: CalendarAppearance }} CalendarSpecs */
 
-    /** @typedef {BoundsFuncs<G0YMD> | BoundsFuncs<J0YMD> | BoundsFuncs<G1YMD> | BoundsFuncs<IFCYMD>} KnownBoundsFuncs */
+    /** @typedef {BoundsFuncs<G0YMD> | BoundsFuncs<J0YMD> | BoundsFuncs<G1YMD> | BoundsFuncs<IFCYMD> | BoundsFuncs<J1YMD>} KnownBoundsFuncs */
 
     /**
      * @type {(date: Date, boundsFunc: KnownBoundsFuncs) => CalendarSpecs} */
@@ -1649,7 +1722,7 @@ var Time = (function () {
     const julian1YMDToJulianDaysSinceJulianEpoch = ({j1Year, j1Month, j1DayOfMonth}) => {
         return julian0YMDToJulianDaysSinceJulianEpoch(J0.ymd(j1Year < 0 ? j1Year + 1: j1Year, j1Month, j1DayOfMonth))
     };
-    
+
 
     return {
         calculateCalendarSpecs,
