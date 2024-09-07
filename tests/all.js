@@ -289,6 +289,8 @@ it(() => {
     }
 })
 
+////////////////////////////////
+// g0 <-> j0 days diff section
 it(() => {
     /** @type {[[Integer, Month, DayOfMonth], number][]} GREGORIAN_EXAMPLES */
     const GREGORIAN_EXAMPLES = [
@@ -300,11 +302,11 @@ it(() => {
     for (let i = 0; i < GREGORIAN_EXAMPLES.length; i += 1) {
         const [[gY, gM, gD], expected] = GREGORIAN_EXAMPLES[i];
 
-        const actual = Time.julianDaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
+        const actual = Time.julian0DaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
 
         assert(
             actual === expected,
-            "julianDaysDifferenceFromGregorian0YMD mismatch for " + [gY, gM, gD] + ", expected " + expected + " got " + actual
+            "julian0DaysDifferenceFromGregorian0YMD mismatch for " + [gY, gM, gD] + ", expected " + expected + " got " + actual
         )
     }
 })
@@ -327,6 +329,52 @@ it(() => {
         )
     }
 })
+
+// end g0 <-> j0 days diff section
+////////////////////////////////
+
+////////////////////////////////
+// g0 <-> j1 days diff section
+it(() => {
+    /** @type {[[Integer, Month, DayOfMonth], number][]} GREGORIAN_EXAMPLES */
+    const GREGORIAN_EXAMPLES = [
+        [[300, 2, 28], 0],
+        [[300, 3,  1], 1],
+        [[500, 3,  1], 2],
+    ]
+
+    for (let i = 0; i < GREGORIAN_EXAMPLES.length; i += 1) {
+        const [[gY, gM, gD], expected] = GREGORIAN_EXAMPLES[i];
+        const actual = Time.julian1DaysDifferenceFromGregorian0YMD(Time.G0.ymd(gY, gM, gD))
+
+        assert(
+            actual === expected,
+            "julian0DaysDifferenceFromGregorian0YMD mismatch for " + [gY, gM, gD] + ", expected " + expected + " got " + actual
+        )
+    }
+})
+
+it(() => {
+    /** @type {[[Integer, Month, DayOfMonth], number][]} JULIAN_EXAMPLES */
+    const JULIAN_EXAMPLES = [
+        [[300, 2, 28], 0],
+        [[300, 2, 29], 0],
+        [[500, 3,  1], 2],
+    ]
+
+    for (let i = 0; i < JULIAN_EXAMPLES.length; i += 1) {
+        const [[jY, jM, jD], expected] = JULIAN_EXAMPLES[i];
+        const actual = Time.gregorian0DaysDifferenceFromJulian1YMD(Time.J0.ymd(jY, jM, jD))
+
+        assert(
+            actual === expected,
+            "gregorian0DaysDifferenceFromJulian0YMD mismatch for " + [jY, jM, jD] + ", expected " + expected + " got " + actual
+        )
+    }
+})
+
+// end g0 <-> j1 days diff section
+////////////////////////////////
 
 /** @typedef {[Integer, Month, DayOfMonth]} YMDTuple */
 
@@ -640,13 +688,13 @@ it(() => {
 
 ////////////////////////////////////////////////////////////////////////
 // Begin G0 <-> J1 section
-// We have gregorian0YMDToJulian0 and julian0YMDToGregorian0 and we further
-// have gregorian0YMDToJulian0DaysSinceJulianEpoch and
-// julian0YMDToJulianDaysSinceJulianEpoch. These functions are related
+// We have gregorian0YMDToJulian1 and julian1YMDToGregorian0 and we further
+// have gregorian0YMDToJulian1DaysSinceJulianEpoch and
+// julian1YMDToJulianDaysSinceJulianEpoch. These functions are related
 // in the following way:
-// Call gregorian0YMDToJulian0 A, julian0YMDToGregorian0 B,
+// Call gregorian0YMDToJulian1 A, julian1YMDToGregorian0 B,
 // gregorian0YMDToJulianDaysSinceJulianEpoch C, and
-// julian0YMDToJulianDaysSinceJulianEpoch D
+// julian1YMDToJulianDaysSinceJulianEpoch D
 //
 // gymd--A-->jymd
 // jymd--B-->gymd
@@ -679,7 +727,7 @@ it(() => {
             "gJD is not in the expected range: " + gJD
         )
 
-        const jJD = Time.julian0YMDToJulianDaysSinceJulianEpoch(j1YMD)
+        const jJD = Time.julian1YMDToJulianDaysSinceJulianEpoch(j1YMD)
         assert(
             isNormalEnoughNumber(jJD),
             "jJD is not in the expected range: " + jJD
@@ -693,16 +741,16 @@ it(() => {
     for (let i = 0; i < GREGORIAN_JULIAN_PAIRS.length; i += 1) {
         const [[inY, inM, inD], _, __, [outY, outM, outD]] = GREGORIAN_JULIAN_PAIRS[i];
 
-        const {j1Year: year, j1Month: month, j1DayOfMonth: dayOfMonth} = Time.gregorian0YMDToJulian0(Time.G0.ymd(inY, inM, inD))
+        const {j1Year: year, j1Month: month, j1DayOfMonth: dayOfMonth} = Time.gregorian0YMDToJulian1(Time.G0.ymd(inY, inM, inD))
         assert(
             year === outY && month === outM && dayOfMonth === outD,
-            "gregorian0YMDToJulian0 mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
+            "gregorian0YMDToJulian1 mismatch for " + [inY, inM, inD] + ", expected " + [outY, outM, outD] + " got " + [year, month, dayOfMonth]
         )
 
-        const looped = Time.julian0YMDToGregorian0(Time.J1.ymd(outY, outM, outD))
+        const looped = Time.julian1YMDToGregorian0(Time.J1.ymd(outY, outM, outD))
         assert(
             inY === looped.g0Year && inM === looped.g0Month && inD === looped.g0DayOfMonth,
-            "julian0YMDToGregorian0 mismatch for " + [outY, outM, outD] + ", expected " + [inY, inM, inD] + " got " + [looped.g0Year, looped.g0Month, looped.g0DayOfMonth]
+            "julian1YMDToGregorian0 mismatch for " + [outY, outM, outD] + ", expected " + [inY, inM, inD] + " got " + [looped.g0Year, looped.g0Month, looped.g0DayOfMonth]
         )
     }
 })
@@ -714,12 +762,12 @@ it(() => {
 
         const j1YMD = Time.J1.ymd(jY, jM, jD);
 
-        const JD1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.julian0YMDToGregorian0(j1YMD))
-        const JD2 = Time.julian0YMDToJulianDaysSinceJulianEpoch(j1YMD)
+        const JD1 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(Time.julian1YMDToGregorian0(j1YMD))
+        const JD2 = Time.julian1YMDToJulianDaysSinceJulianEpoch(j1YMD)
 
         assert(
             JD1 === JD2,
-            "julian0YMDToJulianDaysSinceJulianEpoch mismatch for " + [jY, jM, jD] + ", expected " + JD1 + " got " + JD2
+            "julian1YMDToJulianDaysSinceJulianEpoch mismatch for " + [jY, jM, jD] + ", expected " + JD1 + " got " + JD2
         )
     }
 })
@@ -731,13 +779,13 @@ it(() => {
 
         const g0YMD = Time.G0.ymd(gY, gM, gD);
 
-        const JD1 = Time.julian0YMDToJulianDaysSinceJulianEpoch(Time.gregorian0YMDToJulian0(g0YMD))
+        const JD1 = Time.julian1YMDToJulianDaysSinceJulianEpoch(Time.gregorian0YMDToJulian1(g0YMD))
 
         const JD2 = Time.gregorian0YMDToJulianDaysSinceJulianEpoch(g0YMD)
 
         assert(
             JD1 === JD2,
-            "gregorian0YMDToJulian0DaysSinceJulianEpoch mismatch for " + [gY, gM, gD] + ", expected " + JD1 + " got " + JD2
+            "gregorian0YMDToJulian1DaysSinceJulianEpoch mismatch for " + [gY, gM, gD] + ", expected " + JD1 + " got " + JD2
         )
     }
 })
