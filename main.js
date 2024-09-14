@@ -683,6 +683,14 @@ const {ctx: analogueClockVerbal24Ctx, verbal: verbalClock24} = appendVerbalAnalo
     analogueScale: 2,
 });
 
+const {ctx: analogueClockInternetTimeCtx, verbal: digitalClockInternetTime} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-internet-time",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-internet-time",
+    analogueDescription: "A an analogue clock that uses internet time (beats)",
+    analogueScale: 2,
+});
+
 const verbalTime = appendVerbalClock("verbal-time");
 
 const analogueClock12ZeroOffsetCtx = appendAnalogueClock({
@@ -1289,10 +1297,16 @@ const range = (n) => {
     return output
 }
 
+const range10 = range(10)
 const range12 = range(12)
 const range24 = range(24)
 
 // TODO? Memoize these?
+/** @type {(index: Index, scale: Scale) => XY} */
+const decimalClockNumberXYForIndex = (index, scale) => {
+    return clockNumberCenterXYForIndex({index, divisor: 10, scale})
+}
+
 /** @type {(index: Index, scale: Scale) => XY} */
 const twelveHourClockNumberXYForIndex = (index, scale) => {
     return clockNumberCenterXYForIndex({index, divisor: 12, scale})
@@ -1364,6 +1378,10 @@ const twentyFourHourClockNumberXYs = (scale) => range24.map(n => twentyFourHourC
 /** @type {(scale: Scale) => XY[]} */
 const twentyFourHourClockVerbalNumberXYs = (scale) => range24.map(n => twentyFourHourClockVerbalXYForIndex(n, scale))
 
+/** @type {(scale: Scale) => XY[]} */
+const decimalClockNumberXYs = (scale) => range10.map(n => decimalClockNumberXYForIndex(n, scale))
+
+
 /** @type {(year: G0Year) => DayOfWeek} */
 const getDayOfWeekOfLastDayOfYear = (year) => /** @type {DayOfWeek} */ ((year + Math.floor(year/4) - Math.floor(year/100) + Math.floor(year/400)) % 7);
 
@@ -1397,6 +1415,16 @@ const getISO8601WeekNumber = (date) => {
         return {iso8601WeekNumber: provisionalWeekNumber, yearOfISO8601Week: year}
     }
 }
+
+const internetTimeStringFromHMS = (hours, minutes, seconds) => {
+    hours ||= 0;
+    minutes ||= 0;
+    seconds ||= 0;
+
+    const utc1Hours = Time.modToZeroIndexedHour(hours + 1);
+
+    return "@" + padToNDigits(3, Math.floor((3600 * utc1Hours + 60 * minutes + seconds) / 86.4));
+};
 
 const TEN_THOUSAND_DAY_BASE_TIME = Date.UTC(1961, 7 - 1, 28);
 
@@ -1452,6 +1480,8 @@ const renderAt = (date) => {
         + chineseTelegraphDigitsForDayOfMonth(dayOfMonth)
         + " "
         + chineseTelegraphDigitsForHour(hours)
+
+    digitalClockInternetTime.textContent = internetTimeStringFromHMS(hours, minutes, seconds)
 
     const nextHours12 = (hours12 + 1) % 12
     const nextHours24 = (hours + 1) % 24
@@ -1578,6 +1608,8 @@ const renderAt = (date) => {
     renderClock({time, ctx: analogueClockEmojiNumbersCtx, textForIndex: emojiTextForIndex })
     renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 12 : Time.modToZeroIndexedHour(i)))})
     renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 24 : Time.modToZeroIndexedHour(i))), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
+    renderClock({time, ctx: analogueClockInternetTimeCtx, textForIndex: /** @type {TextForIndex} */ (i => i + "00"), numberXYs: decimalClockNumberXYs, topOfClockShift: -0.26 /* trial and error */, divisor: 24, handFlags: H_HAND})
+
 
     const julian0YMD = Time.julian0YMD(date)
     const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
@@ -1930,14 +1962,20 @@ const hoursToWord = (n, divisor) => {
 /** @typedef {(index: Index, divisor: Integer) => string} TextForIndex */
 /** @typedef {(index: Index) => Radians} RotationForIndex */
 
-/** @type {(args: {time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: (scale: Scale) => XY[], topOfClockShift?: number, textForIndex?: TextForIndex, rotationForIndex?: RotationForIndex) => void} */
-const renderClock = ({time, ctx: ctxIn, divisor, numberXYs: numberXYsIn, topOfClockShift, textForIndex: textForIndexIn, rotationForIndex}) => {
+/** @typedef {number} HandFlags */
+const S_HAND = 1 << 0;
+const M_HAND = 1 << 1;
+const H_HAND = 1 << 2;
+
+/** @type {(args: {time: EpochTime, ctx: AnalogueClockCtx, divisor?: Integer, numberXYs?: (scale: Scale) => XY[], topOfClockShift?: number, textForIndex?: TextForIndex, rotationForIndex?: RotationForIndex, handFlags: HandFlags) => void} */
+const renderClock = ({time, ctx: ctxIn, divisor, numberXYs: numberXYsIn, topOfClockShift, textForIndex: textForIndexIn, rotationForIndex, handFlags}) => {
     divisor ||= 12
     /** @type {(scale: Scale) => XY[]} */
     let numberXYs = numberXYsIn || twelveHourClockNumberXYs
     topOfClockShift = topOfClockShift === undefined ? -0.25 : topOfClockShift
     let textForIndex = textForIndexIn || clockTextForIndex
     rotationForIndex ||= () => 0;
+    handFlags ||= H_HAND | M_HAND | S_HAND;
 
     const scale = ctxIn.scale
     let ctx = ctxIn.ctx
@@ -1979,29 +2017,35 @@ const renderClock = ({time, ctx: ctxIn, divisor, numberXYs: numberXYsIn, topOfCl
     const minuteFrac = (time % Time.HOUR_IN_MILLIS) / Time.HOUR_IN_MILLIS
     const secondFrac = (time % Time.MINUTE_IN_MILLIS) / Time.MINUTE_IN_MILLIS
 
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#3352e1';
-    ctx.beginPath()
-    ctx.moveTo(lengths.clockX, lengths.clockY)
-    const hourAngle = (hourFrac + topOfClockShift) * TAU
-    ctx.lineTo(lengths.clockX + Math.cos(hourAngle) * lengths.clockHourRadius, lengths.clockY + Math.sin(hourAngle) * lengths.clockHourRadius)
-    ctx.stroke()
+    if ((handFlags & H_HAND) != 0) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#3352e1';
+        ctx.beginPath()
+        ctx.moveTo(lengths.clockX, lengths.clockY)
+        const hourAngle = (hourFrac + topOfClockShift) * TAU
+        ctx.lineTo(lengths.clockX + Math.cos(hourAngle) * lengths.clockHourRadius, lengths.clockY + Math.sin(hourAngle) * lengths.clockHourRadius)
+        ctx.stroke()
+    }
 
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#5a7d8b';
-    ctx.beginPath()
-    ctx.moveTo(lengths.clockX, lengths.clockY)
-    const minuteAngle = (minuteFrac + topOfClockShift) * TAU
-    ctx.lineTo(lengths.clockX + Math.cos(minuteAngle) * lengths.clockMinuteRadius, lengths.clockY + Math.sin(minuteAngle) * lengths.clockMinuteRadius)
-    ctx.stroke()
+    if ((handFlags & M_HAND) != 0) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#5a7d8b';
+        ctx.beginPath()
+        ctx.moveTo(lengths.clockX, lengths.clockY)
+        const minuteAngle = (minuteFrac + topOfClockShift) * TAU
+        ctx.lineTo(lengths.clockX + Math.cos(minuteAngle) * lengths.clockMinuteRadius, lengths.clockY + Math.sin(minuteAngle) * lengths.clockMinuteRadius)
+        ctx.stroke()
+    }
 
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#de4949';
-    ctx.beginPath()
-    ctx.moveTo(lengths.clockX, lengths.clockY)
-    const secondAngle = (secondFrac + topOfClockShift) * TAU
-    ctx.lineTo(lengths.clockX + Math.cos(secondAngle) * lengths.clockSecondRadius, lengths.clockY + Math.sin(secondAngle) * lengths.clockSecondRadius)
-    ctx.stroke()
+    if ((handFlags & S_HAND) != 0) {
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#de4949';
+        ctx.beginPath()
+        ctx.moveTo(lengths.clockX, lengths.clockY)
+        const secondAngle = (secondFrac + topOfClockShift) * TAU
+        ctx.lineTo(lengths.clockX + Math.cos(secondAngle) * lengths.clockSecondRadius, lengths.clockY + Math.sin(secondAngle) * lengths.clockSecondRadius)
+        ctx.stroke()
+    }
 }
 
 /** @type {(n: Integer) => string} */
@@ -2427,6 +2471,8 @@ renderStep()
 
 console.log("Init: ", performance.now() - scriptStart, "ms")
 
+// TODO show fractional Swatch Internet time
+// TODO show fractional UTC+0 based Internet time, using !, (one less than @) for a prefix instead
 // TODO? Add 12 and 24 hour variations for time paired with yyyyddd, yddd etc?
 // TODO? Add days since UNIX epoch?
 //  If so, might as well add seconds, minutes etc.
@@ -2463,7 +2509,6 @@ console.log("Init: ", performance.now() - scriptStart, "ms")
 //    https://en.wikipedia.org/wiki/Pawukon_calendar
 // TODO show French Republican decimal time
 // TODO show French Republican Calendar
-// TODO show Swatch Internet time
 // TODO show a version of the clock on xkcd.com/now
 // TODO show a "digital analogue" clock that merely prints the angle of the hands
 //  I guess a analogue digital clock would be one of those ones where the digits are shown on cards that flip over?
