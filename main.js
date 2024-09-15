@@ -691,6 +691,14 @@ const {ctx: analogueClockInternetTimeCtx, verbal: digitalClockInternetTime} = ap
     analogueScale: 2,
 });
 
+const {ctx: analogueClockExclamationTimeCtx, verbal: digitalClockExclamationTime} = appendVerbalAnaloguePair({
+    verbalId: "digital-clock-exclamation-time",
+    verbalClass: "digital",
+    analogueId: "analogue-clock-exclamation-time",
+    analogueDescription: "A an analogue clock that uses exclamation time (bangs)",
+    analogueScale: 2,
+});
+
 const verbalTime = appendVerbalClock("verbal-time");
 
 const analogueClock12ZeroOffsetCtx = appendAnalogueClock({
@@ -1426,6 +1434,14 @@ const internetTimeStringFromHMS = (hours, minutes, seconds) => {
     return "@" + padToNDigits(3, ((3600 * utc1Hours + 60 * minutes + seconds) / 86.4).toFixed(2));
 };
 
+const exclamationTimeStringFromHMS = (hours, minutes, seconds) => {
+    hours ||= 0;
+    minutes ||= 0;
+    seconds ||= 0;
+
+    return "!" + padToNDigits(3, ((3600 * hours + 60 * minutes + seconds) / 86.4).toFixed(2));
+};
+
 const TEN_THOUSAND_DAY_BASE_TIME = Date.UTC(1961, 7 - 1, 28);
 
 /** @type {(date: Date) => void} */
@@ -1482,6 +1498,8 @@ const renderAt = (date) => {
         + chineseTelegraphDigitsForHour(hours)
 
     digitalClockInternetTime.textContent = internetTimeStringFromHMS(hours, minutes, seconds)
+    digitalClockExclamationTime.textContent = exclamationTimeStringFromHMS(hours, minutes, seconds)
+
 
     const nextHours12 = (hours12 + 1) % 12
     const nextHours24 = (hours + 1) % 24
@@ -1609,7 +1627,7 @@ const renderAt = (date) => {
     renderClock({time, ctx: analogueClockChineseTelegraphCtx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 12 : Time.modToZeroIndexedHour(i)))})
     renderClock({time, ctx: analogueClockChineseTelegraph24Ctx, textForIndex: /** @type {TextForIndex} */ (i => chineseTelegraphSymbolForHour(i === 0 ? 24 : Time.modToZeroIndexedHour(i))), numberXYs: twentyFourHourClockNumberXYs, divisor: 24})
     renderClock({time, ctx: analogueClockInternetTimeCtx, textForIndex: /** @type {TextForIndex} */ (i => i + "00"), numberXYs: decimalClockNumberXYs, topOfClockShift: -0.26 /* trial and error */, divisor: 24, handFlags: H_HAND})
-
+    renderClock({time, ctx: analogueClockExclamationTimeCtx, textForIndex: /** @type {TextForIndex} */ (i => i + "00"), numberXYs: decimalClockNumberXYs, topOfClockShift: -0.3 /* trial and error */, divisor: 24, handFlags: H_HAND})
 
     const julian0YMD = Time.julian0YMD(date)
     const ifcMAndD = Time.ifcZeroIndexedMonthAndDay(date);
@@ -2471,7 +2489,8 @@ renderStep()
 
 console.log("Init: ", performance.now() - scriptStart, "ms")
 
-// TODO show fractional UTC+0 based Internet time, using !, (one less than @) for a prefix instead
+// TODO verbal internet time, e.g. "one hundred twenty three beats"
+// TODO verbal exclamation time, e.g. "one hundred twenty three bangs"
 // TODO? Add 12 and 24 hour variations for time paired with yyyyddd, yddd etc?
 // TODO? Add days since UNIX epoch?
 //  If so, might as well add seconds, minutes etc.
