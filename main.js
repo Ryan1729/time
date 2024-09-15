@@ -1423,7 +1423,7 @@ const internetTimeStringFromHMS = (hours, minutes, seconds) => {
 
     const utc1Hours = Time.modToZeroIndexedHour(hours + 1);
 
-    return "@" + padToNDigits(3, Math.floor((3600 * utc1Hours + 60 * minutes + seconds) / 86.4));
+    return "@" + padToNDigits(3, ((3600 * utc1Hours + 60 * minutes + seconds) / 86.4).toFixed(2));
 };
 
 const TEN_THOUSAND_DAY_BASE_TIME = Date.UTC(1961, 7 - 1, 28);
@@ -2471,7 +2471,6 @@ renderStep()
 
 console.log("Init: ", performance.now() - scriptStart, "ms")
 
-// TODO show fractional Swatch Internet time
 // TODO show fractional UTC+0 based Internet time, using !, (one less than @) for a prefix instead
 // TODO? Add 12 and 24 hour variations for time paired with yyyyddd, yddd etc?
 // TODO? Add days since UNIX epoch?
